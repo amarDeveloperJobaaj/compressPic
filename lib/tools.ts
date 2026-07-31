@@ -89,6 +89,16 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
         badge: "New",
         badgeTone: "primary",
       },
+      {
+        slug: "remove-background",
+        name: "Remove Background",
+        href: "/remove-background",
+        description: "AI background remover in your browser",
+        tagline: "Remove Background",
+        stat: "AI · Transparent PNG · Batch",
+        badge: "AI",
+        badgeTone: "primary",
+      },
     ],
   },
 ];

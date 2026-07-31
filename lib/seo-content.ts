@@ -585,6 +585,149 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+
+  "remove-background": {
+    intro: {
+      heading: "AI Background Remover — Free & Private",
+      paragraphs: [
+        "Remove backgrounds from photos in seconds with CompressPix's AI Background Remover. The neural network detects your subject automatically and cuts it out — no manual selection, no green screens, no design skills needed.",
+        "Everything runs entirely in your browser using WebAssembly and WebGPU, so your images never leave your device. Replace the background with a color, gradient, blur, or another photo, refine the edges, and download a transparent PNG, JPG, or WEBP in one click.",
+      ],
+    },
+    benefits: [
+      {
+        title: "AI-Powered Cutouts",
+        description: "A neural network detects the subject automatically — including hair and fine details.",
+      },
+      {
+        title: "100% Private & Free",
+        description: "Processing happens in your browser. Images are never uploaded, so nothing is stored.",
+      },
+      {
+        title: "Instant Transparent PNGs",
+        description: "Export a clean cutout with a transparent background in a single click.",
+      },
+      {
+        title: "Batch Mode & ZIP",
+        description: "Process multiple images at once and download them all as a ZIP archive.",
+      },
+    ],
+    features: [
+      {
+        title: "One-Click Subject Detection",
+        description: "Upload an image and the AI finds the subject and removes the background automatically.",
+      },
+      {
+        title: "7 Background Replacements",
+        description: "Transparent, solid color, gradient, blurred backdrop, or any replacement photo.",
+      },
+      {
+        title: "Full Image Adjustments",
+        description: "Brightness, contrast, saturation, sharpness, exposure, temperature, tint, gamma, and opacity.",
+      },
+      {
+        title: "Edge Refinement",
+        description: "Smooth, feather, hair refinement, and edge cleanup — plus restore and erase brushes.",
+      },
+      {
+        title: "Before / After Comparison",
+        description: "Slider, side-by-side, and split views with zoom, pan, and fullscreen preview.",
+      },
+      {
+        title: "Multi-Format Export",
+        description: "Download as transparent PNG, colored PNG, JPG, or WEBP with a quality slider.",
+      },
+    ],
+    howTo: {
+      heading: "How to Remove a Background",
+      description: "Cut out any image and replace its background in four simple steps.",
+      steps: [
+        {
+          name: "Upload your image",
+          text: "Drag and drop, click to browse, or paste a JPG, PNG, or WEBP image (up to 50 MB).",
+        },
+        {
+          name: "AI removes the background",
+          text: "The neural network detects the subject and creates a clean cutout automatically.",
+        },
+        {
+          name: "Refine & replace",
+          text: "Choose a new background, fine-tune edges with brushes, and adjust the subject's look.",
+        },
+        {
+          name: "Download",
+          text: "Export as transparent PNG, JPG, or WEBP — or download the whole batch as a ZIP.",
+        },
+      ],
+    },
+    faqs: [
+      {
+        question: "How do I remove a background from an image online?",
+        answer:
+          "Upload your image and the AI removes the background automatically. You can then replace it with a color, gradient, blur, or another photo, refine the edges, and download the result. Everything happens in your browser.",
+      },
+      {
+        question: "Is this AI background remover really free?",
+        answer:
+          "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits. You can remove backgrounds from as many images as you like.",
+      },
+      {
+        question: "Are my images uploaded to a server?",
+        answer:
+          "No. All processing runs locally in your browser with WebAssembly. Your photos never leave your device, so nothing is ever stored or uploaded.",
+      },
+      {
+        question: "How does the AI detect the subject?",
+        answer:
+          "A neural network (ONNX model) analyzes the image and predicts which pixels belong to the subject versus the background. It's the same technology used by paid background removers — running right in your browser.",
+      },
+      {
+        question: "What image formats are supported?",
+        answer:
+          "You can upload JPG, JPEG, PNG, and WEBP images up to 50 MB each, and download the result as transparent PNG, colored PNG, JPG, or WEBP.",
+      },
+      {
+        question: "How do I make a transparent background PNG?",
+        answer:
+          "Choose 'PNG (Transparent)' in the export panel after the AI removes the background. The download will have a fully transparent background, perfect for logos and product photos.",
+      },
+      {
+        question: "Can I replace the background with a color or image?",
+        answer:
+          "Yes. Pick from transparent, solid color, gradient, a blurred version of the photo, or upload any image to use as the new background.",
+      },
+      {
+        question: "Does it work on photos with hair?",
+        answer:
+          "The AI model is trained to preserve fine details like hair. You can also use the Hair Refine tool and the Restore brush to bring back any wispy strands that were removed.",
+      },
+      {
+        question: "How do I fix leftover background bits or missing parts?",
+        answer:
+          "Use the Erase brush to remove leftover background and the Restore brush to bring back parts of the subject. You can undo, redo, or reset to the original AI cutout at any time.",
+      },
+      {
+        question: "Can I remove backgrounds from multiple images at once?",
+        answer:
+          "Yes. Upload several images to the batch queue — they process automatically — and download them all together as a ZIP file.",
+      },
+      {
+        question: "Why does the first use download a model?",
+        answer:
+          "The first time you use the tool, the browser downloads the AI model (~80 MB) so it can run locally. It's cached afterward, so later images process instantly and offline.",
+      },
+      {
+        question: "Will the background removal reduce image quality?",
+        answer:
+          "No. The cutout keeps your image's pixels — only the background is removed. Choose PNG for lossless quality or JPG/WEBP with a quality slider for smaller files.",
+      },
+      {
+        question: "Does it work on mobile?",
+        answer:
+          "Yes, the tool is fully responsive and works on desktop, tablet, and mobile browsers — including touch-friendly restore and erase brushes.",
+      },
+    ],
+  },
 };
 
 /* ------------------------------------------------------------------ */
