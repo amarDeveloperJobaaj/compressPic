@@ -11,6 +11,10 @@ export interface HowToStep {
 }
 
 export interface ToolSeoContent {
+  /** Article meta chips shown above the content (read time, updated, author). */
+  meta?: { readTime: string; updated: string; author: string };
+  /** 3–6 short feature-highlight chips shown at the top of the content. */
+  highlights?: string[];
   /** H2 intro heading + paragraphs shown on the tool page */
   intro: { heading: string; paragraphs: string[] };
   /** Benefits section */
@@ -725,6 +729,740 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
         question: "Does it work on mobile?",
         answer:
           "Yes, the tool is fully responsive and works on desktop, tablet, and mobile browsers — including touch-friendly restore and erase brushes.",
+      },
+    ],
+  },
+
+  "passport-photo-maker": {
+    meta: { readTime: "5 min read", updated: "July 2026", author: "CompressPix" },
+    highlights: [
+      "25+ country sizes",
+      "300 DPI output",
+      "Print sheets (4×6 · A4)",
+      "Background colors",
+      "100% browser-based",
+    ],
+    intro: {
+      heading: "Make a Passport Photo Online — 25+ Country Sizes",
+      paragraphs: [
+        "Need a passport-size photo without the studio visit? The Passport Photo Maker builds a print-ready photo for 25+ countries — US 2×2 inch, India 35×45 mm, UK 35×45 mm, China 33×48 mm, and more — right in your browser. Pick your country, drag your face into the frame, choose a background color, and download a single photo or a full print sheet.",
+        "Everything runs locally on your device using the Canvas API, so your photo never leaves your computer. Export at exact pixel dimensions with 300 DPI quality, or generate a 4×6, 5×7, or A4 sheet with multiple copies ready for home printing.",
+      ],
+    },
+    benefits: [
+      {
+        title: "25+ Country Presets",
+        description: "US, India, UK, Canada, China, Japan, UAE, and more — the correct size for each is built in.",
+      },
+      {
+        title: "Print-Ready Sheets",
+        description: "Generate a 4×6, 5×7, or A4 sheet with as many copies as fit — perfect for home printing.",
+      },
+      {
+        title: "Exact 300 DPI Output",
+        description: "Every photo exports at its official pixel dimensions with print-quality resolution.",
+      },
+      {
+        title: "100% Private",
+        description: "Your photo is processed in your browser and never uploaded to any server.",
+      },
+    ],
+    features: [
+      {
+        title: "Country Size Presets",
+        description: "25+ official sizes grouped by region — passport, visa, and ID card dimensions.",
+      },
+      {
+        title: "Custom Size & DPI",
+        description: "Enter any width, height, and DPI to match requirements your country isn't listed for.",
+      },
+      {
+        title: "Face Positioning",
+        description: "Drag the photo to center your face and zoom in with the slider or mouse wheel.",
+      },
+      {
+        title: "Background Colors",
+        description: "White, gray, blue, navy, red, and green — plus automatic recoloring of near-white backgrounds.",
+      },
+      {
+        title: "Print Sheets",
+        description: "Auto-arrange multiple copies on 4×6 in, 5×7 in, or A4 sheets for home printing.",
+      },
+      {
+        title: "JPG & PNG Export",
+        description: "Download as JPG (with quality control) or lossless PNG at exact passport dimensions.",
+      },
+    ],
+    howTo: {
+      heading: "How to Make a Passport Photo",
+      description: "Create a print-ready passport photo in four simple steps.",
+      steps: [
+        {
+          name: "Upload your photo",
+          text: "Drag and drop, browse, or paste a JPG, PNG, WEBP, or HEIC selfie. A straight-on, evenly lit shot works best.",
+        },
+        {
+          name: "Choose your country size",
+          text: "Pick from 25+ presets like US 2×2, India 35×45, or UK 35×45 mm — or enter a custom size and DPI.",
+        },
+        {
+          name: "Position your face",
+          text: "Drag to center your face and zoom until your head fills the frame nicely. Pick a background color if needed.",
+        },
+        {
+          name: "Download",
+          text: "Save the single photo, or download a 4×6 / 5×7 / A4 print sheet with multiple copies.",
+        },
+      ],
+    },
+    faqs: [
+      {
+        question: "How do I make a passport photo online?",
+        answer:
+          "Upload your photo, choose your country's size from the presets, drag your face into position, and download. The photo is generated at the exact official pixel dimensions — entirely in your browser.",
+      },
+      {
+        question: "Is the passport photo maker free?",
+        answer:
+          "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits. Make as many passport photos as you need.",
+      },
+      {
+        question: "Are my photos uploaded to a server?",
+        answer:
+          "No. All processing happens locally in your browser using the Canvas API — your photo never leaves your device.",
+      },
+      {
+        question: "What size is a standard passport photo?",
+        answer:
+          "The most common size is 35×45 mm (used by the UK, India, Australia, and most of Europe), but it varies by country — the US uses 2×2 inch (51×51 mm) and Canada uses 50×70 mm. The tool includes the official size for 25+ countries.",
+      },
+      {
+        question: "What size is a US passport photo?",
+        answer:
+          "A US passport photo is 2×2 inches (51×51 mm), which is 600×600 pixels at 300 DPI. The US preset in the tool produces exactly this.",
+      },
+      {
+        question: "What size is an Indian passport photo?",
+        answer:
+          "An Indian passport photo is 35×45 mm (413×531 pixels at 300 DPI). Blue or white backgrounds are commonly accepted.",
+      },
+      {
+        question: "What size is a UK passport photo?",
+        answer:
+          "A UK passport photo is 35×45 mm (413×531 pixels at 300 DPI). The UK preset produces exactly this size.",
+      },
+      {
+        question: "What size is a China passport photo?",
+        answer:
+          "A Chinese passport photo is 33×48 mm (390×567 pixels at 300 DPI). The China preset in the tool produces exactly this size.",
+      },
+      {
+        question: "How do I print passport photos at home?",
+        answer:
+          "Use the Print Sheet option: the tool arranges multiple copies of your photo on a 4×6, 5×7, or A4 sheet. Print at 100% scale with no margin scaling and cut along the guides.",
+      },
+      {
+        question: "Can I change the background color?",
+        answer:
+          "Yes. Choose from white, gray, light blue, blue, navy, red, or green, or pick a custom color. For selfies with a white background, enable the near-white recoloring option to tint the background automatically.",
+      },
+      {
+        question: "What DPI should I use for passport photos?",
+        answer:
+          "300 DPI is the standard for print. All country presets default to 300 DPI, and you can raise it in the custom size options if your application requires higher resolution.",
+      },
+      {
+        question: "Can I make a visa photo with this tool?",
+        answer:
+          "Yes. Many visa photos use the same 35×45 mm size, and the tool includes dedicated presets such as the US 1×1 inch and UAE 43×55 mm. Always check your visa authority's exact requirements.",
+      },
+      {
+        question: "How many passport photos fit on a 4×6 sheet?",
+        answer:
+          "For a 35×45 mm photo, the tool fits 3 copies on a 4×6 inch sheet; larger sheets like A4 fit many more. The layout is computed automatically with clean margins for cutting.",
+      },
+      {
+        question: "Why does my face look too small or too large in the frame?",
+        answer:
+          "Use the zoom slider (or scroll on the preview) to enlarge your face, then drag to center it. Passport rules usually want your head to fill most of the frame with a small margin around it.",
+      },
+      {
+        question: "Does the tool work on mobile?",
+        answer:
+          "Yes, the tool is fully responsive and works on desktop, tablet, and mobile browsers — including drag-to-position on touch screens.",
+      },
+      {
+        question: "What are the official requirements for passport photos?",
+        answer:
+          "Common requirements: neutral expression, face centered and forward, even lighting, plain light background, no glasses glare or headwear, and sharp focus. Always confirm with your issuing authority — requirements differ by country.",
+      },
+    ],
+  },
+
+  "image-to-pdf": {
+    meta: { readTime: "4 min read", updated: "July 2026", author: "CompressPix" },
+    highlights: [
+      "Merge up to 50 images",
+      "A4 · Letter · Legal · A5",
+      "Reorder pages",
+      "HEIC support",
+      "100% browser-based",
+    ],
+    intro: {
+      heading: "Convert Images to PDF — Merge JPG, PNG & HEIC in Seconds",
+      paragraphs: [
+        "The Image to PDF tool turns your photos and scans into a single PDF document, right in your browser. Upload up to 50 images — JPG, PNG, WEBP, or HEIC from an iPhone — reorder them into the right sequence, pick your page size and orientation, and download a ready-to-share PDF.",
+        "Each image becomes one page, fitted and centered automatically with your chosen margins. Everything is generated locally with the PDF built in your browser, so your files never leave your device — perfect for contracts, scans, receipts, and photo albums.",
+      ],
+    },
+    benefits: [
+      {
+        title: "One PDF from Many Images",
+        description: "Merge up to 50 JPG, PNG, WEBP, or HEIC files into a single document.",
+      },
+      {
+        title: "Full Page Control",
+        description: "A4, Letter, Legal, or A5 — portrait or landscape — with four margin presets.",
+      },
+      {
+        title: "Reorder Before Export",
+        description: "Move pages up or down so the final document is in exactly the right order.",
+      },
+      {
+        title: "100% Private",
+        description: "The PDF is generated locally in your browser — nothing is uploaded anywhere.",
+      },
+    ],
+    features: [
+      {
+        title: "Multi-Image Upload",
+        description: "Drag, drop, or paste as many images as you like — each becomes a PDF page.",
+      },
+      {
+        title: "Page Reordering",
+        description: "Move any image up or down in the list to control the page order.",
+      },
+      {
+        title: "Page Size Presets",
+        description: "A4, Letter, Legal, and A5 with portrait or landscape orientation.",
+      },
+      {
+        title: "Margin Options",
+        description: "None, small, medium, or large margins around each fitted image.",
+      },
+      {
+        title: "Quality Control",
+        description: "Adjust the image quality inside the PDF to balance sharpness and file size.",
+      },
+      {
+        title: "HEIC Support",
+        description: "iPhone HEIC photos are decoded automatically before being added to the PDF.",
+      },
+    ],
+    howTo: {
+      heading: "How to Convert Images to PDF",
+      description: "Merge your images into a PDF document in three simple steps.",
+      steps: [
+        {
+          name: "Upload your images",
+          text: "Drag and drop, browse, or paste JPG, PNG, WEBP, or HEIC images. Add as many as you need — up to 50.",
+        },
+        {
+          name: "Arrange & configure",
+          text: "Reorder pages with the up and down buttons, then choose page size, orientation, margins, and quality.",
+        },
+        {
+          name: "Download the PDF",
+          text: "Click Download PDF and your merged document is generated instantly in your browser.",
+        },
+      ],
+    },
+    faqs: [
+      {
+        question: "How do I convert images to PDF online?",
+        answer:
+          "Upload your images, reorder them if needed, choose your page size and margins, and click Download PDF. Each image becomes one page — generated entirely in your browser.",
+      },
+      {
+        question: "Can I convert JPG to PDF?",
+        answer:
+          "Yes. JPG, PNG, WEBP, and HEIC files are all supported — each becomes a page in the PDF. There's no need to convert the images to another format first.",
+      },
+      {
+        question: "Can I merge multiple images into one PDF?",
+        answer:
+          "Yes. Upload up to 50 images and they are merged into a single PDF document, one image per page, in the order you arrange them.",
+      },
+      {
+        question: "Can I reorder the pages before downloading?",
+        answer:
+          "Yes. Use the up and down arrows next to each image to move it within the list — the order of the list is the order of the PDF pages.",
+      },
+      {
+        question: "Is the image to PDF converter free?",
+        answer:
+          "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits.",
+      },
+      {
+        question: "Are my images uploaded to a server?",
+        answer:
+          "No. The PDF is built locally in your browser using client-side libraries — your images never leave your device.",
+      },
+      {
+        question: "What page sizes are supported?",
+        answer:
+          "A4, Letter, Legal, and A5 — each in portrait or landscape orientation, with none, small, medium, or large margins.",
+      },
+      {
+        question: "What happens to image quality in the PDF?",
+        answer:
+          "Images are embedded at up to 3000 px on their longest side. Use the quality slider to trade a smaller file size for slightly lower detail, or keep 100% for maximum sharpness.",
+      },
+      {
+        question: "Does the tool keep image transparency?",
+        answer:
+          "PDF pages are opaque, so transparent PNG areas are filled with white to keep the document clean and print-friendly.",
+      },
+      {
+        question: "Can I convert iPhone HEIC photos to PDF?",
+        answer:
+          "Yes. HEIC and HEIF files from iPhones are decoded automatically in your browser before being added to the PDF.",
+      },
+      {
+        question: "Is there a limit on the number of images?",
+        answer:
+          "You can combine up to 50 images per PDF, each up to 50 MB. After downloading, you can start a new document anytime.",
+      },
+      {
+        question: "Can I make a photo album PDF?",
+        answer:
+          "Absolutely. Add your photos, arrange them in the order you like, pick A4 or Letter with small margins, and download a shareable album PDF.",
+      },
+    ],
+  },
+
+  "pdf-to-image": {
+    meta: { readTime: "4 min read", updated: "July 2026", author: "CompressPix" },
+    highlights: [
+      "PDF → JPG / PNG",
+      "Up to 4× resolution (288 DPI)",
+      "Page previews",
+      "ZIP download of all pages",
+      "100% browser-based",
+    ],
+    intro: {
+      heading: "Convert PDF to Image — Every Page to JPG or PNG",
+      paragraphs: [
+        "The PDF to Image tool converts every page of your PDF into a high-resolution JPG or PNG image, right in your browser. Upload a document, choose your resolution — from 1× for quick sharing up to 4× (288 DPI) for print — preview each page, and download them one by one or all together as a ZIP.",
+        "It's powered by the same PDF rendering engine used by Firefox, running locally on your device, so your document never leaves your computer. Perfect for turning PDF reports into images, pulling a single page out as a picture, or extracting pages for a presentation.",
+      ],
+    },
+    benefits: [
+      {
+        title: "Every Page, One Click",
+        description: "All pages are rasterized automatically — download any page individually or all as a ZIP.",
+      },
+      {
+        title: "Print-Quality Resolution",
+        description: "Render up to 4× scale (288 DPI) for sharp, print-ready images.",
+      },
+      {
+        title: "JPG or PNG Output",
+        description: "Choose PNG for lossless quality or JPG with an adjustable quality slider for smaller files.",
+      },
+      {
+        title: "100% Private",
+        description: "Rendering happens locally in your browser using the same engine as Firefox — nothing is uploaded.",
+      },
+    ],
+    features: [
+      {
+        title: "Whole-Document Conversion",
+        description: "Every page of the PDF is converted automatically with live progress.",
+      },
+      {
+        title: "Page Previews",
+        description: "See a thumbnail of every rendered page with its exact pixel dimensions.",
+      },
+      {
+        title: "Resolution Control",
+        description: "1×, 1.5×, 2×, 3×, or 4× scale — roughly 72 to 288 DPI — re-render anytime.",
+      },
+      {
+        title: "ZIP All Pages",
+        description: "Download every page in a single ZIP archive, named and numbered automatically.",
+      },
+      {
+        title: "Per-Page Download",
+        description: "Grab just the page you need as a JPG or PNG with one click.",
+      },
+      {
+        title: "Password & Corruption Handling",
+        description: "Clear errors are shown for password-protected or unreadable PDFs.",
+      },
+    ],
+    howTo: {
+      heading: "How to Convert a PDF to Images",
+      description: "Turn a PDF into images in three simple steps.",
+      steps: [
+        {
+          name: "Upload your PDF",
+          text: "Drag and drop or browse for a PDF file (up to 50 MB). Every page is rendered automatically.",
+        },
+        {
+          name: "Choose format & resolution",
+          text: "Pick PNG or JPG, adjust the quality, and select a resolution from 1× to 4×. Pages re-render instantly.",
+        },
+        {
+          name: "Download",
+          text: "Download individual pages or grab them all as a ZIP archive — generated entirely in your browser.",
+        },
+      ],
+    },
+    faqs: [
+      {
+        question: "How do I convert a PDF to images online?",
+        answer:
+          "Upload your PDF and every page is rendered automatically. Choose JPG or PNG, pick a resolution, and download pages individually or all at once as a ZIP. Everything happens in your browser.",
+      },
+      {
+        question: "Can I convert PDF to JPG?",
+        answer:
+          "Yes. Choose the JPG format and adjust the quality slider, then download individual pages or the whole document as a ZIP of JPG files.",
+      },
+      {
+        question: "Can I convert PDF to PNG?",
+        answer:
+          "Yes. PNG is the default output format — it's lossless, so text and graphics stay perfectly sharp.",
+      },
+      {
+        question: "What resolution will the images be?",
+        answer:
+          "That depends on the scale you choose: 1× is about 72 DPI (screen), 2× is 144 DPI, and 4× is 288 DPI — plenty for print. Higher scales produce larger, sharper files.",
+      },
+      {
+        question: "Is the PDF to image converter free?",
+        answer:
+          "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits.",
+      },
+      {
+        question: "Are my documents uploaded to a server?",
+        answer:
+          "No. Pages are rendered locally in your browser with pdf.js — the same rendering engine Firefox uses. Your documents never leave your device.",
+      },
+      {
+        question: "Can I convert just one page?",
+        answer:
+          "Yes. After rendering, use the download button on any single page to save just that one as an image.",
+      },
+      {
+        question: "Can I download all pages at once?",
+        answer:
+          "Yes. The 'Download All as ZIP' button packages every rendered page into a single ZIP archive with numbered file names.",
+      },
+      {
+        question: "Why can't my PDF be read?",
+        answer:
+          "Password-protected, corrupted, or scanned-only PDFs with unusual encodings can fail. The tool shows a clear error so you can try another file.",
+      },
+      {
+        question: "What is the maximum PDF size?",
+        answer:
+          "Files up to 50 MB are supported. Very large documents render page by page with a live progress bar.",
+      },
+      {
+        question: "Does the tool work with scanned documents?",
+        answer:
+          "Yes — scanned PDFs render just like any other PDF. The images will show the scanned page content at your chosen resolution.",
+      },
+      {
+        question: "Can I use the images for printing?",
+        answer:
+          "Yes. Use 3× or 4× resolution (216–288 DPI) for crisp prints, and choose PNG for the sharpest text and graphics.",
+      },
+    ],
+  },
+
+  "signature-resizer": {
+    meta: { readTime: "4 min read", updated: "July 2026", author: "CompressPix" },
+    highlights: [
+      "5 size presets + custom",
+      "20 / 50 / 100 KB limits",
+      "Keeps transparency",
+      "PNG & JPG export",
+      "100% browser-based",
+    ],
+    intro: {
+      heading: "Resize a Signature Online — Fit Any Size & File Limit",
+      paragraphs: [
+        "The Signature Resizer fits your signature to the exact pixel size and file-size limit your application needs. Choose a preset like 500×200 or 1000×300 px, then squeeze the file under common e-signature limits — 20 KB, 50 KB, or 100 KB — automatically.",
+        "Because signatures are almost always transparent PNGs, the tool preserves transparency by default so your signature layers cleanly onto any document. Everything runs in your browser using the Canvas API, so your signature never leaves your device.",
+      ],
+    },
+    benefits: [
+      {
+        title: "Exact Size Presets",
+        description: "300×100 up to 1000×300 px with one click — the sizes most signature platforms accept.",
+      },
+      {
+        title: "File-Size Limits Built In",
+        description: "Auto-shrink your signature to 20 KB, 50 KB, or 100 KB for platforms with upload caps.",
+      },
+      {
+        title: "Transparency Preserved",
+        description: "PNG export keeps your signature's transparent background for clean document layering.",
+      },
+      {
+        title: "100% Private",
+        description: "Your signature is processed locally in your browser — nothing is ever uploaded.",
+      },
+    ],
+    features: [
+      {
+        title: "Signature Size Presets",
+        description: "300×100, 400×150, 500×200, 800×250, and 1000×300 px — plus custom dimensions.",
+      },
+      {
+        title: "Target KB Compression",
+        description: "Hit 20 KB, 50 KB, 100 KB, or 200 KB limits by adjusting quality and resolution automatically.",
+      },
+      {
+        title: "Transparent PNG Export",
+        description: "Signatures keep their transparency so they layer cleanly onto contracts and PDFs.",
+      },
+      {
+        title: "White-Background JPG",
+        description: "For platforms that need a solid background, export a clean JPG with a white fill.",
+      },
+      {
+        title: "Live Preview",
+        description: "See your resized signature at its exact output size, with transparency visible.",
+      },
+      {
+        title: "HEIC Support",
+        description: "iPhone HEIC photos are decoded automatically before resizing.",
+      },
+    ],
+    howTo: {
+      heading: "How to Resize a Signature",
+      description: "Fit your signature to any size and file limit in three simple steps.",
+      steps: [
+        {
+          name: "Upload your signature",
+          text: "Drag and drop, browse, or paste your signature image — PNG, JPG, WEBP, or HEIC.",
+        },
+        {
+          name: "Pick size & limit",
+          text: "Choose a size preset like 500×200 px and a file limit like 20 KB or 50 KB. Pick PNG to keep transparency.",
+        },
+        {
+          name: "Download",
+          text: "Your resized, size-limited signature downloads instantly — generated entirely in your browser.",
+        },
+      ],
+    },
+    faqs: [
+      {
+        question: "How do I resize a signature online?",
+        answer:
+          "Upload your signature, choose a size preset (or set a file limit like 20 KB or 50 KB), pick PNG to keep transparency or JPG for a white background, and download. It all happens in your browser.",
+      },
+      {
+        question: "What size should a signature image be?",
+        answer:
+          "Most platforms accept signatures around 500×200 px or 800×250 px at 150–300 DPI. The tool's presets cover the most common sizes, and larger options exist for print-quality documents.",
+      },
+      {
+        question: "How do I make a signature under 20 KB?",
+        answer:
+          "Select the 20 KB limit and the tool automatically lowers the JPG quality — or shrinks the resolution — until the exported file fits. Clean, simple signatures usually compress below 20 KB easily.",
+      },
+      {
+        question: "How do I make a signature under 50 KB?",
+        answer:
+          "Select the 50 KB limit. The tool iterates quality and resolution automatically until the file fits the limit, so you never have to fiddle with sliders.",
+      },
+      {
+        question: "Will my signature keep its transparent background?",
+        answer:
+          "Yes — as long as you export as PNG. Transparent PNGs layer cleanly onto contracts and PDFs. JPG doesn't support transparency, so it fills white instead.",
+      },
+      {
+        question: "Is the signature resizer free?",
+        answer:
+          "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits.",
+      },
+      {
+        question: "Are my signatures uploaded to a server?",
+        answer:
+          "No. All processing happens locally in your browser using the Canvas API — your signature never leaves your device.",
+      },
+      {
+        question: "What formats can I download?",
+        answer:
+          "PNG (with transparency) and JPG (with a white background). WEBP and HEIC signatures are supported as input and converted automatically.",
+      },
+      {
+        question: "Why is my signature file still larger than the limit?",
+        answer:
+          "Very complex signatures (lots of detail or color) can't always reach tiny limits like 20 KB. The tool gets as close as possible by lowering quality and resolution.",
+      },
+      {
+        question: "Can I resize a signature I drew on my phone?",
+        answer:
+          "Yes. Upload the image from your phone — including iPhone HEIC files, which are decoded automatically — and resize it to any preset.",
+      },
+      {
+        question: "Does the tool work on mobile?",
+        answer:
+          "Yes, the tool is fully responsive and works on desktop, tablet, and mobile browsers.",
+      },
+      {
+        question: "Can I use the resized signature in PDF documents?",
+        answer:
+          "Yes. Export a transparent PNG and insert it into any document or PDF — it will layer cleanly over the page.",
+      },
+    ],
+  },
+
+  "social-media-resizer": {
+    meta: { readTime: "5 min read", updated: "July 2026", author: "CompressPix" },
+    highlights: [
+      "20+ platform presets",
+      "Exact pixel dimensions",
+      "Drag & zoom to frame",
+      "JPG · PNG · WEBP",
+      "100% browser-based",
+    ],
+    intro: {
+      heading: "Social Media Image Resizer — Perfect Sizes for Every Platform",
+      paragraphs: [
+        "The Social Media Image Resizer outputs photos at the exact pixel dimensions each platform expects — Instagram square posts and stories, YouTube thumbnails and channel art, Facebook covers, X headers, LinkedIn banners, Pinterest pins, and TikTok covers.",
+        "Pick a preset, drag to frame the part of your photo you want, and download. With 20+ presets covering the dimensions that change every time the platforms update, your images will never get awkwardly cropped or rejected again. Everything runs in your browser.",
+      ],
+    },
+    benefits: [
+      {
+        title: "20+ Exact Presets",
+        description: "Instagram, YouTube, Facebook, X, LinkedIn, Pinterest, and TikTok — all official dimensions.",
+      },
+      {
+        title: "No More Awkward Crops",
+        description: "Frame your photo precisely with drag and zoom before it's resized to the platform ratio.",
+      },
+      {
+        title: "Multiple Export Formats",
+        description: "Download as JPG, PNG, or WEBP with an adjustable quality slider.",
+      },
+      {
+        title: "100% Private",
+        description: "Everything is processed locally in your browser — nothing is uploaded anywhere.",
+      },
+    ],
+    features: [
+      {
+        title: "Instagram Presets",
+        description: "Square 1080×1080, portrait 1080×1350, landscape 1080×566, stories & reels 1080×1920, profile 320×320.",
+      },
+      {
+        title: "YouTube Presets",
+        description: "Thumbnail 1280×720, channel art 2560×1440, and profile photo 800×800.",
+      },
+      {
+        title: "Facebook Presets",
+        description: "Cover 851×315, profile 170×170, share post 1200×630, event cover 1920×1080, and stories.",
+      },
+      {
+        title: "X & LinkedIn Presets",
+        description: "X header 1500×500 and in-stream 1600×900; LinkedIn banner 1584×396 and post 1200×627.",
+      },
+      {
+        title: "Pinterest & TikTok",
+        description: "Standard pin 1000×1500 and TikTok video/cover 1080×1920.",
+      },
+      {
+        title: "Drag & Zoom Framing",
+        description: "Position your subject inside the platform ratio with drag-to-pan and scroll-to-zoom.",
+      },
+    ],
+    howTo: {
+      heading: "How to Resize an Image for Social Media",
+      description: "Get the perfect size for any platform in three simple steps.",
+      steps: [
+        {
+          name: "Upload your image",
+          text: "Drag and drop, browse, or paste your photo — JPG, PNG, WEBP, or HEIC.",
+        },
+        {
+          name: "Pick a platform preset",
+          text: "Choose Instagram post, YouTube thumbnail, Facebook cover, or any of 20+ presets with exact dimensions.",
+        },
+        {
+          name: "Frame & download",
+          text: "Drag and zoom to frame your subject, pick a format and quality, then download at the exact preset size.",
+        },
+      ],
+    },
+    faqs: [
+      {
+        question: "How do I resize an image for Instagram?",
+        answer:
+          "Choose the Instagram preset you need — Square Post (1080×1080), Portrait (1080×1350), Landscape (1080×566), or Story/Reel (1080×1920) — frame your photo, and download. It's resized to the exact dimensions instantly.",
+      },
+      {
+        question: "What is the best YouTube thumbnail size?",
+        answer:
+          "1280×720 pixels is the recommended YouTube thumbnail size — the YouTube Thumbnail preset produces exactly this, which displays crisp on all devices.",
+      },
+      {
+        question: "What size is a Facebook cover photo?",
+        answer:
+          "Facebook cover photos display best at 851×315 pixels on desktop. The Facebook Cover preset produces exactly this size, so it won't be cropped.",
+      },
+      {
+        question: "What size is a LinkedIn banner?",
+        answer:
+          "LinkedIn company pages use 1584×396 pixels for their banner. The LinkedIn Banner preset produces exactly this size.",
+      },
+      {
+        question: "What size is a Twitter/X header photo?",
+        answer:
+          "The X (Twitter) header photo is 1500×500 pixels. The X Header preset produces exactly this size.",
+      },
+      {
+        question: "What size is an Instagram story?",
+        answer:
+          "Instagram stories and reels are 1080×1920 pixels (9:16). The Instagram Story / Reel preset produces exactly this size.",
+      },
+      {
+        question: "Can I resize an image without losing quality?",
+        answer:
+          "The tool crops and resizes to the preset resolution with high-quality smoothing. For maximum quality, export as PNG (lossless) — or keep JPG/WEBP with the quality slider at 100%.",
+      },
+      {
+        question: "Can I crop my image to the right ratio?",
+        answer:
+          "Yes. The preset's aspect ratio frames your photo automatically — drag to reposition your subject and zoom to fill the frame before downloading.",
+      },
+      {
+        question: "Is the social media resizer free?",
+        answer:
+          "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits.",
+      },
+      {
+        question: "Are my images uploaded to a server?",
+        answer:
+          "No. All resizing happens locally in your browser — your images never leave your device.",
+      },
+      {
+        question: "What output formats are supported?",
+        answer:
+          "JPG, PNG, and WEBP, with a quality slider for JPG and WEBP. PNG keeps transparency for logos and graphics.",
+      },
+      {
+        question: "Can I resize an iPhone HEIC photo?",
+        answer:
+          "Yes, HEIC and HEIF files from iPhones are decoded automatically before resizing.",
       },
     ],
   },

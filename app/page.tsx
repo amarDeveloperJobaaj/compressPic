@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, ImageDown, Shield, Zap, Download, Crop, FlipHorizontal2, Repeat, Stamp, Smartphone, Wand2, type LucideIcon } from "lucide-react";
+import { ArrowRight, ImageDown, Shield, Zap, Download, Crop, FlipHorizontal2, Repeat, Stamp, Smartphone, Wand2, IdCard, FileText, FileImage, PenLine, Share2, type LucideIcon } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
 
 // Icon per tool slug, shown on the homepage tool cards. Add a key here when
@@ -14,6 +14,11 @@ const toolCardIcons: Record<string, LucideIcon> = {
   convert: Repeat,
   "watermark-image": Stamp,
   "remove-background": Wand2,
+  "passport-photo-maker": IdCard,
+  "image-to-pdf": FileText,
+  "pdf-to-image": FileImage,
+  "signature-resizer": PenLine,
+  "social-media-resizer": Share2,
 };
 
 const features = [

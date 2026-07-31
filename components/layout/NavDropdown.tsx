@@ -114,7 +114,7 @@ export function NavDropdown({ label, items }: NavDropdownProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 top-full z-50 mt-2 w-52 rounded-xl border border-border bg-surface p-1.5 shadow-xl shadow-black/10"
+            className="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-52 overflow-y-auto rounded-xl border border-border bg-surface p-1.5 shadow-xl shadow-black/10"
           >
             {items.map((item) => (
               <Link

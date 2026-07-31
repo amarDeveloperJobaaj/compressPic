@@ -16,6 +16,13 @@ export function ToolSeoContent({ slug }: { slug: string }) {
   const content = TOOL_SEO_CONTENT[slug];
   if (!tool || !content) return null;
 
+  const meta = content.meta ?? {
+    readTime: `${Math.max(4, Math.round(content.faqs.length / 2))} min read`,
+    updated: "July 2026",
+    author: "CompressPix",
+  };
+  const highlights = content.highlights ?? [];
+
   return (
     <>
       <JsonLd
@@ -30,6 +37,15 @@ export function ToolSeoContent({ slug }: { slug: string }) {
       <section className="border-t border-border py-16 sm:py-20">
         <div className="container-page">
           <div className="mx-auto max-w-3xl">
+            {/* Article meta: read time, last updated, author */}
+            <p className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+              <span>By {meta.author}</span>
+              <span aria-hidden="true">·</span>
+              <span>Last updated {meta.updated}</span>
+              <span aria-hidden="true">·</span>
+              <span>{meta.readTime}</span>
+            </p>
+
             <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
               {content.intro.heading}
             </h2>
@@ -38,6 +54,20 @@ export function ToolSeoContent({ slug }: { slug: string }) {
                 {paragraph}
               </p>
             ))}
+
+            {/* Feature highlights */}
+            {highlights.length > 0 && (
+              <ul className="mt-6 flex flex-wrap gap-2">
+                {highlights.map((highlight) => (
+                  <li
+                    key={highlight}
+                    className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-text-secondary"
+                  >
+                    {highlight}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>
