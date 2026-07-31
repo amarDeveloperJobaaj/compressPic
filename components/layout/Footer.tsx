@@ -1,16 +1,25 @@
 import Link from "next/link";
 import { ImageDown } from "lucide-react";
+import { ALL_TOOLS } from "@/lib/tools";
+import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
 
 const footerLinks = [
   {
     title: "Product",
     links: [
       { label: "Home", href: "/" },
-      { label: "Compress", href: "/compress" },
-      { label: "Resize", href: "/resize" },
+      // Tool links stay in sync with the registry — new tools appear here automatically
+      ...ALL_TOOLS.map((tool) => ({ label: tool.name, href: tool.href })),
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
     ],
+  },
+  {
+    title: "Popular Tools",
+    links: CONVERSION_PAIRS.slice(0, 6).map((pair) => ({
+      label: `${pair.from.label} to ${pair.to.label}`,
+      href: `/${pair.slug}`,
+    })),
   },
   {
     title: "Legal",
@@ -25,7 +34,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="container-page py-12">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-text-primary">

@@ -38,6 +38,9 @@ export function getFileTypeLabel(mimeType: string): string {
     "image/jpeg": "JPEG",
     "image/png": "PNG",
     "image/webp": "WEBP",
+    "image/avif": "AVIF",
+    "image/heic": "HEIC",
+    "image/heif": "HEIF",
   };
   return map[mimeType] ?? mimeType.split("/")[1]?.toUpperCase() ?? "Unknown";
 }

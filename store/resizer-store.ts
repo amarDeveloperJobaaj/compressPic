@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { isHeicFile, normalizeImageType, decodeHeicToJpeg } from "@/lib/heic";
 import { loadImage } from "@/features/resizer/utils/resize";
 
 export type AspectRatio = {
@@ -138,40 +139,66 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
     const prevResultUrl = get().resultPreviewUrl;
     if (prevResultUrl) URL.revokeObjectURL(prevResultUrl);
 
-    const previewUrl = URL.createObjectURL(file);
-
-    // Load the image to get natural dimensions
-    const img = new Image();
-    img.onload = () => {
-      const nw = img.naturalWidth;
-      const nh = img.naturalHeight;
-
-      set({
-        naturalWidth: nw,
-        naturalHeight: nh,
-        // Default crop to full image
-        cropX: 0,
-        cropY: 0,
-        cropWidth: nw,
-        cropHeight: nh,
-        outputWidth: nw,
-        outputHeight: nh,
-      });
-    };
-    img.src = previewUrl;
+    const heic = isHeicFile(file);
 
     set({
       originalFile: file,
-      originalPreviewUrl: previewUrl,
+      originalPreviewUrl: null,
       originalSize: file.size,
-      originalType: file.type,
+      originalType: normalizeImageType(file),
       resultBlob: null,
       resultPreviewUrl: null,
       resultSize: 0,
       error: null,
-      isProcessing: false,
+      isProcessing: heic, // HEIC needs decoding before it can render
       selectedRatio: null,
     });
+
+    const finish = async () => {
+      // HEIC can't be rendered by <img> in most browsers — decode to JPEG first
+      let source: Blob = file;
+      if (heic) {
+        try {
+          source = await decodeHeicToJpeg(file);
+        } catch {
+          if (get().originalFile !== file) return;
+          set({
+            isProcessing: false,
+            error:
+              "Couldn't decode this HEIC file. Try converting it to JPG or PNG on your device first.",
+          });
+          return;
+        }
+      }
+
+      if (get().originalFile !== file) return;
+
+      const previewUrl = URL.createObjectURL(source);
+      set({ originalPreviewUrl: previewUrl, isProcessing: false });
+
+      // Load the image to get natural dimensions
+      const img = new Image();
+      img.onload = () => {
+        if (get().originalPreviewUrl !== previewUrl) return;
+        const nw = img.naturalWidth;
+        const nh = img.naturalHeight;
+
+        set({
+          naturalWidth: nw,
+          naturalHeight: nh,
+          // Default crop to full image
+          cropX: 0,
+          cropY: 0,
+          cropWidth: nw,
+          cropHeight: nh,
+          outputWidth: nw,
+          outputHeight: nh,
+        });
+      };
+      img.src = previewUrl;
+    };
+
+    void finish();
   },
 
   setDisplayDimensions: (w: number, h: number) => {

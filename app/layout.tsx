@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -6,16 +6,25 @@ import "@fontsource/inter/700.css";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AnalyticsScripts } from "@/components/seo/AnalyticsScripts";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  ogImageUrl,
+  organizationSchema,
+  websiteSchema,
+} from "@/lib/seo";
 
-const jsonLd = {
+const softwareAppSchema = {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "CompressPix",
-  url: "https://compresspix.com",
-  description:
-    "Compress JPG, PNG, and WEBP images online for free. 100% browser-based – no uploads, no servers, no limits.",
-  applicationCategory: "Multimedia",
-  operatingSystem: "All",
+  "@type": "SoftwareApplication",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Any (Web browser)",
   browserRequirements: "Requires JavaScript",
   offers: {
     "@type": "Offer",
@@ -24,57 +33,78 @@ const jsonLd = {
   },
   author: {
     "@type": "Organization",
-    name: "CompressPix",
+    name: SITE_NAME,
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0f" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+};
+
+const HOME_TITLE = "Compress Image Online Free — CompressPix";
+const HOME_IMAGE = ogImageUrl(HOME_TITLE);
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "CompressPix — Free Online Image Compressor",
+    default: HOME_TITLE,
     template: "%s | CompressPix",
   },
-  description:
-    "Compress JPG, PNG, and WEBP images online for free. 100% browser-based – no uploads, no servers, no limits.",
+  description: SITE_DESCRIPTION,
   keywords: [
-    "image compressor",
     "compress image",
-    "free image compressor",
-    "jpg compressor",
-    "png compressor",
-    "webp compressor",
-    "browser compression",
+    "compress image online",
+    "image tools",
+    "image compressor",
+    "resize image",
+    "crop image online",
+    "flip image online",
+    "image converter",
+    "jpg to png",
+    "png to jpg",
   ],
-  authors: [{ name: "CompressPix" }],
-  creator: "CompressPix",
-  publisher: "CompressPix",
-  metadataBase: new URL("https://compresspix.com"),
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "image-processing",
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "/",
-    siteName: "CompressPix",
-    title: "CompressPix — Free Online Image Compressor",
-    description:
-      "Compress JPG, PNG, and WEBP images online for free. 100% browser-based – no uploads, no servers, no limits.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/og-image.png",
+        url: HOME_IMAGE,
         width: 1200,
         height: 630,
-        alt: "CompressPix",
+        alt: SITE_NAME,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CompressPix — Free Online Image Compressor",
-    description:
-      "Compress JPG, PNG, and WEBP images online for free. 100% browser-based – no uploads, no servers.",
-    images: ["/og-image.png"],
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [HOME_IMAGE],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   icons: {
     icon: "/favicon.ico",
@@ -102,11 +132,11 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        {/* JSON-LD Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {/* JSON-LD Structured Data: WebSite + Organization + SoftwareApplication */}
+        <JsonLd data={websiteSchema()} />
+        <JsonLd data={organizationSchema()} />
+        <JsonLd data={softwareAppSchema} />
+        <AnalyticsScripts />
         <Header />
         <main id="main-content" className="flex-1" tabIndex={-1}>
           {children}

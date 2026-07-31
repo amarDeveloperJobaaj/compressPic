@@ -2,7 +2,18 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, ImageDown, Shield, Zap, Download, Crop } from "lucide-react";
+import { ArrowRight, ImageDown, Shield, Zap, Download, Crop, FlipHorizontal2, Repeat, Stamp, Smartphone, type LucideIcon } from "lucide-react";
+import { TOOL_CATEGORIES } from "@/lib/tools";
+
+// Icon per tool slug, shown on the homepage tool cards. Add a key here when
+// registering a new tool to give it a card icon (falls back to ImageDown).
+const toolCardIcons: Record<string, LucideIcon> = {
+  compress: Download,
+  resize: Crop,
+  flip: FlipHorizontal2,
+  convert: Repeat,
+  "watermark-image": Stamp,
+};
 
 const features = [
   {
@@ -21,9 +32,29 @@ const features = [
     description: "Crop to passport, document, or social media sizes. Over 20 preset ratios to choose from.",
   },
   {
+    icon: FlipHorizontal2,
+    title: "Flip & Rotate",
+    description: "Mirror images horizontally or vertically and rotate 90° at a time — perfect for fixing orientation.",
+  },
+  {
+    icon: Repeat,
+    title: "Format Converter",
+    description: "Change any image to PNG, JPEG, or WEBP instantly — perfect for compatibility across devices and apps.",
+  },
+  {
     icon: Download,
     title: "Free & Unlimited",
-    description: "No sign-ups, no limits, no hidden costs. Compress, crop, and resize as much as you want.",
+    description: "No sign-ups, no limits, no hidden costs. Compress, crop, resize, flip, and convert as much as you want.",
+  },
+  {
+    icon: Smartphone,
+    title: "Works on Any Device",
+    description: "Fully responsive and works perfectly on desktop, tablet, and mobile — no apps to install.",
+  },
+  {
+    icon: ImageDown,
+    title: "PNG, JPEG, WEBP & AVIF",
+    description: "Export in your preferred format with adjustable quality — including AVIF and HEIC support.",
   },
 ];
 
@@ -57,6 +88,16 @@ const faqs = [
       "The Resize &amp; Crop tool lets you crop your images to any shape or size. Choose from over 20 prebuilt ratios including passport photo sizes (2×2), document formats (A4, Letter), social media dimensions (Instagram, Twitter, Facebook, YouTube), and common aspect ratios (16:9, 4:3, 1:1). You can also set a custom ratio and fine-tune the crop area by dragging.",
   },
   {
+    question: "What is the Format Converter tool?",
+    answer:
+      "The Format Converter lets you change any image to PNG, JPEG, WEBP, or AVIF. It also accepts HEIC files from iPhones, so you can convert those straight to JPG or PNG. Perfect when a website or app only accepts a specific format — convert it instantly in your browser.",
+  },
+  {
+    question: "What is the Flip & Rotate tool?",
+    answer:
+      "The Flip & Rotate tool lets you mirror an image horizontally or vertically and rotate it 90° at a time. It's perfect for fixing mirrored selfies, sideways photos, or any image that needs a quick orientation change — all in your browser.",
+  },
+  {
     question: "What output formats are supported for cropping?",
     answer:
       "You can download your cropped image as PNG (lossless), JPEG, or WEBP. For JPEG and WEBP, you can also adjust the quality slider to balance file size and image quality.",
@@ -68,7 +109,8 @@ const faqs = [
   },
   {
     question: "What image formats are supported?",
-    answer: "We support JPG, JPEG, PNG, and WEBP formats. You can compress to any target size from 1KB upwards.",
+    answer:
+      "We support JPG, JPEG, PNG, WEBP, AVIF, and HEIC (iPhone) formats. You can compress to any target size from 1KB upwards, or convert between formats.",
   },
   {
     question: "Is there a file size limit?",
@@ -143,52 +185,45 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          {/* Tool cards illustration */}
+          {/* Tool cards — driven by the tools registry, so new tools appear here automatically */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            className="mt-10 grid w-full max-w-3xl gap-4 sm:grid-cols-2"
+            className="mt-10 grid w-full max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
-            {/* Compress card */}
-            <Link
-              href="/compress"
-              className="group rounded-2xl border border-border bg-surface p-6 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light group-hover:bg-primary transition-colors">
-                  <Download className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-text-primary">Compress Images</p>
-                  <p className="text-xs text-text-muted">Reduce file size instantly</p>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between rounded-xl bg-background p-3">
-                <span className="text-xs text-text-secondary">2.4 MB → 350 KB</span>
-                <span className="rounded-full bg-success-light px-2 py-0.5 text-[10px] font-medium text-success">-85%</span>
-              </div>
-            </Link>
-
-            {/* Resize card */}
-            <Link
-              href="/resize"
-              className="group rounded-2xl border border-border bg-surface p-6 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light group-hover:bg-primary transition-colors">
-                  <Crop className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-text-primary">Resize & Crop</p>
-                  <p className="text-xs text-text-muted">Perfect dimensions every time</p>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between rounded-xl bg-background p-3">
-                <span className="text-xs text-text-secondary">Passport, A4, Social media...</span>
-                <span className="rounded-full bg-primary-light px-2 py-0.5 text-[10px] font-medium text-primary">20+ presets</span>
-              </div>
-            </Link>
+            {TOOL_CATEGORIES.flatMap((category) => category.tools).map((tool) => {
+              const Icon = toolCardIcons[tool.slug] ?? ImageDown;
+              return (
+                <Link
+                  key={tool.slug}
+                  href={tool.href}
+                  className="group rounded-2xl border border-border bg-surface p-6 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light transition-colors group-hover:bg-primary">
+                      <Icon className="h-6 w-6 text-primary transition-colors group-hover:text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-text-primary">{tool.tagline}</p>
+                      <p className="text-xs text-text-muted">{tool.description}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between rounded-xl bg-background p-3">
+                    <span className="text-xs text-text-secondary">{tool.stat}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        tool.badgeTone === "success"
+                          ? "bg-success-light text-success"
+                          : "bg-primary-light text-primary"
+                      }`}
+                    >
+                      {tool.badge}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </motion.div>
         </div>
       </section>
@@ -360,6 +395,156 @@ export default function HomePage() {
             >
               <Crop className="h-4 w-4" />
               Start Resizing
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works — Flip */}
+      <section className="py-16 sm:py-20">
+        <div className="container-page">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light">
+              <FlipHorizontal2 className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              Flip &amp; Rotate Images
+            </h2>
+            <p className="mt-3 text-lg text-text-secondary">
+              Fix mirrored selfies or sideways photos in one click.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-8 md:grid-cols-3">
+            {[
+              {
+                number: "01",
+                title: "Upload Image",
+                description: "Drag & drop, click to upload, or paste an image from your clipboard.",
+              },
+              {
+                number: "02",
+                title: "Flip or Rotate",
+                description: "Mirror horizontally or vertically, or rotate 90° left and right.",
+              },
+              {
+                number: "03",
+                title: "Download",
+                description: "Save as PNG, JPEG, or WEBP with adjustable quality in one click.",
+              },
+            ].map((step, index) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.15 }}
+                className="relative text-center"
+              >
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-xl font-bold text-primary">
+                  {step.number}
+                </div>
+                <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/flip"
+              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
+            >
+              <FlipHorizontal2 className="h-4 w-4" />
+              Start Flipping
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works — Convert */}
+      <section className="border-t border-border bg-surface py-16 sm:py-20">
+        <div className="container-page">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light">
+              <Repeat className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              Convert Image Formats
+            </h2>
+            <p className="mt-3 text-lg text-text-secondary">
+              Switch to the right format for any platform in one click.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-8 md:grid-cols-3">
+            {[
+              {
+                number: "01",
+                title: "Upload Image",
+                description: "Drag & drop, click to upload, or paste an image from your clipboard.",
+              },
+              {
+                number: "02",
+                title: "Pick a Format",
+                description: "Choose PNG, JPEG, WEBP, or AVIF and fine-tune the quality slider.",
+              },
+              {
+                number: "03",
+                title: "Download",
+                description: "Your converted image is ready instantly — download it with one click.",
+              },
+            ].map((step, index) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.15 }}
+                className="relative text-center"
+              >
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-xl font-bold text-primary">
+                  {step.number}
+                </div>
+                <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Format badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="mx-auto mt-10 flex flex-wrap justify-center gap-2"
+          >
+            {[
+              { label: "PNG — Lossless & transparent", color: "bg-success-light text-success" },
+              { label: "JPEG — Small & universal", color: "bg-primary-light text-primary" },
+              { label: "WEBP — Modern & efficient", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+              { label: "AVIF — Next-gen & tiny", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" },
+              { label: "HEIC — iPhone photos", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" },
+            ].map((badge) => (
+              <span
+                key={badge.label}
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${badge.color}`}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </motion.div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/convert"
+              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
+            >
+              <Repeat className="h-4 w-4" />
+              Start Converting
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

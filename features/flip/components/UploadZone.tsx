@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { isHeicFile } from "@/lib/heic";
-import { useResizerStore } from "@/store/resizer-store";
+import { useFlipStore } from "@/store/flip-store";
 
 const ACCEPTED_TYPES = [
   "image/jpeg",
@@ -17,7 +17,7 @@ const ACCEPTED_TYPES = [
 export function UploadZone() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const setFile = useResizerStore((s) => s.setFile);
+  const setFile = useFlipStore((s) => s.setFile);
 
   const validateAndSetFile = useCallback(
     (file: File) => {
@@ -111,7 +111,7 @@ export function UploadZone() {
             ? "border-primary bg-primary-light shadow-lg shadow-primary/10"
             : "border-border bg-surface hover:border-primary/50 hover:bg-primary-light/50"
         }`}
-        aria-label="Upload an image to resize"
+        aria-label="Upload an image to flip"
       >
         {isDragging && (
           <div className="absolute inset-0 rounded-2xl bg-primary/5 blur-3xl animate-pulse" />

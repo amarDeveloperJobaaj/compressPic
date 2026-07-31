@@ -2,9 +2,17 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Upload } from "lucide-react";
+import { isHeicFile } from "@/lib/heic";
 import { useCompressorStore } from "@/store/compressor-store";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/avif",
+];
 
 export function UploadZone() {
   const [isDragging, setIsDragging] = useState(false);
@@ -13,9 +21,11 @@ export function UploadZone() {
 
   const validateAndSetFile = useCallback(
     (file: File) => {
-      if (!ACCEPTED_TYPES.includes(file.type)) {
+      // isHeicFile also catches HEIC files with an empty MIME type (a common
+      // quirk on Windows/Android) via the .heic/.heif extension.
+      if (!ACCEPTED_TYPES.includes(file.type) && !isHeicFile(file)) {
         alert(
-          `Unsupported file type: "${file.type || "unknown"}". Please upload a JPG, PNG, or WEBP image.`
+          `Unsupported file type: "${file.type || "unknown"}". Please upload a JPG, PNG, WEBP, AVIF, or HEIC image.`
         );
         return;
       }
@@ -91,7 +101,7 @@ export function UploadZone() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp"
+        accept=".jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
         onChange={handleFileChange}
         className="hidden"
         aria-hidden="true"
@@ -128,7 +138,7 @@ export function UploadZone() {
           {isDragging ? "Drop your image here" : "Drop an image here"}
         </p>
         <p className="mt-1 text-sm text-text-secondary">
-          or click to browse &middot; JPG, PNG, WEBP
+          or click to browse &middot; JPG, PNG, WEBP, AVIF, HEIC
         </p>
         <p className="mt-6 text-xs text-text-muted">
           You can also paste an image from clipboard

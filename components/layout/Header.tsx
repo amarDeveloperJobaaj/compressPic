@@ -4,15 +4,23 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageDown, Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { TOOL_CATEGORIES } from "@/lib/tools";
+import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
+import { NavDropdown, type NavLinkItem } from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Compress", href: "/compress" },
-  { label: "Resize", href: "/resize" },
+const pageLinks = [
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
+];
+
+// "Convert" dropdown items — every dedicated conversion page (from the registry)
+const convertItems: NavLinkItem[] = [
+  { label: "Convert Any Format", href: "/convert" },
+  ...CONVERSION_PAIRS.map((pair) => ({
+    label: `${pair.from.label} → ${pair.to.label}`,
+    href: `/${pair.slug}`,
+  })),
 ];
 
 export function Header() {
@@ -34,7 +42,29 @@ export function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => (
+          <Link
+            href="/"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+          >
+            Home
+          </Link>
+
+          {/* One dropdown per tool category (Image Tools today, Developer Tools later) */}
+          {TOOL_CATEGORIES.map((category) => (
+            <NavDropdown
+              key={category.id}
+              label={category.label}
+              items={category.tools.map((tool) => ({
+                label: tool.name,
+                href: tool.href,
+              }))}
+            />
+          ))}
+
+          {/* Convert dropdown — all dedicated conversion pages */}
+          <NavDropdown label="Convert" items={convertItems} />
+
+          {pageLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -66,14 +96,57 @@ export function Header() {
       <AnimatePresence>
         {isMenuOpen && (
           <motion.nav
-            initial={{ opacity: 0, maxHeight: 0 }}
-            animate={{ opacity: 1, maxHeight: 320 }}
-            exit={{ opacity: 0, maxHeight: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden border-t border-border md:hidden"
           >
             <div className="container-page flex flex-col gap-1 py-4">
-              {navLinks.map((link) => (
+              <Link
+                href="/"
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-lg px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+              >
+                Home
+              </Link>
+
+              {TOOL_CATEGORIES.map((category) => (
+                <div key={category.id}>
+                  <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    {category.label}
+                  </p>
+                  {category.tools.map((tool) => (
+                    <Link
+                      key={tool.slug}
+                      href={tool.href}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="rounded-lg py-3 pl-8 pr-4 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+                    >
+                      {tool.name}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+
+              {/* Convert section — all dedicated conversion pages */}
+              <div>
+                <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Convert
+                </p>
+                {convertItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="rounded-lg py-3 pl-8 pr-4 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              {pageLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

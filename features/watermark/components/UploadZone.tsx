@@ -2,31 +2,26 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload } from "lucide-react";
-import { isHeicFile } from "@/lib/heic";
-import { useResizerStore } from "@/store/resizer-store";
+import { useWatermarkStore } from "@/store/watermark-store";
 
-const ACCEPTED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-  "image/avif",
-];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export function UploadZone() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const setFile = useResizerStore((s) => s.setFile);
+  const setFile = useWatermarkStore((s) => s.setFile);
 
   const validateAndSetFile = useCallback(
     (file: File) => {
-      // isHeicFile also catches HEIC files with an empty MIME type (a common
-      // quirk on Windows/Android) via the .heic/.heif extension.
-      if (!ACCEPTED_TYPES.includes(file.type) && !isHeicFile(file)) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
         alert(
-          `Unsupported file type: "${file.type || "unknown"}". Please upload a JPG, PNG, WEBP, AVIF, or HEIC image.`
+          `Unsupported file type: "${file.type || "unknown"}". Please upload a JPG, PNG, or WEBP image.`
         );
+        return;
+      }
+      if (file.size > MAX_SIZE) {
+        alert("This image is larger than 50 MB. Please upload a smaller image.");
         return;
       }
       setFile(file);
@@ -95,7 +90,7 @@ export function UploadZone() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp,.avif,.heic,.heif"
+        accept=".jpg,.jpeg,.png,.webp"
         onChange={handleFileChange}
         className="hidden"
         aria-hidden="true"
@@ -111,7 +106,7 @@ export function UploadZone() {
             ? "border-primary bg-primary-light shadow-lg shadow-primary/10"
             : "border-border bg-surface hover:border-primary/50 hover:bg-primary-light/50"
         }`}
-        aria-label="Upload an image to resize"
+        aria-label="Upload an image to watermark"
       >
         {isDragging && (
           <div className="absolute inset-0 rounded-2xl bg-primary/5 blur-3xl animate-pulse" />
@@ -129,7 +124,7 @@ export function UploadZone() {
           {isDragging ? "Drop your image here" : "Drop an image here"}
         </p>
         <p className="mt-1 text-sm text-text-secondary">
-          or click to browse &middot; JPG, PNG, WEBP, AVIF, HEIC
+          or click to browse &middot; JPG, PNG, WEBP &middot; up to 50 MB
         </p>
         <p className="mt-6 text-xs text-text-muted">
           You can also paste an image from clipboard
