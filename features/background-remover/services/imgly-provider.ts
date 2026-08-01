@@ -12,6 +12,12 @@ const PUBLIC_PATH = "";
 
 /** Model size: "isnet" (full), "isnet_fp16" (default), "isnet_quint8" (small/fast). */
 const MODEL = "isnet_fp16";
+/**
+ * isnet_fp16 needs WebGPU/WebGL2 fp16 support, which is missing on a lot of
+ * devices. When it fails we retry with the full-precision isnet model, which
+ * runs on a much wider range of hardware, before falling back to chroma.
+ */
+const FALLBACK_MODEL = "isnet";
 
 let modulePromise: Promise<typeof import("@imgly/background-removal")> | null = null;
 
@@ -67,23 +73,44 @@ export const imglyProvider: BackgroundRemovalProvider = {
 
     onProgress?.({ percent: 4, stage: "Loading AI model…" });
 
-    const resultBlob = await removeBackground(blob, {
-      publicPath: PUBLIC_PATH,
-      model: MODEL,
-      progress: (key: string, current: number, total: number) => {
-        // Progress spans the model download + inference; map to 5–90%
-        const pct = total > 0 ? Math.round((current / total) * 85) + 5 : 30;
-        const stage = key.includes(".onnx")
-          ? `Downloading AI model… (${Math.round((current / (1024 * 1024)) * 10) / 10} MB)`
-          : "Removing background…";
-        onProgress?.({ percent: Math.min(90, pct), stage });
-      },
-    });
+    const progressCb = (key: string, current: number, total: number) => {
+      // Progress spans the model download + inference; map to 5–90%
+      const pct = total > 0 ? Math.round((current / total) * 85) + 5 : 30;
+      const stage = key.includes(".onnx")
+        ? `Downloading AI model… (${Math.round((current / (1024 * 1024)) * 10) / 10} MB)`
+        : "Removing background…";
+      onProgress?.({ percent: Math.min(90, pct), stage });
+    };
+
+    let resultBlob: Blob;
+    try {
+      resultBlob = await removeBackground(blob, {
+        publicPath: PUBLIC_PATH,
+        model: MODEL,
+        progress: progressCb,
+      });
+    } catch (err) {
+      // fp16 isn't supported on every GPU/browser — retry with the
+      // full-precision model before giving up. Skip the retry when the error
+      // is clearly a download/network failure (the fallback model would hit
+      // the same wall, and we'd rather reach the offline chroma fallback fast).
+      const message = err instanceof Error ? err.message : String(err);
+      const looksLikeNetwork =
+        /network|fetch|download|load failed|timeout|404|ECONN|internet|ENOTFOUND|ENOTCONN/i.test(message);
+      if (looksLikeNetwork) throw err;
+
+      onProgress?.({ percent: 6, stage: "Switching to compatible model…" });
+      resultBlob = await removeBackground(blob, {
+        publicPath: PUBLIC_PATH,
+        model: FALLBACK_MODEL,
+        progress: progressCb,
+      });
+    }
 
     onProgress?.({ percent: 92, stage: "Refining edges…" });
     const result = await blobToMask(resultBlob);
 
     onProgress?.({ percent: 100, stage: "Done" });
-    return { ...result, provider: this.label };
+    return { ...result, provider: this.label, usedFallback: false };
   },
 };

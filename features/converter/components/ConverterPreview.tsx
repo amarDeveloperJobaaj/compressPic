@@ -43,7 +43,7 @@ export function ConverterPreview() {
       <div className="grid gap-px bg-border sm:grid-cols-2">
         {/* Original */}
         <div className="relative bg-surface">
-          <div className="absolute left-3 top-3 z-10 rounded-lg bg-white/90 px-2.5 py-1 text-xs font-medium text-text-primary shadow-xs backdrop-blur-sm dark:bg-gray-800/90">
+          <div className="absolute left-3 top-3 z-10 rounded-lg bg-white/90 px-2.5 py-1 text-xs font-medium text-text-primary shadow-xs backdrop-blur-sm dark:bg-surface/90">
             Original · {getFileTypeLabel(originalType)}
           </div>
           <div className="flex aspect-square items-center justify-center p-4 sm:aspect-[4/3]">

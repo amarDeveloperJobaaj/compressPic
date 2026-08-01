@@ -3,15 +3,18 @@ import { notFound } from "next/navigation";
 import { CONVERSION_PAIRS, getConversionPair } from "@/features/converter/utils/pairs";
 import { ConversionPairPage } from "@/features/converter/components/ConversionPairPage";
 import { ConversionSeoContent } from "@/components/seo/ConversionSeoContent";
+import { getFinanceConfig, FINANCE_SLUGS } from "@/features/finance/configs";
+import { FinanceCalculatorPage } from "@/features/finance/components/FinanceCalculatorPage";
+import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { buildMetadata } from "@/lib/seo";
 
-// Only render routes listed in the conversion pairs registry; anything else 404s
+// Only render routes listed in the registries below; anything else 404s
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return CONVERSION_PAIRS.map((pair) => ({ slug: pair.slug }));
+  return [...CONVERSION_PAIRS.map((pair) => ({ slug: pair.slug })), ...FINANCE_SLUGS.map((slug) => ({ slug }))];
 }
 
 export async function generateMetadata({
@@ -20,6 +23,24 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+
+  const finance = getFinanceConfig(slug);
+  if (finance) {
+    return buildMetadata({
+      title: `${finance.title} — Free & Instant`,
+      description: `${finance.description} Calculate in seconds — free, private, and 100% in your browser.`,
+      path: `/${slug}`,
+      keywords: [
+        finance.title.toLowerCase(),
+        `${finance.title.toLowerCase()} online`,
+        `${finance.title.toLowerCase()} free`,
+        `${finance.name.toLowerCase()} calculator`,
+        "finance calculator",
+        "calculator online",
+      ],
+    });
+  }
+
   const pair = getConversionPair(slug);
   if (!pair) return {};
   return buildMetadata({
@@ -35,12 +56,41 @@ export async function generateMetadata({
   });
 }
 
-export default async function ConversionSlugPage({
+export default async function SlugPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  const finance = getFinanceConfig(slug);
+  if (finance) {
+    return (
+      <PageTransition>
+        <Breadcrumbs
+          items={[
+            { label: "Finance Tools" },
+            { label: finance.name, href: `/${finance.slug}` },
+          ]}
+        />
+        <section className="py-8 sm:py-10">
+          <div className="container-page">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+                {finance.title}
+              </h1>
+              <p className="mt-3 max-w-2xl text-lg text-text-secondary">
+                {finance.description}
+              </p>
+            </div>
+            <FinanceCalculatorPage slug={slug} />
+          </div>
+        </section>
+        <ToolSeoContent slug={slug} />
+      </PageTransition>
+    );
+  }
+
   const pair = getConversionPair(slug);
   if (!pair) notFound();
 

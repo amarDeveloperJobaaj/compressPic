@@ -1,165 +1,137 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ImageDown, Menu, X } from "lucide-react";
+import { ImageDown, Menu } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
-import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
-import { NavDropdown, type NavLinkItem } from "./NavDropdown";
+import { getToolIcon } from "@/lib/tool-icons";
+import { NavDropdown, CONVERT_NAV_ITEMS, type NavDropdownSection } from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
+import { MobileDrawer } from "./MobileDrawer";
+import { cn } from "@/lib/utils";
 
 const pageLinks = [
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
 
-// "Convert" dropdown items — every dedicated conversion page (from the registry)
-const convertItems: NavLinkItem[] = [
-  { label: "Convert Any Format", href: "/convert" },
-  ...CONVERSION_PAIRS.map((pair) => ({
-    label: `${pair.from.label} → ${pair.to.label}`,
-    href: `/${pair.slug}`,
-  })),
-];
+/** Build the dropdown sections for a category; Image Tools also embeds Convert. */
+function buildSections(categoryId: string): NavDropdownSection[] {
+  const category = TOOL_CATEGORIES.find((c) => c.id === categoryId);
+  if (!category) return [];
+
+  const toolsSection: NavDropdownSection = {
+    items: category.tools.map((tool) => ({
+      label: tool.name,
+      href: tool.href,
+      description: tool.description,
+      icon: getToolIcon(tool.slug),
+      badge: tool.badge === "New" ? undefined : tool.badge,
+    })),
+  };
+
+  if (categoryId === "image") {
+    return [
+      toolsSection,
+      { title: "Convert Formats", items: CONVERT_NAV_ITEMS, columns: 3 },
+    ];
+  }
+
+  return [toolsSection];
+}
+
+/** Short nav label override (kept out of the tools registry to avoid bloating it). */
+const NAV_LABELS: Record<string, string> = {
+  analysis: "Analysis",
+};
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Right-aligned categories sit near the viewport edge — anchor their panels right.
+  const RIGHT_ALIGNED = new Set(["seo", "analysis"]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      {/* Premium gradient hairline */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+
       <div className="container-page flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-xl font-semibold text-text-primary"
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <ImageDown className="h-4 w-4 text-white" />
-          </div>
-          <span className="hidden sm:inline">CompressPix</span>
+        <Link href="/" className="group flex items-center gap-2.5">
+          <span className="relative isolate flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-sky-500 shadow-lg shadow-primary/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/50">
+            <span className="absolute inset-0 -z-10 animate-glow-pulse rounded-xl bg-primary/60 blur-md" />
+            <ImageDown className="relative h-5 w-5 text-white" />
+          </span>
+          <span className="hidden text-lg font-bold tracking-tight text-text-primary sm:inline">
+            Compress
+            <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
+              Pix
+            </span>
+          </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
           <Link
             href="/"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+            className={cn(
+              "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+              pathname === "/"
+                ? "bg-primary-light text-primary"
+                : "text-text-secondary hover:bg-primary-light/70 hover:text-primary"
+            )}
           >
             Home
           </Link>
 
-          {/* One dropdown per tool category (Image Tools today, Developer Tools later) */}
           {TOOL_CATEGORIES.map((category) => (
             <NavDropdown
               key={category.id}
-              label={category.label}
-              items={category.tools.map((tool) => ({
-                label: tool.name,
-                href: tool.href,
-              }))}
+              label={NAV_LABELS[category.id] ?? category.label}
+              sections={buildSections(category.id)}
+              align={RIGHT_ALIGNED.has(category.id) ? "right" : "left"}
             />
           ))}
-
-          {/* Convert dropdown — all dedicated conversion pages */}
-          <NavDropdown label="Convert" items={convertItems} />
 
           {pageLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+              className={cn(
+                "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+                pathname === link.href
+                  ? "bg-primary-light text-primary"
+                  : "text-text-secondary hover:bg-primary-light/70 hover:text-primary"
+              )}
             >
               {link.label}
             </Link>
           ))}
-          <ThemeToggle />
+          <div className="ml-1">
+            <ThemeToggle />
+          </div>
         </nav>
 
         {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-primary-light hover:text-primary md:hidden"
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={isMenuOpen}
-        >
-          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-
-        {/* Mobile Theme Toggle */}
-        <div className="flex md:hidden">
+        <div className="flex items-center gap-1 md:hidden">
           <ThemeToggle />
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+            aria-label="Open menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-drawer"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
-      {/* Mobile Nav */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.nav
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden border-t border-border md:hidden"
-          >
-            <div className="container-page flex flex-col gap-1 py-4">
-              <Link
-                href="/"
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-lg px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
-              >
-                Home
-              </Link>
-
-              {TOOL_CATEGORIES.map((category) => (
-                <div key={category.id}>
-                  <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                    {category.label}
-                  </p>
-                  {category.tools.map((tool) => (
-                    <Link
-                      key={tool.slug}
-                      href={tool.href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="rounded-lg py-3 pl-8 pr-4 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
-                    >
-                      {tool.name}
-                    </Link>
-                  ))}
-                </div>
-              ))}
-
-              {/* Convert section — all dedicated conversion pages */}
-              <div>
-                <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                  Convert
-                </p>
-                {convertItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="rounded-lg py-3 pl-8 pr-4 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-
-              {pageLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="rounded-lg px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+      {/* Mobile Sidebar Drawer */}
+      <MobileDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 }

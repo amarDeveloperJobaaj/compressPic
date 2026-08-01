@@ -5,12 +5,7 @@ import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
 export function ThemeToggle() {
-  const { theme, toggleTheme, mounted } = useTheme();
-
-  // Prevent hydration mismatch — show nothing until mounted
-  if (!mounted) {
-    return <div className="h-10 w-10" />;
-  }
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <button

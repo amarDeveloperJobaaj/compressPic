@@ -1,25 +1,16 @@
 import Link from "next/link";
 import { ImageDown } from "lucide-react";
-import { ALL_TOOLS } from "@/lib/tools";
+import { TOOL_CATEGORIES } from "@/lib/tools";
 import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
 
 const footerLinks = [
   {
-    title: "Product",
+    title: "Company",
     links: [
       { label: "Home", href: "/" },
-      // Tool links stay in sync with the registry — new tools appear here automatically
-      ...ALL_TOOLS.map((tool) => ({ label: tool.name, href: tool.href })),
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
     ],
-  },
-  {
-    title: "Popular Tools",
-    links: CONVERSION_PAIRS.slice(0, 6).map((pair) => ({
-      label: `${pair.from.label} to ${pair.to.label}`,
-      href: `/${pair.slug}`,
-    })),
   },
   {
     title: "Legal",
@@ -34,26 +25,62 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="container-page py-12">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-2">
+          <div>
             <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-text-primary">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-sky-500 shadow-md shadow-primary/25">
                 <ImageDown className="h-3.5 w-3.5 text-white" />
               </div>
               CompressPix
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-text-secondary">
-              Compress your images directly in the browser. No uploads, no servers &ndash; just fast,
-              private compression.
+              40+ free browser-based tools for images, PDFs, developers &amp; SEO. No uploads, no
+              servers &ndash; everything stays on your device.
             </p>
           </div>
 
-          {/* Link Groups */}
+          {/* Tool categories — horizontal wrapped links */}
+          {TOOL_CATEGORIES.map((category) => (
+            <div key={category.id}>
+              <h3 className="text-sm font-semibold text-text-primary">{category.label}</h3>
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                {category.tools.map((tool) => (
+                  <li key={tool.href}>
+                    <Link
+                      href={tool.href}
+                      className="text-sm text-text-secondary transition-colors hover:text-primary"
+                    >
+                      {tool.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          {/* Popular conversions */}
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">Popular Converters</h3>
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+              {CONVERSION_PAIRS.map((pair) => (
+                <li key={pair.slug}>
+                  <Link
+                    href={`/${pair.slug}`}
+                    className="text-sm text-text-secondary transition-colors hover:text-primary"
+                  >
+                    {pair.from.label} to {pair.to.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company / Legal */}
           {footerLinks.map((group) => (
             <div key={group.title}>
               <h3 className="text-sm font-semibold text-text-primary">{group.title}</h3>
-              <ul className="mt-3 flex flex-col gap-2">
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <Link

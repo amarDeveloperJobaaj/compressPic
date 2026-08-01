@@ -24,6 +24,8 @@ export interface RemovalResult {
   mask: Uint8ClampedArray;
   /** Human-readable label of the provider that produced the mask */
   provider: string;
+  /** True when the mask came from the offline fallback (not the AI engine). */
+  usedFallback?: boolean;
 }
 
 export interface BackgroundRemovalProvider {

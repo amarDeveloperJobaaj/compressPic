@@ -43,6 +43,7 @@ export function ComparisonViewer() {
   const beginStroke = useBackgroundRemoverStore((s) => s.beginStroke);
   const paintMask = useBackgroundRemoverStore((s) => s.paintMask);
   const endStroke = useBackgroundRemoverStore((s) => s.endStroke);
+  const retryWithAi = useBackgroundRemoverStore((s) => s.retryWithAi);
 
   const item = activeIndex >= 0 ? items[activeIndex] : undefined;
 
@@ -655,10 +656,27 @@ export function ComparisonViewer() {
           <span>{item.name}</span>
         </div>
         {item.provider && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-2.5 py-0.5 text-[10px] font-medium text-primary">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium",
+              item.usedFallback
+                ? "bg-warning-light text-warning"
+                : "bg-primary-light text-primary"
+            )}
+          >
             <Sparkles className="h-3 w-3" />
             {item.provider}
           </span>
+        )}
+        {item.usedFallback && !isProcessing && (
+          <button
+            type="button"
+            onClick={() => retryWithAi(activeIndex)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-warning px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm transition-all hover:bg-warning/85 active:scale-[0.97]"
+          >
+            <Sparkles className="h-3 w-3" />
+            Retry with AI
+          </button>
         )}
       </div>
     </motion.div>

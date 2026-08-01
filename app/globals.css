@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
-@theme inline {
+/*
+ * Class-based dark mode.
+ *
+ * The .dark class on <html> (set by the theme toggle + pre-hydration script)
+ * drives BOTH the theme tokens below AND every dark: variant — so toggling
+ * dark mode restyles the entire site, instead of following the OS setting.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
   --color-primary: #2563EB;
   --color-primary-dark: #1D4ED8;
   --color-primary-light: #DBEAFE;
@@ -29,19 +38,30 @@
   --animate-fade-in: fade-in 0.5s ease-out;
   --animate-slide-up: slide-up 0.5s ease-out;
   --animate-scale-in: scale-in 0.3s ease-out;
+  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
+  --animate-beam-slow: beam-slow 16s ease-in-out infinite;
+  --animate-beam-slow-reverse: beam-slow 20s ease-in-out infinite reverse;
+  --animate-glow-pulse: glow-pulse 3.5s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
 }
 
-/* Dark mode overrides */
+/* Native form controls & scrollbars follow the theme */
+:root {
+  color-scheme: light;
+}
+
+/* Dark mode overrides — modern indigo-tinted palette */
 .dark {
+  color-scheme: dark;
   --color-primary: #3B82F6;
   --color-primary-dark: #2563EB;
   --color-primary-light: #1E3A5F;
-  --color-background: #0F172A;
-  --color-surface: #1E293B;
-  --color-border: #334155;
-  --color-text-primary: #F1F5F9;
+  --color-background: #0B1120;
+  --color-surface: #121B2E;
+  --color-border: #1E2A44;
+  --color-text-primary: #E6EDF7;
   --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
+  --color-text-muted: #5C6B84;
   --color-success-light: #064E3B;
   --color-error-light: #7F1D1D;
   --color-warning-light: #713F12;
@@ -78,6 +98,55 @@
   }
 }
 
+/* Aceternity-style spotlight sweep (used on the hero) */
+@keyframes spotlight {
+  0% {
+    opacity: 0;
+    transform: translate(-72%, -62%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -40%) scale(1);
+  }
+}
+
+/* Drifting aurora beams behind the hero */
+@keyframes beam-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(48px, -36px, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-36px, 28px, 0) scale(0.94);
+  }
+}
+
+/* Soft breathing glow for featured tool cards */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+/* Continuous marquee strip (used for the format ticker) */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @utility container-page {
   max-width: 1280px;
   margin-left: auto;
@@ -93,6 +162,19 @@
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+}
+
+/* Respect users who prefer reduced motion — pause ambient animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-glow-pulse,
+  .animate-beam-slow,
+  .animate-beam-slow-reverse {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Focus ring */

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { removeImageBackground } from "@/features/background-remover/services";
+import { removeImageBackground, forceAiRetry } from "@/features/background-remover/services";
 import type { BackgroundSettings } from "@/features/background-remover/utils/compose";
 import { DEFAULT_BACKGROUND, capSize } from "@/features/background-remover/utils/compose";
 import type { AdjustmentSettings } from "@/features/background-remover/utils/adjustments";
@@ -39,6 +39,8 @@ export interface BatchItem {
   status: ItemStatus;
   error: string | null;
   provider: string | null;
+  /** True when this mask came from the offline fallback (not the AI engine). */
+  usedFallback: boolean;
 }
 
 export interface EdgeSettings {
@@ -81,6 +83,8 @@ interface BackgroundRemoverState {
   setActiveIndex: (index: number) => void;
   processQueue: () => void;
   reprocessItem: (index: number) => void;
+  /** Re-queue an item and force the AI engine to be retried (resets fallback cache). */
+  retryWithAi: (index: number) => void;
 
   beginStroke: () => void;
   paintMask: (normalizedX: number, normalizedY: number) => void;
@@ -175,6 +179,7 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
                 maskFuture: [],
                 status: "done",
                 provider: result.provider,
+                usedFallback: result.usedFallback ?? false,
               }
             : it
         ),
@@ -252,6 +257,7 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
           status: "queued",
           error: null,
           provider: null,
+          usedFallback: false,
         });
       });
 
@@ -319,10 +325,19 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
       // Re-queue a single item and process the queue
       set((s) => ({
         items: s.items.map((it, i) =>
-          i === index ? { ...it, status: "queued", mask: null, originalMask: null, maskHistory: [], maskFuture: [], error: null } : it
+          i === index
+            ? { ...it, status: "queued", mask: null, originalMask: null, maskHistory: [], maskFuture: [], error: null, usedFallback: false }
+            : it
         ),
       }));
       processQueue();
+    },
+
+    retryWithAi: (index) => {
+      // Reset the fallback cache so the next pass really tries the AI engine
+      // again (a transient model-download failure shouldn't stick forever).
+      forceAiRetry();
+      get().reprocessItem(index);
     },
 
     beginStroke: () => {

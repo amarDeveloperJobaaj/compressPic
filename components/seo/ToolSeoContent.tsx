@@ -1,5 +1,11 @@
 import { softwareApplicationSchema } from "@/lib/seo";
 import { TOOL_SEO_CONTENT } from "@/lib/seo-content";
+import { DEV_TOOL_SEO_CONTENT } from "@/lib/seo-content-dev";
+import { SEO_TOOL_SEO_CONTENT } from "@/lib/seo-content-seo";
+import { ANALYSIS_TOOL_SEO_CONTENT } from "@/lib/seo-content-analysis";
+import { PLAYGROUND_TOOL_SEO_CONTENT } from "@/lib/seo-content-playground";
+import { FINANCE_TOOL_SEO_CONTENT } from "@/lib/seo-content-finance";
+import { FINANCE_TOOL_SEO_CONTENT_2 } from "@/lib/seo-content-finance-2";
 import { getToolBySlug } from "@/lib/tools";
 import { JsonLd } from "./JsonLd";
 import { HowToSection } from "./HowToSection";
@@ -13,7 +19,15 @@ import { RelatedTools } from "./RelatedTools";
  */
 export function ToolSeoContent({ slug }: { slug: string }) {
   const tool = getToolBySlug(slug);
-  const content = TOOL_SEO_CONTENT[slug];
+  // Image tools resolve from seo-content.ts; dev tools from seo-content-dev.ts; SEO tools from seo-content-seo.ts
+  const content =
+    TOOL_SEO_CONTENT[slug] ??
+    DEV_TOOL_SEO_CONTENT[slug] ??
+    SEO_TOOL_SEO_CONTENT[slug] ??
+    ANALYSIS_TOOL_SEO_CONTENT[slug] ??
+    PLAYGROUND_TOOL_SEO_CONTENT[slug] ??
+    FINANCE_TOOL_SEO_CONTENT[slug] ??
+    FINANCE_TOOL_SEO_CONTENT_2[slug];
   if (!tool || !content) return null;
 
   const meta = content.meta ?? {

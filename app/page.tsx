@@ -2,8 +2,81 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, ImageDown, Shield, Zap, Download, Crop, FlipHorizontal2, Repeat, Stamp, Smartphone, Wand2, IdCard, FileText, FileImage, PenLine, Share2, type LucideIcon } from "lucide-react";
-import { TOOL_CATEGORIES } from "@/lib/tools";
+import {
+  ArrowRight,
+  ImageDown,
+  Shield,
+  Zap,
+  Download,
+  Crop,
+  FlipHorizontal2,
+  Repeat,
+  Stamp,
+  Smartphone,
+  Wand2,
+  IdCard,
+  FileText,
+  FileImage,
+  PenLine,
+  Share2,
+  ChevronDown,
+  Flame,
+  Instagram,
+  Twitter,
+  Youtube,
+  RectangleHorizontal,
+  Image as ImageIcon,
+  Globe,
+  Sparkles as SparklesIcon,
+  Braces,
+  ShieldCheck,
+  Binary,
+  KeyRound,
+  Hash,
+  QrCode,
+  Palette,
+  Box,
+  Fingerprint,
+  Database,
+  Tags,
+  FileJson,
+  Bot,
+  Network,
+  Link2,
+  Search,
+  TextCursorInput,
+  ScanSearch,
+  Heading,
+  BarChart3,
+  Code2,
+  TrendingUp,
+  Layers,
+  Home,
+  Percent,
+  Landmark,
+  LineChart,
+  Target,
+  Receipt,
+  Sun,
+  BadgePercent,
+  Coins,
+  CandlestickChart,
+  Wallet,
+  TrendingDown,
+  type LucideIcon,
+} from "lucide-react";
+import { TOOL_CATEGORIES, type Tool } from "@/lib/tools";
+import { Spotlight } from "@/components/ui/spotlight";
+import { Sparkles } from "@/components/ui/sparkles";
+import { BackgroundBeams } from "@/components/ui/background-beams";
+import { GridPattern } from "@/components/ui/grid-pattern";
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
+import { FlipWords } from "@/components/ui/flip-words";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
+import { CardHoverEffect } from "@/components/ui/card-hover-effect";
+import { Capsule, type CapsuleVariant } from "@/components/ui/capsule";
+import { cn } from "@/lib/utils";
 
 // Icon per tool slug, shown on the homepage tool cards. Add a key here when
 // registering a new tool to give it a card icon (falls back to ImageDown).
@@ -19,7 +92,78 @@ const toolCardIcons: Record<string, LucideIcon> = {
   "pdf-to-image": FileImage,
   "signature-resizer": PenLine,
   "social-media-resizer": Share2,
+  // Developer Tools
+  "json-formatter": Braces,
+  "json-validator": ShieldCheck,
+  "base64-encoder": Binary,
+  "base64-decoder": Binary,
+  "password-generator": KeyRound,
+  "uuid-generator": Hash,
+  "qr-code-generator": QrCode,
+  "css-gradient-generator": Palette,
+  "css-box-shadow-generator": Box,
+  "jwt-decoder": Fingerprint,
+  "sql-formatter": Database,
+  // SEO Tools
+  "meta-tag-generator": Tags,
+  "schema-markup-generator": FileJson,
+  "open-graph-generator": Share2,
+  "robots-txt-generator": Bot,
+  "sitemap-generator": Network,
+  "utm-builder": Link2,
+  "serp-preview": Search,
+  "slug-generator": TextCursorInput,
+  "meta-tag-analyzer": ScanSearch,
+  "heading-checker": Heading,
+  // Website Analysis Tools
+  "website-traffic-checker": BarChart3,
+  // Developer Playground
+  "html-css-js-playground": Code2,
+  "sql-playground": Database,
+  // Finance Tools
+  "sip-calculator": TrendingUp,
+  "compound-interest-calculator": Layers,
+  "emi-calculator": Home,
+  "gst-calculator": Percent,
+  "fd-calculator": Landmark,
+  "cagr-calculator": LineChart,
+  "roi-calculator": Target,
+  "income-tax-calculator": Receipt,
+  "retirement-calculator": Sun,
+  "discount-calculator": BadgePercent,
+  "profit-margin-calculator": Coins,
+  "stock-average-calculator": CandlestickChart,
+  "salary-calculator": Wallet,
+  "inflation-calculator": TrendingDown,
 };
+
+// High-demand tools get a featured spotlight treatment on the homepage.
+const FEATURED_SLUGS = new Set([
+  "remove-background",
+  "compress",
+  "passport-photo-maker",
+  "image-to-pdf",
+]);
+
+/** Map a tool's badge text to a capsule color. */
+function badgeVariant(tool: Tool): CapsuleVariant {
+  switch (tool.badge) {
+    case "-85%":
+      return "success";
+    case "AI":
+      return "purple";
+    case "Free":
+      return "success";
+    case "1-click":
+      return "teal";
+    case "20+ presets":
+      return "violet";
+    case "New":
+      return "sky";
+    default:
+      return tool.badgeTone === "success" ? "success" : "primary";
+  }
+}
 
 const features = [
   {
@@ -64,7 +208,7 @@ const features = [
   },
 ];
 
-const steps = [
+const compressSteps = [
   {
     number: "01",
     title: "Upload Image",
@@ -82,6 +226,77 @@ const steps = [
   },
 ];
 
+const resizeSteps = [
+  {
+    number: "01",
+    title: "Upload Image",
+    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
+  },
+  {
+    number: "02",
+    title: "Choose a Preset",
+    description: "Pick from passport, document, social media sizes, or set a custom aspect ratio.",
+  },
+  {
+    number: "03",
+    title: "Crop & Download",
+    description: "Fine-tune your crop area, adjust output quality, and download in PNG, JPEG, or WEBP.",
+  },
+];
+
+const flipSteps = [
+  {
+    number: "01",
+    title: "Upload Image",
+    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
+  },
+  {
+    number: "02",
+    title: "Flip or Rotate",
+    description: "Mirror horizontally or vertically, or rotate 90° left and right.",
+  },
+  {
+    number: "03",
+    title: "Download",
+    description: "Save as PNG, JPEG, or WEBP with adjustable quality in one click.",
+  },
+];
+
+const convertSteps = [
+  {
+    number: "01",
+    title: "Upload Image",
+    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
+  },
+  {
+    number: "02",
+    title: "Pick a Format",
+    description: "Choose PNG, JPEG, WEBP, or AVIF and fine-tune the quality slider.",
+  },
+  {
+    number: "03",
+    title: "Download",
+    description: "Your converted image is ready instantly — download it with one click.",
+  },
+];
+
+const presetBadges: { label: string; variant: CapsuleVariant; icon: LucideIcon }[] = [
+  { label: "Passport (2×2)", variant: "violet", icon: IdCard },
+  { label: "A4 Document", variant: "primary", icon: FileText },
+  { label: "Instagram Square", variant: "fuchsia", icon: Instagram },
+  { label: "Twitter Header", variant: "sky", icon: Twitter },
+  { label: "YouTube Thumbnail", variant: "rose", icon: Youtube },
+  { label: "16:9 Widescreen", variant: "amber", icon: RectangleHorizontal },
+];
+
+const formatBadges: { label: string; variant: CapsuleVariant; icon: LucideIcon }[] = [
+  { label: "PNG — Lossless & transparent", variant: "success", icon: ImageIcon },
+  { label: "JPEG — Small & universal", variant: "primary", icon: FileImage },
+  { label: "WEBP — Modern & efficient", variant: "purple", icon: Globe },
+  { label: "AVIF — Next-gen & tiny", variant: "sky", icon: SparklesIcon },
+  { label: "HEIC — iPhone photos", variant: "rose", icon: Smartphone },
+];
+
 const faqs = [
   {
     question: "How does CompressPix work?",
@@ -89,9 +304,9 @@ const faqs = [
       "CompressPix uses advanced browser-based image processing technology. Your images are processed entirely within your browser using the Canvas API — nothing is ever uploaded to any server.",
   },
   {
-    question: "What is the Resize &amp; Crop tool?",
+    question: "What is the Resize & Crop tool?",
     answer:
-      "The Resize &amp; Crop tool lets you crop your images to any shape or size. Choose from over 20 prebuilt ratios including passport photo sizes (2×2), document formats (A4, Letter), social media dimensions (Instagram, Twitter, Facebook, YouTube), and common aspect ratios (16:9, 4:3, 1:1). You can also set a custom ratio and fine-tune the crop area by dragging.",
+      "The Resize & Crop tool lets you crop your images to any shape or size. Choose from over 20 prebuilt ratios including passport photo sizes (2×2), document formats (A4, Letter), social media dimensions (Instagram, Twitter, Facebook, YouTube), and common aspect ratios (16:9, 4:3, 1:1). You can also set a custom ratio and fine-tune the crop area by dragging.",
   },
   {
     question: "What is the Format Converter tool?",
@@ -135,34 +350,121 @@ const faqs = [
   },
 ];
 
+interface Step {
+  number: string;
+  title: string;
+  description: string;
+}
+
+/** Gradient number tiles with connector line + hover pop, inside soft cards. */
+function StepGrid({ steps }: { steps: Step[] }) {
+  return (
+    <div className="mt-10 grid gap-6 sm:gap-8 md:grid-cols-3">
+      {steps.map((step, index) => (
+        <motion.div
+          key={step.number}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: index * 0.15 }}
+          className="group relative"
+        >
+          {index < steps.length - 1 && (
+            <span className="absolute left-[calc(50%+3.5rem)] top-16 hidden h-px w-[calc(100%-7rem)] bg-gradient-to-r from-primary/40 via-primary/20 to-transparent md:block" />
+          )}
+          <div className="flex h-full flex-col items-center rounded-2xl border border-border bg-surface/60 p-8 text-center shadow-sm backdrop-blur transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/10">
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-sky-500 text-xl font-bold text-white shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-110">
+              {step.number}
+              <span className="absolute inset-0 -z-10 animate-glow-pulse rounded-2xl bg-primary/40 blur-md" />
+            </div>
+            <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/** Centered eyebrow capsule + icon tile + title + subtitle section header. */
+function ToolSectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+  eyebrow,
+  eyebrowVariant = "primary",
+}: {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  eyebrow?: string;
+  eyebrowVariant?: CapsuleVariant;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      {eyebrow && (
+        <Capsule variant={eyebrowVariant} sm dot className="mb-4">
+          {eyebrow}
+        </Capsule>
+      )}
+      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-sky-500 text-white shadow-md shadow-primary/25">
+        <Icon className="h-5 w-5" />
+      </div>
+      <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+        {title}
+      </h2>
+      <p className="mt-3 text-lg text-text-secondary">{subtitle}</p>
+    </div>
+  );
+}
+
+/** Tools sorted so featured (high-demand) ones come first. */
+const allTools = [...TOOL_CATEGORIES.flatMap((category) => category.tools)].sort(
+  (a, b) => Number(FEATURED_SLUGS.has(b.slug)) - Number(FEATURED_SLUGS.has(a.slug))
+);
+
 export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Animated Background */}
+        {/* Animated background layers */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-light/50 via-background to-background" />
-          <div className="absolute right-0 top-0 h-[500px] w-[500px] translate-x-1/2 -translate-y-1/4 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-[300px] w-[300px] -translate-x-1/4 translate-y-1/4 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-light/40 via-background to-background" />
+          <BackgroundBeams />
+          <GridPattern className="text-primary" />
         </div>
+        <Spotlight
+          id="hero-spotlight"
+          className="-top-40 left-0 md:-top-24 md:left-1/4"
+          fill="var(--color-primary)"
+        />
+        <Sparkles
+          className="opacity-70"
+          particleColor="#3B82F6"
+          speed={0.45}
+          particleDensity={45}
+        />
 
-        <div className="container-page relative flex min-h-[70vh] flex-col items-center justify-center py-16 text-center sm:py-20">
+        <div className="container-page relative flex min-h-[60vh] flex-col items-center justify-center py-14 text-center sm:min-h-[70vh] sm:py-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="max-w-3xl"
           >
-            <div className="mb-6 inline-flex items-center rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-text-secondary shadow-xs">
-              <span className="mr-2 flex h-2 w-2 rounded-full bg-success" />
+            <Capsule variant="success" dot className="mb-6">
               100% Browser-Based — No Uploads
-            </div>
+            </Capsule>
 
-            <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight text-text-primary sm:text-5xl md:text-6xl lg:text-7xl">
-              Edit Images
-              <br />
-              <span className="text-primary">Instantly & Free</span>
+            <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              <TextGenerateEffect words="Edit Images" className="block text-text-primary" />
+              <span className="mt-2 block bg-gradient-to-r from-primary via-sky-500 to-primary bg-clip-text text-transparent">
+                <FlipWords
+                  words={["Instantly & Free", "100% Privately", "In Your Browser", "On Any Device"]}
+                  duration={3200}
+                />
+              </span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-text-secondary sm:text-xl">
@@ -171,65 +473,96 @@ export default function HomePage() {
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link
-                href="/compress"
-                className="group inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-              >
+              <ShimmerButton href="/compress">
                 <ImageDown className="h-4 w-4" />
                 Compress Images
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              </ShimmerButton>
 
               <Link
-                href="/resize"
-                className="group inline-flex h-12 items-center gap-2 rounded-xl border-2 border-primary/20 bg-surface px-6 text-sm font-semibold text-primary shadow-xs transition-all hover:border-primary hover:bg-primary-light/50 active:scale-[0.98]"
+                href="/remove-background"
+                className="group inline-flex h-12 items-center gap-2 rounded-full border-2 border-primary/20 bg-surface px-7 text-sm font-semibold text-primary shadow-sm transition-all hover:border-primary hover:bg-primary-light/50 active:scale-[0.98]"
               >
-                <Crop className="h-4 w-4" />
-                Resize & Crop
+                <Wand2 className="h-4 w-4" />
+                Remove Background
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </motion.div>
 
-          {/* Tool cards — driven by the tools registry, so new tools appear here automatically */}
+          {/* Tool cards — driven by the tools registry; featured tools get a spotlight */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            className="mt-10 grid w-full max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            transition={{ duration: 0.6, delay: 0.35, ease: "easeOut" }}
+            className="mt-14 w-full"
           >
-            {TOOL_CATEGORIES.flatMap((category) => category.tools).map((tool) => {
-              const Icon = toolCardIcons[tool.slug] ?? ImageDown;
-              return (
-                <Link
-                  key={tool.slug}
-                  href={tool.href}
-                  className="group rounded-2xl border border-border bg-surface p-6 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light transition-colors group-hover:bg-primary">
-                      <Icon className="h-6 w-6 text-primary transition-colors group-hover:text-white" />
+            <BentoGrid>
+              {allTools.map((tool) => {
+                const Icon = toolCardIcons[tool.slug] ?? ImageDown;
+                const featured = FEATURED_SLUGS.has(tool.slug);
+
+                const card = (
+                  <Link href={tool.href} className="flex h-full flex-col p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div
+                          className={cn(
+                            "flex shrink-0 items-center justify-center transition-all duration-300",
+                            featured
+                              ? "h-14 w-14 rounded-2xl bg-gradient-to-br from-primary via-fuchsia-500 to-sky-500 text-white shadow-lg shadow-primary/30"
+                              : "h-12 w-12 rounded-xl bg-primary-light group-hover:bg-primary"
+                          )}
+                        >
+                          <Icon
+                            className={cn(
+                              "h-6 w-6",
+                              featured
+                                ? "text-white"
+                                : "text-primary transition-colors duration-300 group-hover:text-white"
+                            )}
+                          />
+                        </div>
+                        <div className="min-w-0 text-left">
+                          <p className="text-sm font-semibold text-text-primary">{tool.tagline}</p>
+                          <p className="mt-0.5 text-xs text-text-muted">{tool.description}</p>
+                        </div>
+                      </div>
+                      {featured && (
+                        <Capsule variant="amber" icon={Flame} sm className="shrink-0">
+                          Popular
+                        </Capsule>
+                      )}
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-text-primary">{tool.tagline}</p>
-                      <p className="text-xs text-text-muted">{tool.description}</p>
+                    <div className="mt-auto flex items-center justify-between gap-2 rounded-xl bg-background p-3">
+                      <span className="text-xs text-text-secondary">{tool.stat}</span>
+                      <Capsule variant={badgeVariant(tool)} sm>
+                        {tool.badge}
+                      </Capsule>
                     </div>
+                  </Link>
+                );
+
+                return featured ? (
+                  <div
+                    key={tool.slug}
+                    className="rounded-2xl bg-gradient-to-br from-primary via-fuchsia-500 to-sky-500 p-px shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/30 sm:col-span-2 lg:col-span-2"
+                  >
+                    <BentoGridItem className="h-full border-transparent hover:border-transparent">
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 animate-glow-pulse rounded-full bg-fuchsia-500/25 blur-3xl"
+                      />
+                      {card}
+                    </BentoGridItem>
                   </div>
-                  <div className="mt-4 flex items-center justify-between rounded-xl bg-background p-3">
-                    <span className="text-xs text-text-secondary">{tool.stat}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        tool.badgeTone === "success"
-                          ? "bg-success-light text-success"
-                          : "bg-primary-light text-primary"
-                      }`}
-                    >
-                      {tool.badge}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+                ) : (
+                  <BentoGridItem key={tool.slug} className="h-full">
+                    {card}
+                  </BentoGridItem>
+                );
+              })}
+            </BentoGrid>
           </motion.div>
         </div>
       </section>
@@ -238,78 +571,51 @@ export default function HomePage() {
       <section className="border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
+            <Capsule variant="primary" sm dot className="mb-4">
+              Why CompressPix
+            </Capsule>
             <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Why Choose CompressPix?
+              Everything You Need, Nothing You Don&apos;t
             </h2>
             <p className="mt-3 text-lg text-text-secondary">
-              Everything you need for fast, private image compression.
+              Fast, private, browser-based image tools that just work.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="group rounded-xl border border-border bg-background p-6 transition-all hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                  <feature.icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 font-semibold text-text-primary">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-text-secondary">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mt-10"
+          >
+            <CardHoverEffect
+              items={features.map((feature) => ({
+                icon: <feature.icon className="h-5 w-5" />,
+                title: feature.title,
+                description: feature.description,
+              }))}
+            />
+          </motion.div>
         </div>
       </section>
 
       {/* How It Works — Compress */}
       <section className="py-16 sm:py-20">
         <div className="container-page">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light">
-              <Download className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Compress Images
-            </h2>
-            <p className="mt-3 text-lg text-text-secondary">
-              Three simple steps to reduce your file sizes.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.15 }}
-                className="relative text-center"
-              >
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-xl font-bold text-primary">
-                  {step.number}
-                </div>
-                <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-
+          <ToolSectionHeader
+            icon={Download}
+            title="Compress Images"
+            subtitle="Three simple steps to reduce your file sizes."
+            eyebrow="How it works"
+          />
+          <StepGrid steps={compressSteps} />
           <div className="mt-10 text-center">
-            <Link
-              href="/compress"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-            >
+            <ShimmerButton href="/compress">
               <ImageDown className="h-4 w-4" />
               Start Compressing
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </ShimmerButton>
           </div>
         </div>
       </section>
@@ -317,54 +623,16 @@ export default function HomePage() {
       {/* How It Works — Resize */}
       <section className="border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light">
-              <Crop className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Resize &amp; Crop Images
-            </h2>
-            <p className="mt-3 text-lg text-text-secondary">
-              Choose from prebuilt sizes or create your own custom dimensions.
-            </p>
-          </div>
+          <ToolSectionHeader
+            icon={Crop}
+            title="Resize & Crop Images"
+            subtitle="Choose from prebuilt sizes or create your own custom dimensions."
+            eyebrow="Prebuilt sizes"
+            eyebrowVariant="violet"
+          />
+          <StepGrid steps={resizeSteps} />
 
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {[
-              {
-                number: "01",
-                title: "Upload Image",
-                description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-              },
-              {
-                number: "02",
-                title: "Choose a Preset",
-                description: "Pick from passport, document, social media sizes, or set a custom aspect ratio.",
-              },
-              {
-                number: "03",
-                title: "Crop & Download",
-                description: "Fine-tune your crop area, adjust output quality, and download in PNG, JPEG, or WEBP.",
-              },
-            ].map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.15 }}
-                className="relative text-center"
-              >
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-xl font-bold text-primary">
-                  {step.number}
-                </div>
-                <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Preset badges */}
+          {/* Preset capsules */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -372,37 +640,24 @@ export default function HomePage() {
             transition={{ duration: 0.4, delay: 0.3 }}
             className="mx-auto mt-10 max-w-2xl text-center"
           >
-            <p className="text-sm font-medium text-text-secondary mb-4">
+            <p className="mb-4 text-sm font-medium text-text-secondary">
               Prebuilt sizes for every need
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {[
-                { label: "Passport (2×2)", color: "bg-success-light text-success" },
-                { label: "A4 Document", color: "bg-primary-light text-primary" },
-                { label: "Instagram Square", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-                { label: "Twitter Header", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" },
-                { label: "YouTube Thumbnail", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" },
-                { label: "16:9 Widescreen", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-              ].map((badge) => (
-                <span
-                  key={badge.label}
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${badge.color}`}
-                >
+            <div className="flex flex-wrap justify-center gap-2.5">
+              {presetBadges.map((badge) => (
+                <Capsule key={badge.label} variant={badge.variant} icon={badge.icon}>
                   {badge.label}
-                </span>
+                </Capsule>
               ))}
             </div>
           </motion.div>
 
           <div className="mt-10 text-center">
-            <Link
-              href="/resize"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-            >
+            <ShimmerButton href="/resize">
               <Crop className="h-4 w-4" />
               Start Resizing
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </ShimmerButton>
           </div>
         </div>
       </section>
@@ -410,62 +665,20 @@ export default function HomePage() {
       {/* How It Works — Flip */}
       <section className="py-16 sm:py-20">
         <div className="container-page">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light">
-              <FlipHorizontal2 className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Flip &amp; Rotate Images
-            </h2>
-            <p className="mt-3 text-lg text-text-secondary">
-              Fix mirrored selfies or sideways photos in one click.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {[
-              {
-                number: "01",
-                title: "Upload Image",
-                description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-              },
-              {
-                number: "02",
-                title: "Flip or Rotate",
-                description: "Mirror horizontally or vertically, or rotate 90° left and right.",
-              },
-              {
-                number: "03",
-                title: "Download",
-                description: "Save as PNG, JPEG, or WEBP with adjustable quality in one click.",
-              },
-            ].map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.15 }}
-                className="relative text-center"
-              >
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-xl font-bold text-primary">
-                  {step.number}
-                </div>
-                <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-
+          <ToolSectionHeader
+            icon={FlipHorizontal2}
+            title="Flip & Rotate Images"
+            subtitle="Fix mirrored selfies or sideways photos in one click."
+            eyebrow="Quick fixes"
+            eyebrowVariant="teal"
+          />
+          <StepGrid steps={flipSteps} />
           <div className="mt-10 text-center">
-            <Link
-              href="/flip"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-            >
+            <ShimmerButton href="/flip">
               <FlipHorizontal2 className="h-4 w-4" />
               Start Flipping
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </ShimmerButton>
           </div>
         </div>
       </section>
@@ -473,86 +686,43 @@ export default function HomePage() {
       {/* How It Works — Convert */}
       <section className="border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light">
-              <Repeat className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Convert Image Formats
-            </h2>
-            <p className="mt-3 text-lg text-text-secondary">
-              Switch to the right format for any platform in one click.
-            </p>
-          </div>
+          <ToolSectionHeader
+            icon={Repeat}
+            title="Convert Image Formats"
+            subtitle="Switch to the right format for any platform in one click."
+            eyebrow="Formats"
+            eyebrowVariant="fuchsia"
+          />
+          <StepGrid steps={convertSteps} />
 
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {[
-              {
-                number: "01",
-                title: "Upload Image",
-                description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-              },
-              {
-                number: "02",
-                title: "Pick a Format",
-                description: "Choose PNG, JPEG, WEBP, or AVIF and fine-tune the quality slider.",
-              },
-              {
-                number: "03",
-                title: "Download",
-                description: "Your converted image is ready instantly — download it with one click.",
-              },
-            ].map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.15 }}
-                className="relative text-center"
-              >
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-xl font-bold text-primary">
-                  {step.number}
-                </div>
-                <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Format badges */}
+          {/* Format capsule marquee */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="mx-auto mt-10 flex flex-wrap justify-center gap-2"
+            className="relative mt-12 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
           >
-            {[
-              { label: "PNG — Lossless & transparent", color: "bg-success-light text-success" },
-              { label: "JPEG — Small & universal", color: "bg-primary-light text-primary" },
-              { label: "WEBP — Modern & efficient", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-              { label: "AVIF — Next-gen & tiny", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" },
-              { label: "HEIC — iPhone photos", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" },
-            ].map((badge) => (
-              <span
-                key={badge.label}
-                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${badge.color}`}
-              >
-                {badge.label}
-              </span>
-            ))}
+            <div className="flex w-max animate-marquee gap-3 hover:[animation-play-state:paused]">
+              {[...formatBadges, ...formatBadges].map((badge, i) => (
+                <Capsule
+                  key={`${badge.label}-${i}`}
+                  variant={badge.variant}
+                  icon={badge.icon}
+                  interactive={false}
+                >
+                  {badge.label}
+                </Capsule>
+              ))}
+            </div>
           </motion.div>
 
           <div className="mt-10 text-center">
-            <Link
-              href="/convert"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-            >
+            <ShimmerButton href="/convert">
               <Repeat className="h-4 w-4" />
               Start Converting
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </ShimmerButton>
           </div>
         </div>
       </section>
@@ -577,13 +747,11 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="group cursor-pointer rounded-xl border border-border bg-background transition-all hover:border-text-muted"
+                className="group cursor-pointer rounded-xl border border-border bg-background transition-all hover:border-primary/40 hover:shadow-md"
               >
                 <summary className="flex items-center justify-between px-6 py-4 text-sm font-medium text-text-primary">
                   {faq.question}
-                  <span className="ml-4 shrink-0 text-text-muted transition-transform group-open:rotate-180">
-                    ▼
-                  </span>
+                  <ChevronDown className="ml-4 h-4 w-4 shrink-0 text-text-muted transition-transform duration-300 group-open:rotate-180" />
                 </summary>
                 <div className="border-t border-border px-6 py-4">
                   <p className="text-sm leading-relaxed text-text-secondary">{faq.answer}</p>

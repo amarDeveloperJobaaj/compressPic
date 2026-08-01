@@ -1,0 +1,104 @@
+"use client";
+
+import type { WebsiteReport } from "../types";
+
+/** Compact visitor formatting: 12,400 -> "12.4K", 2,300,000 -> "2.3M". */
+export function formatVisitors(value: number): string {
+  if (value >= 1_000_000) {
+    const millions = value / 1_000_000;
+    return `${millions >= 10 ? Math.round(millions) : millions.toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    const thousands = value / 1_000;
+    return `${thousands >= 10 ? Math.round(thousands) : thousands.toFixed(1)}K`;
+  }
+  return value.toLocaleString();
+}
+
+/** Plain-text summary used for copy/share. */
+export function buildSummaryText(report: WebsiteReport): string {
+  const lines = [
+    `Estimated traffic for ${report.domain}`,
+    `  Estimated monthly visitors: ${formatVisitors(report.traffic.monthlyVisitors)}`,
+    `  Estimated yearly visitors: ${formatVisitors(report.traffic.yearlyVisitors)}`,
+    `  Confidence: ${report.traffic.confidence}%`,
+    `  Trend: ${report.traffic.trend}`,
+    `Scores: SEO ${report.scores.seo} · Technical ${report.scores.technical} · Performance ${report.scores.performance} · Accessibility ${report.scores.accessibility} · Best practices ${report.scores.bestPractices} · Health ${report.scores.health}`,
+    ``,
+    `This is an estimation based on publicly available SEO signals and should not be considered exact analytics.`,
+  ];
+  return lines.join("\n");
+}
+
+function esc(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Self-contained printable HTML report (used by printReport). */
+export function buildReportHtml(report: WebsiteReport): string {
+  const checks = [...report.groups.seo, ...report.groups.technical, ...report.groups.performance, ...report.groups.content]
+    .map(
+      (check) =>
+        `<tr><td>${esc(check.label)}</td><td>${esc(check.status)}</td><td>${esc(check.detail ?? "")}</td></tr>`
+    )
+    .join("");
+
+  const recs = report.recommendations
+    .map((rec) => `<li><strong>${esc(rec.title)}</strong> — ${esc(rec.detail)}</li>`)
+    .join("");
+
+  const tech = report.tech.length > 0 ? report.tech.map((t) => esc(t.name)).join(", ") : "Unknown";
+
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Traffic estimate — ${esc(report.domain)}</title>
+<style>
+  body { font-family: system-ui, sans-serif; color: #111827; margin: 32px; line-height: 1.5; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .muted { color: #6B7280; font-size: 13px; }
+  .banner { border: 1px solid #F59E0B; background: #FEF3C7; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 16px 0; }
+  .metrics { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+  .metric { border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 18px; min-width: 180px; }
+  .metric .label { font-size: 11px; text-transform: uppercase; color: #6B7280; }
+  .metric .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th, td { border: 1px solid #E5E7EB; padding: 8px 10px; text-align: left; font-size: 13px; }
+  th { background: #F9FAFB; }
+  h2 { font-size: 16px; margin: 24px 0 8px; }
+  .footer { margin-top: 32px; font-size: 12px; color: #9CA3AF; }
+</style>
+</head>
+<body>
+  <h1>Estimated Traffic Report — ${esc(report.domain)}</h1>
+  <div class="muted">${esc(report.url)} · Estimated trend: ${report.traffic.trend}</div>
+  <div class="banner">This is an estimation based on publicly available SEO signals and should not be considered exact analytics.</div>
+  <div class="metrics">
+    <div class="metric"><div class="label">Estimated monthly visitors</div><div class="value">${formatVisitors(report.traffic.monthlyVisitors)}</div></div>
+    <div class="metric"><div class="label">Estimated yearly visitors</div><div class="value">${formatVisitors(report.traffic.yearlyVisitors)}</div></div>
+    <div class="metric"><div class="label">Confidence</div><div class="value">${report.traffic.confidence}%</div></div>
+    <div class="metric"><div class="label">Website health</div><div class="value">${report.scores.health}/100</div></div>
+  </div>
+  <h2>Scores</h2>
+  <p>SEO ${report.scores.seo} · Technical ${report.scores.technical} · Performance ${report.scores.performance} · Accessibility ${report.scores.accessibility} · Best practices ${report.scores.bestPractices}</p>
+  <h2>Signal checks</h2>
+  <table><thead><tr><th>Signal</th><th>Status</th><th>Detail</th></tr></thead><tbody>${checks}</tbody></table>
+  <h2>Recommendations</h2>
+  <ul>${recs || "<li>No major issues detected.</li>"}</ul>
+  <h2>Site overview</h2>
+  <p>Page size: ${report.meta.pageSizeKb.toLocaleString()} KB · Content words: ${report.meta.wordCount.toLocaleString()} · Images: ${report.meta.imageCount} · Internal links: ${report.meta.internalLinks} · External links: ${report.meta.externalLinks} · Stack: ${tech}</p>
+  <div class="footer">Generated by CompressPix Website Traffic Checker · ${new Date().toLocaleDateString()}</div>
+</body>
+</html>`;
+}
+
+/** Open the printable report in a new window and trigger print (user can save as PDF). */
+export function printReport(report: WebsiteReport) {
+  const win = window.open("", "_blank", "width=860,height=900");
+  if (!win) return;
+  win.document.write(buildReportHtml(report));
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 250);
+}
