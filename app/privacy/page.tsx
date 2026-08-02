@@ -3,7 +3,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "CompressPix Privacy Policy — Your images never leave your device.",
+  description: "Vizo Tool Privacy Policy — Your images never leave your device.",
 };
 
 export default function PrivacyPage() {
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Our Commitment to Privacy</h2>
             <p className="mt-3">
-              At CompressPix, we take your privacy seriously. Our service is built around a
+              At Vizo Tool, we take your privacy seriously. Our service is built around a
               fundamental principle: your images should never leave your device. This document
               outlines our privacy practices.
             </p>
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Data Collection</h2>
             <p className="mt-3">
-              CompressPix is designed to operate without collecting any personal data or images.
+              Vizo Tool is designed to operate without collecting any personal data or images.
               Since all image processing happens locally in your browser:
             </p>
             <ul className="mt-3 list-disc pl-6 space-y-2">
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Third-Party Services</h2>
             <p className="mt-3">
-              CompressPix does not integrate with any third-party services that would have access
+              Vizo Tool does not integrate with any third-party services that would have access
               to your images. The entire compression process runs locally within your browser using
               web standards.
             </p>
@@ -63,8 +63,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-text-primary">Contact</h2>
             <p className="mt-3">
               If you have questions about this privacy policy, please contact us at{" "}
-              <a href="mailto:hello@compresspix.com" className="text-primary hover:underline">
-                hello@compresspix.com
+              <a href="mailto:hello@vizotool.com" className="text-primary hover:underline">
+                hello@vizotool.com
               </a>
               .
             </p>

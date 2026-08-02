@@ -28,7 +28,7 @@ export default function ContactPage() {
       const body = encodeURIComponent(
         `Name: ${data.name}\nEmail: ${data.email}\n\n${data.message}`
       );
-      window.location.href = `mailto:hello@compresspix.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:hello@vizotool.com?subject=${subject}&body=${body}`;
       setIsSubmitted(true);
     } catch {
       // If mailto fails, still show success
@@ -80,7 +80,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-medium text-text-primary">Email</h3>
-                <p className="mt-1 text-sm text-text-secondary">hello@compresspix.com</p>
+                <p className="mt-1 text-sm text-text-secondary">hello@vizotool.com</p>
               </div>
             </div>
             <div className="flex items-start gap-4">

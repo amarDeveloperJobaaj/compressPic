@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 /** Central site constants — change once, apply everywhere. */
-export const SITE_URL = "https://compresspix.com";
-export const SITE_NAME = "CompressPix";
+export const SITE_URL = "https://vizotool.com";
+export const SITE_NAME = "Vizo Tool";
 export const SITE_TAGLINE = "Free Online Image Tools — 100% in Your Browser";
 export const SITE_DESCRIPTION =
   "Compress, resize, crop, flip, and convert images online for free. 100% browser-based — no uploads, no servers, no limits.";

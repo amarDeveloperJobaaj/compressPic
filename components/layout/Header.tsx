@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ImageDown, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
 import { getToolIcon } from "@/lib/tool-icons";
+import { Logo } from "@/components/ui/Logo";
 import { NavDropdown, CONVERT_NAV_ITEMS, type NavDropdownSection } from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileDrawer } from "./MobileDrawer";
@@ -62,15 +63,18 @@ export function Header() {
 
       <div className="container-page flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="relative isolate flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-sky-500 shadow-lg shadow-primary/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/50">
-            <span className="absolute inset-0 -z-10 rounded-xl bg-primary/40 blur-md" />
-            <ImageDown className="relative h-5 w-5 text-white" />
+        <Link href="/" className="group flex items-center gap-2.5" aria-label="Vizo Tool — home">
+          <span className="relative isolate inline-flex transition-transform duration-300 group-hover:scale-105">
+            <span
+              aria-hidden="true"
+              className="absolute -inset-1 -z-10 rounded-2xl bg-primary/50 blur-lg"
+            />
+            <Logo size={36} />
           </span>
           <span className="hidden text-lg font-bold tracking-tight text-text-primary sm:inline">
-            Compress
+            Vizo
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-              Pix
+              Tool
             </span>
           </span>
         </Link>

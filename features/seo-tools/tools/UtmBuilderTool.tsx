@@ -19,7 +19,7 @@ interface UtmFields {
 }
 
 const DEFAULTS: UtmFields = {
-  baseUrl: "https://compresspix.com/",
+  baseUrl: "https://vizotool.com/",
   source: "facebook",
   medium: "cpc",
   campaign: "spring-sale",
@@ -27,7 +27,7 @@ const DEFAULTS: UtmFields = {
   content: "",
 };
 
-const STORAGE_KEY = "compresspix-utm-history";
+const STORAGE_KEY = "vizotool-utm-history";
 
 interface HistoryEntry {
   url: string;
@@ -136,8 +136,8 @@ export function UtmBuilderTool() {
         </div>
       </ToolPanel>
 
-      {/* Output */}
-      <div className="space-y-6">
+      {/* Output — min-w-0 lets panels shrink instead of overflowing on mobile */}
+      <div className="min-w-0 space-y-6">
         <ToolPanel
           title="Final URL"
           description="Copy the full campaign URL or save it to history."
@@ -171,7 +171,7 @@ export function UtmBuilderTool() {
                 <QrCode className="h-8 w-8 text-text-muted" />
               )}
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-text-primary">QR Code</p>
               <p className="mt-1 text-xs text-text-muted">
                 Scan this code to open the campaign URL — perfect for posters, cards, and slides.

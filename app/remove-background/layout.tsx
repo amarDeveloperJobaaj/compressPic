@@ -6,7 +6,7 @@ import { AdSlot } from "@/components/seo/AdSlot";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Remove Background from Image Online Free | CompressPix",
+  title: "Remove Background from Image Online Free | Vizo Tool",
   description:
     "Remove image backgrounds instantly using AI. Create transparent PNGs, replace backgrounds with colors or images, and download in HD for free — 100% in your browser.",
   path: "/remove-background",
@@ -39,13 +39,13 @@ export default function RemoveBackgroundLayout({
         data={{
           "@context": "https://schema.org",
           "@type": "WebPage",
-          name: "Remove Background from Image Online Free | CompressPix",
+          name: "Remove Background from Image Online Free | Vizo Tool",
           url: `${SITE_URL}/remove-background`,
           description:
             "Remove image backgrounds instantly using AI. Create transparent PNGs, replace backgrounds with colors or images, and download in HD for free — 100% in your browser.",
           isPartOf: {
             "@type": "WebSite",
-            name: "CompressPix",
+            name: "Vizo Tool",
             url: SITE_URL,
           },
           about: {

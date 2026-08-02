@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ImageDown } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
+import { Logo } from "@/components/ui/Logo";
 import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
 
 const footerLinks = [
@@ -28,11 +28,8 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-text-primary">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-sky-500 shadow-md shadow-primary/25">
-                <ImageDown className="h-3.5 w-3.5 text-white" />
-              </div>
-              CompressPix
+            <Link href="/" className="group inline-flex items-center gap-2" aria-label="Vizo Tool — home">
+              <Logo size={28} withWordmark />
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-text-secondary">
               40+ free browser-based tools for images, PDFs, developers &amp; SEO. No uploads, no
@@ -99,7 +96,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 border-t border-border pt-6">
           <p className="text-center text-xs text-text-muted">
-            &copy; {new Date().getFullYear()} CompressPix. All rights reserved. Built with privacy in mind.
+            &copy; {new Date().getFullYear()} Vizo Tool. All rights reserved. Built with privacy in mind.
           </p>
         </div>
       </div>

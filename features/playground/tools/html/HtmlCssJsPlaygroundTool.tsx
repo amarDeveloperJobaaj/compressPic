@@ -41,7 +41,7 @@ type Tab = "html" | "css" | "js";
 type Device = "desktop" | "tablet" | "mobile";
 type ConsoleFilter = "all" | "log" | "warn" | "error";
 
-const STORAGE_KEY = "compresspix:html-playground:project";
+const STORAGE_KEY = "vizotool:html-playground:project";
 const SHARE_PREFIX = "#code=";
 
 /** Encode a project into a shareable URL hash (UTF-8 safe base64). */
@@ -432,8 +432,8 @@ function HtmlCssJsPlaygroundInner() {
       {/* Editors + preview */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         <SplitPane left={split} onResize={setSplit} ariaLabel="Resize editor and preview">
-          {/* Left: tabbed editors */}
-          <div className="flex h-[560px] flex-col">
+          {/* Left: tabbed editors — shorter when stacked on phones */}
+          <div className="flex h-[380px] flex-col md:h-[560px]">
             <div className="flex items-center justify-between border-b border-border bg-surface px-2 pt-2">
               <div className="flex items-center gap-1" role="tablist" aria-label="Code panels">
                 {TABS.map((t) => (
@@ -470,8 +470,8 @@ function HtmlCssJsPlaygroundInner() {
             </div>
           </div>
 
-          {/* Right: preview + console */}
-          <div className="flex h-[560px] flex-col">
+          {/* Right: preview + console — shorter when stacked on phones */}
+          <div className="flex h-[420px] flex-col md:h-[560px]">
             <div className="flex items-center justify-between gap-2 border-b border-border bg-surface px-3 py-2">
               <div className="flex items-center gap-1" role="group" aria-label="Preview device width">
                 {(

@@ -43,6 +43,8 @@
   --animate-beam-slow-reverse: beam-slow 20s ease-in-out infinite reverse;
   --animate-glow-pulse: glow-pulse 3.5s ease-in-out infinite;
   --animate-marquee: marquee 30s linear infinite;
+  --animate-logo-shine: logo-shine 4.5s ease-in-out infinite;
+  --animate-logo-spark: logo-spark 2.8s ease-in-out infinite;
 }
 
 /* Native form controls & scrollbars follow the theme */
@@ -144,6 +146,36 @@
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* Premium sheen sweep across the Vizo Tool logo tile — transform only, GPU cheap */
+@keyframes logo-shine {
+  0%,
+  55% {
+    transform: translateX(-32px);
+    opacity: 0;
+  }
+  68% {
+    opacity: 0.65;
+  }
+  80% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(88px);
+    opacity: 0;
+  }
+}
+
+/* Subtle twinkle for the logo spark accent */
+@keyframes logo-spark {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
   }
 }
 

@@ -34,8 +34,9 @@ export function BackgroundPanel() {
       transition={{ duration: 0.25 }}
       className="space-y-5"
     >
-      {/* Type picker */}
-      <div className="grid grid-cols-5 gap-2">
+      {/* Type picker — 3-up on phones so longer labels (Transparent) fit,
+          5-up from sm up. */}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {BG_OPTIONS.map((opt) => (
           <button
             key={opt.id}

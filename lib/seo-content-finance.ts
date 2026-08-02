@@ -7,7 +7,7 @@ import type { ToolSeoContent } from "./seo-content";
  */
 export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   "sip-calculator": {
-    meta: { readTime: "6 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "6 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Step-up SIP",
       "Inflation-adjusted",
@@ -165,7 +165,7 @@ export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "compound-interest-calculator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Any compounding frequency",
       "Interest earned",
@@ -323,7 +323,7 @@ export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "emi-calculator": {
-    meta: { readTime: "6 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "6 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Monthly EMI",
       "Full amortization table",
@@ -481,7 +481,7 @@ export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "gst-calculator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Add or remove GST",
       "CGST / SGST / IGST split",
@@ -634,7 +634,7 @@ export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "fd-calculator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Quarterly compounding",
       "Maturity amount",
@@ -787,7 +787,7 @@ export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "cagr-calculator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Annualized growth",
       "Total return",
@@ -940,7 +940,7 @@ export const FINANCE_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "roi-calculator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Profit in rupees",
       "ROI percentage",

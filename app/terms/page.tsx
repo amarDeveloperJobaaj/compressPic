@@ -3,7 +3,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "CompressPix Terms of Service — Free, browser-based image compression.",
+  description: "Vizo Tool Terms of Service — Free, browser-based image compression.",
 };
 
 export default function TermsPage() {
@@ -20,7 +20,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Acceptance of Terms</h2>
             <p className="mt-3">
-              By using CompressPix, you agree to these terms of service. If you do not agree,
+              By using Vizo Tool, you agree to these terms of service. If you do not agree,
               please do not use our service.
             </p>
           </section>
@@ -28,14 +28,14 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Service Description</h2>
             <p className="mt-3">
-              CompressPix provides a free, browser-based image compression tool. All processing
+              Vizo Tool provides a free, browser-based image compression tool. All processing
               occurs locally on your device. We do not store, transmit, or have access to your images.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Acceptable Use</h2>
-            <p className="mt-3">You agree to use CompressPix only for lawful purposes and in accordance with these terms:</p>
+            <p className="mt-3">You agree to use Vizo Tool only for lawful purposes and in accordance with these terms:</p>
             <ul className="mt-3 list-disc pl-6 space-y-2">
               <li>You may use the service for personal and commercial purposes</li>
               <li>You may not use the service to compress illegal or harmful content</li>
@@ -47,7 +47,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Intellectual Property</h2>
             <p className="mt-3">
-              CompressPix and its associated branding are the property of CompressPix. The service
+              Vizo Tool and its associated branding are the property of Vizo Tool. The service
               itself is provided as-is, and we retain the right to modify or discontinue it at any time.
             </p>
           </section>
@@ -55,7 +55,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-text-primary">Limitation of Liability</h2>
             <p className="mt-3">
-              CompressPix is provided &quot;as is&quot; without warranty of any kind. We are not liable for any
+              Vizo Tool is provided &quot;as is&quot; without warranty of any kind. We are not liable for any
               damages arising from the use or inability to use this service. Since all processing is
               client-side, we cannot guarantee specific compression results.
             </p>
@@ -73,8 +73,8 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-text-primary">Contact</h2>
             <p className="mt-3">
               For questions about these terms, contact us at{" "}
-              <a href="mailto:hello@compresspix.com" className="text-primary hover:underline">
-                hello@compresspix.com
+              <a href="mailto:hello@vizotool.com" className="text-primary hover:underline">
+                hello@vizotool.com
               </a>
               .
             </p>

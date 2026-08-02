@@ -22,7 +22,7 @@ import { CompareView } from "./CompareView";
 import { HistoryPanel, type HistoryItem } from "./HistoryPanel";
 import { DisclaimerBanner } from "./ui";
 
-const HISTORY_KEY = "compresspix:traffic-checker:history";
+const HISTORY_KEY = "vizotool:traffic-checker:history";
 
 interface PipelineStage {
   pct: number;

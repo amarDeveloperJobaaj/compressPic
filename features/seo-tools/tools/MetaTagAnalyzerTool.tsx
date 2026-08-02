@@ -286,7 +286,7 @@ export function MetaTagAnalyzerTool() {
                   {result.ogTags.map((t) => (
                     <li key={t.tag} className="flex items-start justify-between gap-2 rounded-lg bg-background px-3 py-1.5 text-xs">
                       <code className="shrink-0 text-primary">{t.tag}</code>
-                      <span className="break-all text-right text-text-secondary">{t.value || "(empty)"}</span>
+                      <span className="min-w-0 flex-1 break-all text-right text-text-secondary">{t.value || "(empty)"}</span>
                     </li>
                   ))}
                 </ul>
@@ -300,7 +300,7 @@ export function MetaTagAnalyzerTool() {
                   {result.twitterTags.map((t) => (
                     <li key={t.tag} className="flex items-start justify-between gap-2 rounded-lg bg-background px-3 py-1.5 text-xs">
                       <code className="shrink-0 text-primary">{t.tag}</code>
-                      <span className="break-all text-right text-text-secondary">{t.value || "(empty)"}</span>
+                      <span className="min-w-0 flex-1 break-all text-right text-text-secondary">{t.value || "(empty)"}</span>
                     </li>
                   ))}
                 </ul>

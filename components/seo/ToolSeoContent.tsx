@@ -33,7 +33,7 @@ export function ToolSeoContent({ slug }: { slug: string }) {
   const meta = content.meta ?? {
     readTime: `${Math.max(4, Math.round(content.faqs.length / 2))} min read`,
     updated: "July 2026",
-    author: "CompressPix",
+    author: "Vizo Tool",
   };
   const highlights = content.highlights ?? [];
 

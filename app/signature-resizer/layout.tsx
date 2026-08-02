@@ -5,7 +5,7 @@ import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { AdSlot } from "@/components/seo/AdSlot";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Resize Signature Online Free — Signature to 20KB, 50KB | CompressPix",
+  title: "Resize Signature Online Free — Signature to 20KB, 50KB | Vizo Tool",
   description:
     "Resize a signature image online for free. Fit it to any pixel size and compress it under 20 KB or 50 KB limits — keep transparency, download as PNG or JPG, 100% in your browser.",
   path: "/signature-resizer",

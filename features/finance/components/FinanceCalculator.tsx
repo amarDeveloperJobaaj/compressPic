@@ -454,8 +454,11 @@ export function FinanceCalculator({ config }: FinanceCalculatorProps) {
             <h3 className="border-b border-border px-5 py-3 text-sm font-semibold text-text-primary">
               {table.title}
             </h3>
+            {/* min-w makes wide tables (amortization, year-wise) scroll
+                horizontally inside this wrapper on mobile instead of
+                squeezing every column into a phone-width strip. */}
             <div className="max-h-80 overflow-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full min-w-[560px] text-left text-sm">
                 <thead className="sticky top-0 bg-background/95 backdrop-blur">
                   <tr>
                     {table.columns.map((col) => (

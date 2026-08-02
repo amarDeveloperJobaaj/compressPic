@@ -5,14 +5,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronDown,
-  House,
-  ImageDown,
-  X,
-} from "lucide-react";
+import { ChevronDown, House, X } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
 import { getToolIcon } from "@/lib/tool-icons";
+import { Logo } from "@/components/ui/Logo";
 import { CONVERT_NAV_ITEMS } from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -199,10 +195,7 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 onClick={onClose}
                 className="flex items-center gap-2 text-lg font-semibold text-text-primary"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-sky-500 shadow-md shadow-primary/25">
-                  <ImageDown className="h-4 w-4 text-white" />
-                </div>
-                <span>CompressPix</span>
+                <Logo size={32} withWordmark />
               </Link>
               <button
                 ref={closeBtnRef}

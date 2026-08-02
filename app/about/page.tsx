@@ -183,7 +183,7 @@ const faqs = [
   {
     question: "Who is Amar Lodhi?",
     answer:
-      "Amar Lodhi is a 22-year-old software engineer from Mathura, Uttar Pradesh, India — the city of Lord Krishna. He builds CompressPix and is passionate about creating fast, useful, browser-based tools.",
+      "Amar Lodhi is a 22-year-old software engineer from Mathura, Uttar Pradesh, India — the city of Lord Krishna. He builds Vizo Tool and is passionate about creating fast, useful, browser-based tools.",
   },
   {
     question: "How did Amar start coding?",
@@ -201,34 +201,34 @@ const faqs = [
       "His stack spans HTML, CSS, JavaScript, React, Next.js, Node.js, Express.js, MongoDB, SQL, PHP, RAG pipelines, REST APIs, and AI integrations — with a strong focus on performance and SEO.",
   },
   {
-    question: "Why did Amar build CompressPix?",
+    question: "Why did Amar build Vizo Tool?",
     answer:
       "Amar was frustrated by existing tool websites full of ads, slow interfaces, and forced sign-ups. He decided to build one fast, clean, private platform where every tool works in the browser with no uploads.",
   },
   {
-    question: "Is CompressPix really free?",
+    question: "Is Vizo Tool really free?",
     answer:
-      "Yes. CompressPix is completely free with no sign-ups, no watermarks, and no hidden costs. The mission is simple: build tools that save people time, not waste it.",
+      "Yes. Vizo Tool is completely free with no sign-ups, no watermarks, and no hidden costs. The mission is simple: build tools that save people time, not waste it.",
   },
   {
-    question: "Are my files private on CompressPix?",
+    question: "Are my files private on Vizo Tool?",
     answer:
       "Absolutely. Every tool processes files entirely in your browser — nothing is ever uploaded to a server. Your images, PDFs, and data never leave your device.",
   },
   {
-    question: "What kinds of tools are on CompressPix?",
+    question: "What kinds of tools are on Vizo Tool?",
     answer:
-      "CompressPix currently offers 40+ free tools across image editing, PDF conversion, developer utilities, SEO tools, website analysis, and even code playgrounds — all in one place.",
+      "Vizo Tool currently offers 40+ free tools across image editing, PDF conversion, developer utilities, SEO tools, website analysis, and even code playgrounds — all in one place.",
   },
   {
     question: "Does Amar work alone?",
     answer:
-      "CompressPix is founder-led and built independently, but the vision is community-driven — feedback from users directly shapes what gets built next.",
+      "Vizo Tool is founder-led and built independently, but the vision is community-driven — feedback from users directly shapes what gets built next.",
   },
   {
     question: "What are Amar's future plans?",
     answer:
-      "Amar plans to grow CompressPix into a full toolkit platform, add more AI-powered tools, and launch SaaS products — always with the same principle: save people time.",
+      "Amar plans to grow Vizo Tool into a full toolkit platform, add more AI-powered tools, and launch SaaS products — always with the same principle: save people time.",
   },
   {
     question: "What is Amar's favorite game?",

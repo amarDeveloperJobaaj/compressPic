@@ -47,14 +47,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const HOME_TITLE = "Compress Image Online Free — CompressPix";
+const HOME_TITLE = "Compress Image Online Free — Vizo Tool";
 const HOME_IMAGE = ogImageUrl(HOME_TITLE);
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: HOME_TITLE,
-    template: "%s | CompressPix",
+    template: "%s | Vizo Tool",
   },
   description: SITE_DESCRIPTION,
   keywords: [
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
 };
 
@@ -136,7 +136,7 @@ export default function RootLayout({
             there is never a light flash for first-time visitors. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("compresspix-theme");var d=t?t==="dark":true;if(d){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("vizotool-theme")||localStorage.getItem("compresspix-theme");var d=t?t==="dark":true;if(d){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})();`,
           }}
         />
         {/* Skip to content link for keyboard users */}

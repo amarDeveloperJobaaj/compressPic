@@ -5,7 +5,7 @@ import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { AdSlot } from "@/components/seo/AdSlot";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Social Media Image Resizer Online Free — Instagram, YouTube, Facebook | CompressPix",
+  title: "Social Media Image Resizer Online Free — Instagram, YouTube, Facebook | Vizo Tool",
   description:
     "Resize images to exact social media dimensions for free — Instagram posts & stories, YouTube thumbnails, Facebook covers, X headers, LinkedIn banners, Pinterest pins & TikTok. 100% in your browser.",
   path: "/social-media-resizer",

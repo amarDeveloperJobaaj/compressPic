@@ -22,7 +22,10 @@ export function ToolPanel({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6",
+        // min-w-0 lets panels shrink inside grid/flex parents on mobile — long
+        // code/output lines then scroll within the panel instead of overflowing
+        // the viewport (grid items default to min-width:auto).
+        "min-w-0 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6",
         className
       )}
     >

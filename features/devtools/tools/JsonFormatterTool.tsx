@@ -18,7 +18,7 @@ import { downloadText, readFileAsText } from "../utils/download";
 import { highlightJson } from "../utils/highlight";
 import { cn } from "@/lib/utils";
 
-const EXAMPLE = `{"name":"CompressPix","tags":["image","tools"],"stats":{"tools":12,"free":true},"nested":{"deep":{"deeper":[1,2,3]}}}`;
+const EXAMPLE = `{"name":"Vizo Tool","tags":["image","tools"],"stats":{"tools":12,"free":true},"nested":{"deep":{"deeper":[1,2,3]}}}`;
 
 /** Recursive collapsible JSON tree node. */
 function JsonNode({

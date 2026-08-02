@@ -73,10 +73,12 @@ function HeadingTree({ headings }: { headings: HeadingEntry[] }) {
   return (
     <ul className="space-y-1">
       {headings.map((h, i) => (
+        // Indent caps at 54px so deep H5/H6 rows don't overflow on phones;
+        // the text span gets min-w-0 flex-1 so it truncates, never wraps wide.
         <li
           key={`${h.level}-${i}`}
-          className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5"
-          style={{ marginLeft: (h.level - 1) * 18 }}
+          className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5"
+          style={{ marginLeft: Math.min((h.level - 1) * 18, 54) }}
         >
           <span
             className={cn(
@@ -86,7 +88,9 @@ function HeadingTree({ headings }: { headings: HeadingEntry[] }) {
           >
             H{h.level}
           </span>
-          <span className="truncate text-xs text-text-secondary">{h.text}</span>
+          <span className="min-w-0 flex-1 truncate text-xs text-text-secondary" title={h.text}>
+            {h.text}
+          </span>
         </li>
       ))}
     </ul>

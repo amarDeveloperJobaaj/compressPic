@@ -7,7 +7,7 @@ import type { ToolSeoContent } from "./seo-content";
  */
 export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   "income-tax-calculator": {
-    meta: { readTime: "7 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "7 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Old & new regimes",
       "Standard deduction",
@@ -160,7 +160,7 @@ export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   },
 
   "retirement-calculator": {
-    meta: { readTime: "7 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "7 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Corpus projection",
       "4% withdrawal rule",
@@ -313,7 +313,7 @@ export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   },
 
   "discount-calculator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Final price",
       "You save in ₹",
@@ -451,7 +451,7 @@ export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   },
 
   "profit-margin-calculator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Profit in ₹",
       "Margin percentage",
@@ -589,7 +589,7 @@ export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   },
 
   "stock-average-calculator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Unlimited entries",
       "Average buy price",
@@ -732,7 +732,7 @@ export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   },
 
   "salary-calculator": {
-    meta: { readTime: "6 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "6 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "CTC → take-home",
       "PF & professional tax",
@@ -885,7 +885,7 @@ export const FINANCE_TOOL_SEO_CONTENT_2: Record<string, ToolSeoContent> = {
   },
 
   "inflation-calculator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Future value",
       "Present purchasing power",

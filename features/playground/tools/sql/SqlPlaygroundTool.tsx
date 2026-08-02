@@ -37,9 +37,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { downloadText, readFileAsText } from "@/features/devtools/utils/download";
 
-const HISTORY_KEY = "compresspix:sql-playground:history";
-const SAVED_KEY = "compresspix:sql-playground:saved";
-const QUERY_KEY = "compresspix:sql-playground:query";
+const HISTORY_KEY = "vizotool:sql-playground:history";
+const SAVED_KEY = "vizotool:sql-playground:saved";
+const QUERY_KEY = "vizotool:sql-playground:query";
 
 interface HistoryEntry {
   sql: string;

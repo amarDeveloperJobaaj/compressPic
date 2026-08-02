@@ -7,7 +7,7 @@ import type { ToolSeoContent } from "@/lib/seo-content";
  */
 export const ANALYSIS_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   "website-traffic-checker": {
-    meta: { readTime: "6 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "6 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Estimated monthly & yearly visitors",
       "SEO / technical / performance scores",

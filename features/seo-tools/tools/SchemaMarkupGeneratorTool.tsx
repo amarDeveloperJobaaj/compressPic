@@ -484,8 +484,8 @@ export function SchemaMarkupGeneratorTool() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {/* Schema type picker + form */}
-      <div className="space-y-6">
+      {/* Schema type picker + form — min-w-0 lets the panel shrink on mobile */}
+      <div className="min-w-0 space-y-6">
         <ToolPanel title="Schema Type" description="Choose the schema that matches your content.">
           <div className="flex flex-wrap gap-2">
             {SCHEMA_TYPES.map((t) => (

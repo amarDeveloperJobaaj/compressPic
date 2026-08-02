@@ -4,14 +4,14 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
-  title: "About Amar Lodhi — Founder of CompressPix",
+  title: "About Amar Lodhi — Founder of Vizo Tool",
   description:
-    "Meet Amar Lodhi, the 22-year-old software engineer from Mathura building CompressPix — 40+ free, private, browser-based tools for images, PDFs, developers, SEO and more. No uploads, no ads, no sign-ups.",
+    "Meet Amar Lodhi, the 22-year-old software engineer from Mathura building Vizo Tool — 40+ free, private, browser-based tools for images, PDFs, developers, SEO and more. No uploads, no ads, no sign-ups.",
   path: "/about",
   keywords: [
-    "about compresspix",
+    "about vizotool",
     "amar lodhi",
-    "compresspix founder",
+    "vizotool founder",
     "free online tools",
     "browser based tools",
     "software engineer mathura",
@@ -53,10 +53,10 @@ const personSchema = {
 const webpageSchema = {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  name: "About Amar Lodhi — Founder of CompressPix",
+  name: "About Amar Lodhi — Founder of Vizo Tool",
   url: `${SITE_URL}/about`,
   description:
-    "The story of Amar Lodhi, the software engineer behind CompressPix — a platform of 40+ free, private, browser-based tools.",
+    "The story of Amar Lodhi, the software engineer behind Vizo Tool — a platform of 40+ free, private, browser-based tools.",
   isPartOf: {
     "@type": "WebSite",
     name: SITE_NAME,

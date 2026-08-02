@@ -5,7 +5,7 @@ import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { AdSlot } from "@/components/seo/AdSlot";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Passport Photo Maker Online Free — 25+ Countries | CompressPix",
+  title: "Passport Photo Maker Online Free — 25+ Countries | Vizo Tool",
   description:
     "Make a passport-size photo online free for 25+ countries. Choose your size, set the background color, download a print sheet — 100% in your browser, no uploads.",
   path: "/passport-photo-maker",

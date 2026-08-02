@@ -5,7 +5,7 @@ import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { AdSlot } from "@/components/seo/AdSlot";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Convert PDF to Image Online Free — PDF to JPG, PNG | CompressPix",
+  title: "Convert PDF to Image Online Free — PDF to JPG, PNG | Vizo Tool",
   description:
     "Turn PDF pages into high-resolution JPG or PNG images for free. Preview each page, download individually, or grab all as a ZIP — 100% in your browser, no uploads.",
   path: "/pdf-to-image",

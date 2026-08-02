@@ -134,9 +134,10 @@ export function DataGrid({ data }: { data: GridData }) {
         </div>
       </div>
 
-      {/* Per-column filter row */}
+      {/* Per-column filter row — fixed-width inputs scroll horizontally on
+          narrow screens instead of blowing out the page width. */}
       {showFilter && (
-        <div className="flex items-center gap-1 border-b border-border bg-surface/60 px-2 py-1.5">
+        <div className="flex items-center gap-1 overflow-x-auto border-b border-border bg-surface/60 px-2 py-1.5">
           {columns.map((col, i) => (
             <div key={col} className="relative" style={{ width: Math.min(widths[i] ?? 160, 200) }}>
               <input

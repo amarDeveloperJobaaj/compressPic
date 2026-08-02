@@ -6,7 +6,7 @@ import type { ToolSeoContent } from "./seo-content";
  */
 export const PLAYGROUND_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   "html-css-js-playground": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Monaco editor (VS Code engine)",
       "Live preview with console",
@@ -66,7 +66,7 @@ export const PLAYGROUND_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "sql-playground": {
-    meta: { readTime: "6 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "6 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Real SQLite via WASM",
       "5 sample databases",

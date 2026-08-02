@@ -8,7 +8,7 @@ import type { ToolSeoContent } from "@/lib/seo-content";
  */
 export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   "meta-tag-generator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Live SERP preview",
       "SEO score & suggestions",
@@ -168,7 +168,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "schema-markup-generator": {
-    meta: { readTime: "6 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "6 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "15+ schema types",
       "Valid JSON-LD output",
@@ -324,7 +324,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "open-graph-generator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Facebook / LinkedIn / X previews",
       "OG image with aspect guidance",
@@ -480,7 +480,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "robots-txt-generator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Allow & Disallow rules",
       "Sitemap + Host directives",
@@ -636,7 +636,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "sitemap-generator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "XML sitemap builder",
       "Image / video entries",
@@ -792,7 +792,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "utm-builder": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Source · Medium · Campaign",
       "Live URL preview",
@@ -948,7 +948,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "serp-preview": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "Desktop + mobile preview",
       "Pixel-accurate truncation",
@@ -1104,7 +1104,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "slug-generator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "SEO-friendly URL slugs",
       "Unicode & transliteration",
@@ -1260,7 +1260,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "meta-tag-analyzer": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "URL or HTML source input",
       "Title, OG & Twitter audit",
@@ -1416,7 +1416,7 @@ export const SEO_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "heading-checker": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: [
       "H1–H6 hierarchy audit",
       "Duplicate & missing detection",

@@ -4,7 +4,10 @@ import { useCallback, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
-const STORAGE_KEY = "compresspix-theme";
+const STORAGE_KEY = "vizotool-theme";
+// Legacy key from the pre-rebrand days — read once and migrate so users who
+// explicitly chose "light" don't silently flip back to the default dark theme.
+const LEGACY_STORAGE_KEY = "compresspix-theme";
 
 /**
  * Module-level theme store shared by every ThemeToggle instance (desktop nav,
@@ -17,7 +20,16 @@ const listeners = new Set<() => void>();
 function getStoredTheme(): Theme | null {
   if (typeof window === "undefined") return null;
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) {
+      // One-time migration from the legacy rebrand key — only propagate a
+      // value that's actually a valid theme choice.
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy === "light" || legacy === "dark") {
+        stored = legacy;
+        localStorage.setItem(STORAGE_KEY, legacy);
+      }
+    }
     if (stored === "light" || stored === "dark") return stored;
   } catch {
     // localStorage not available

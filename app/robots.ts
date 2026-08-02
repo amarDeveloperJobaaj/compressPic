@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [],
     },
-    sitemap: "https://compresspix.com/sitemap.xml",
+    sitemap: "https://vizotool.com/sitemap.xml",
   };
 }

@@ -63,7 +63,7 @@ export function printResult(
   if (!win) return;
   const body = `
     <h1 style="font: 700 20px system-ui, sans-serif; margin: 0 0 4px;">${config.name}</h1>
-    <p style="font: 12px system-ui, sans-serif; color: #6b7280; margin: 0 0 16px;">CompressPix Finance · generated ${new Date().toLocaleString()}</p>
+    <p style="font: 12px system-ui, sans-serif; color: #6b7280; margin: 0 0 16px;">Vizo Tool Finance · generated ${new Date().toLocaleString()}</p>
     <table style="width:100%; border-collapse: collapse; font: 13px system-ui, sans-serif;">
       ${config.results
         .map(

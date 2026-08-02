@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { readFileAsText } from "../utils/download";
 import { highlightJson } from "../utils/highlight";
 
-const EXAMPLE = `{\n  "name": "CompressPix",\n  "tools": 12,\n  "free": true,\n  "tags": ["image", "developer"]\n}`;
+const EXAMPLE = `{\n  "name": "Vizo Tool",\n  "tools": 12,\n  "free": true,\n  "tags": ["image", "developer"]\n}`;
 
 interface ValidationResult {
   valid: boolean;

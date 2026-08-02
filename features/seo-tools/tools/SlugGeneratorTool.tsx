@@ -68,7 +68,7 @@ function generateSlug(input: string, options: SlugOptions): string {
 export function SlugGeneratorTool() {
   const [input, setInput] = useState("10 Best Free Online SEO Tools for 2026 — The Ultimate Guide!");
   const [options, setOptions] = useState<SlugOptions>(DEFAULT_OPTIONS);
-  const [baseUrl, setBaseUrl] = useState("https://compresspix.com/blog/");
+  const [baseUrl, setBaseUrl] = useState("https://vizotool.com/blog/");
 
   const set = (key: keyof SlugOptions, value: boolean) =>
     setOptions((o) => ({ ...o, [key]: value }));

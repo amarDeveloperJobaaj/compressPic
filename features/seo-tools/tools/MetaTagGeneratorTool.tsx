@@ -38,17 +38,17 @@ const DEFAULT_FIELDS: MetaFields = {
   description:
     "Generate complete, SEO-optimized meta tags with a live SERP preview and SEO score. Open Graph, Twitter Cards, canonical, robots — all in your browser.",
   keywords: "meta tag generator, seo meta tags, generate meta tags",
-  canonical: "https://compresspix.com/meta-tag-generator",
+  canonical: "https://vizotool.com/meta-tag-generator",
   robots: "index, follow",
   viewport: true,
-  author: "CompressPix",
+  author: "Vizo Tool",
   language: "en",
   themeColor: "#2563EB",
   ogTitle: "",
   ogDescription: "",
   ogImage: "",
   ogType: "website",
-  ogSiteName: "CompressPix",
+  ogSiteName: "Vizo Tool",
   twCard: "summary_large_image",
   twTitle: "",
   twDescription: "",
@@ -169,8 +169,9 @@ export function MetaTagGeneratorTool() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {/* Form */}
-      <ToolPanel title="Page Details" description="Fill in your page information — the tags update live.">
+      {/* Form — min-w-0 so the panel can shrink on mobile (grid items default
+          to min-width:auto, which would let long code lines blow out the page) */}
+      <ToolPanel className="min-w-0" title="Page Details" description="Fill in your page information — the tags update live.">
         <div className="space-y-4">
           <Input label="Page Title" value={fields.title} onChange={(e) => set("title", e.target.value)} maxLength={70} />
           <div>
@@ -231,8 +232,8 @@ export function MetaTagGeneratorTool() {
         </div>
       </ToolPanel>
 
-      {/* Preview + output */}
-      <div className="space-y-6">
+      {/* Preview + output — min-w-0 lets the code block scroll inside instead of widening the page */}
+      <div className="min-w-0 space-y-6">
         {/* Live SERP preview */}
         <ToolPanel title="Live SERP Preview" description="How Google renders your title & description right now.">
           <div className="rounded-xl border border-border bg-background p-4">

@@ -9,10 +9,10 @@ import { copyToClipboard, downloadText } from "@/features/devtools/utils/downloa
 import { buildSitemap, validateXml, type SitemapUrl } from "../utils/seo";
 import { cn } from "@/lib/utils";
 
-const EXAMPLE_URLS = `https://compresspix.com
-https://compresspix.com/compress
-https://compresspix.com/resize
-https://compresspix.com/flip`;
+const EXAMPLE_URLS = `https://vizotool.com
+https://vizotool.com/compress
+https://vizotool.com/resize
+https://vizotool.com/flip`;
 
 /** Capture today's date once on mount (lazy initializer — no impure render). */
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -53,7 +53,7 @@ export function SitemapGeneratorTool() {
   const [includeVideos, setIncludeVideos] = useState(false);
   const [asIndex, setAsIndex] = useState(false);
   const [includeNews, setIncludeNews] = useState(false);
-  const [newsPublication, setNewsPublication] = useState("CompressPix");
+  const [newsPublication, setNewsPublication] = useState("Vizo Tool");
   const [newsLanguage, setNewsLanguage] = useState("en");
   const [newsTitle, setNewsTitle] = useState("");
   const [newsDate] = useState(todayIso);
@@ -97,8 +97,8 @@ export function SitemapGeneratorTool() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {/* Builder */}
-      <div className="space-y-6">
+      {/* Builder — min-w-0 lets panels shrink instead of overflowing on mobile */}
+      <div className="min-w-0 space-y-6">
         <ToolPanel title="Page URLs" description="One URL per line. Optionally append: lastmod changefreq priority">
           <textarea
             value={urlsInput}

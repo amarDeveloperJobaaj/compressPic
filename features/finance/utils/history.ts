@@ -5,8 +5,8 @@
  * recent calculations (per calculator) + favorite calculator slugs.
  */
 
-const RECENT_KEY = "compresspix:finance:recent";
-const FAVS_KEY = "compresspix:finance:favorites";
+const RECENT_KEY = "vizotool:finance:recent";
+const FAVS_KEY = "vizotool:finance:favorites";
 
 export interface RecentEntry {
   slug: string;

@@ -22,8 +22,8 @@ const DEFAULTS: SerpFields = {
   title: "Meta Tag Generator — Free Online SEO Tool",
   description:
     "Generate complete, SEO-optimized meta tags with a live SERP preview and SEO score. Open Graph, Twitter Cards, canonical, robots — all in your browser.",
-  url: "https://compresspix.com/meta-tag-generator",
-  breadcrumb: "CompressPix › SEO Tools",
+  url: "https://vizotool.com/meta-tag-generator",
+  breadcrumb: "Vizo Tool › SEO Tools",
   keyword: "meta tag generator",
 };
 
@@ -147,8 +147,8 @@ export function SerpPreviewTool() {
         </div>
       </ToolPanel>
 
-      {/* Previews */}
-      <div className="space-y-6">
+      {/* Previews — min-w-0 lets panels shrink instead of overflowing on mobile */}
+      <div className="min-w-0 space-y-6">
         {/* Desktop */}
         <ToolPanel title="Desktop Preview" description="Google desktop results — ~600px content width.">
           <div className="rounded-xl border border-border bg-background p-5">

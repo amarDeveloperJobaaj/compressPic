@@ -60,7 +60,7 @@ export function RobotsTxtGeneratorTool() {
   const [groups, setGroups] = useState<RuleGroup[]>([
     { id: nextRuleId++, userAgent: "*", disallow: "/admin\n/private", allow: "/public" },
   ]);
-  const [sitemap, setSitemap] = useState("https://compresspix.com/sitemap.xml");
+  const [sitemap, setSitemap] = useState("https://vizotool.com/sitemap.xml");
   const [host, setHost] = useState("");
   const [crawlDelay, setCrawlDelay] = useState("");
 
@@ -153,8 +153,8 @@ export function RobotsTxtGeneratorTool() {
         </div>
       </ToolPanel>
 
-      {/* Output */}
-      <div className="space-y-6">
+      {/* Output — min-w-0 lets the code block scroll inside instead of widening the page */}
+      <div className="min-w-0 space-y-6">
         <ToolPanel
           title="robots.txt"
           description="Copy or download the file and place it at your site root."

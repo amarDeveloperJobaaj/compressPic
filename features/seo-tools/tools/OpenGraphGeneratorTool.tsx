@@ -26,10 +26,10 @@ const DEFAULTS: OgFields = {
   ogTitle: "Open Graph Generator — Preview Social Shares",
   ogDescription:
     "Design your social share cards with live Facebook, LinkedIn, and X previews. Copy-ready Open Graph and Twitter tags.",
-  ogImage: "https://compresspix.com/og?title=Open%20Graph%20Generator",
-  ogUrl: "https://compresspix.com/open-graph-generator",
+  ogImage: "https://vizotool.com/og?title=Open%20Graph%20Generator",
+  ogUrl: "https://vizotool.com/open-graph-generator",
   ogType: "website",
-  ogSiteName: "CompressPix",
+  ogSiteName: "Vizo Tool",
   twCard: "summary_large_image",
   twTitle: "",
   twDescription: "",
@@ -111,8 +111,8 @@ export function OpenGraphGeneratorTool() {
         </div>
       </ToolPanel>
 
-      {/* Previews + output */}
-      <div className="space-y-6">
+      {/* Previews + output — min-w-0 lets panels shrink instead of overflowing on mobile */}
+      <div className="min-w-0 space-y-6">
         {/* Facebook preview */}
         <ToolPanel title="Facebook / WhatsApp Preview">
           <div className="overflow-hidden rounded-xl border border-border bg-background">

@@ -32,7 +32,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
     intro: {
       heading: "Compress Image Online — Free & Private",
       paragraphs: [
-        "CompressPix's image compressor shrinks JPG, PNG, WEBP, AVIF, and HEIC photos right in your browser — no uploads, no servers, no watermarks. Just pick a target size like 50 KB, 100 KB, or 200 KB, and download a smaller file in seconds.",
+        "Vizo Tool's image compressor shrinks JPG, PNG, WEBP, AVIF, and HEIC photos right in your browser — no uploads, no servers, no watermarks. Just pick a target size like 50 KB, 100 KB, or 200 KB, and download a smaller file in seconds.",
         "Because everything runs locally on your device, your images never leave your computer. It's the fastest, safest way to reduce file size for email, websites, or app uploads.",
       ],
     },
@@ -97,7 +97,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
           "Upload your image, choose a target size (50 KB, 100 KB, 200 KB, or custom), and download the compressed result. Everything happens instantly in your browser.",
       },
       {
-        question: "Is CompressPix free?",
+        question: "Is Vizo Tool free?",
         answer:
           "Yes, it's completely free with no sign-ups, no watermarks, and no usage limits.",
       },
@@ -594,7 +594,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
     intro: {
       heading: "AI Background Remover — Free & Private",
       paragraphs: [
-        "Remove backgrounds from photos in seconds with CompressPix's AI Background Remover. The neural network detects your subject automatically and cuts it out — no manual selection, no green screens, no design skills needed.",
+        "Remove backgrounds from photos in seconds with Vizo Tool's AI Background Remover. The neural network detects your subject automatically and cuts it out — no manual selection, no green screens, no design skills needed.",
         "Everything runs entirely in your browser using WebAssembly and WebGPU, so your images never leave your device. Replace the background with a color, gradient, blur, or another photo, refine the edges, and download a transparent PNG, JPG, or WEBP in one click.",
       ],
     },
@@ -734,7 +734,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "passport-photo-maker": {
-    meta: { readTime: "5 min read", updated: "July 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "July 2026", author: "Vizo Tool" },
     highlights: [
       "25+ country sizes",
       "300 DPI output",
@@ -900,7 +900,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "image-to-pdf": {
-    meta: { readTime: "4 min read", updated: "July 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "July 2026", author: "Vizo Tool" },
     highlights: [
       "Merge up to 50 images",
       "A4 · Letter · Legal · A5",
@@ -1042,7 +1042,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "pdf-to-image": {
-    meta: { readTime: "4 min read", updated: "July 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "July 2026", author: "Vizo Tool" },
     highlights: [
       "PDF → JPG / PNG",
       "Up to 4× resolution (288 DPI)",
@@ -1184,7 +1184,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "signature-resizer": {
-    meta: { readTime: "4 min read", updated: "July 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "July 2026", author: "Vizo Tool" },
     highlights: [
       "5 size presets + custom",
       "20 / 50 / 100 KB limits",
@@ -1326,7 +1326,7 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "social-media-resizer": {
-    meta: { readTime: "5 min read", updated: "July 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "July 2026", author: "Vizo Tool" },
     highlights: [
       "20+ platform presets",
       "Exact pixel dimensions",
@@ -1545,10 +1545,10 @@ export function getConversionSeoContent(pair: ConversionPair): {
         answer: "Yes, the tool is fully responsive and works on desktop, tablet, and mobile browsers.",
       },
       {
-        question: conversionQuestion(pair, "Why choose CompressPix to convert {from} to {to}?"),
+        question: conversionQuestion(pair, "Why choose Vizo Tool to convert {from} to {to}?"),
         answer: conversionQuestion(
           pair,
-          `CompressPix is free, private, and unlimited. There's no software to install and your {from} files are never uploaded to a server.`
+          `Vizo Tool is free, private, and unlimited. There's no software to install and your {from} files are never uploaded to a server.`
         ),
       },
     ],

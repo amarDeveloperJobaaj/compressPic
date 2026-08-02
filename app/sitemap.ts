@@ -3,7 +3,7 @@ import { ALL_TOOLS } from "@/lib/tools";
 import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://compresspix.com";
+  const baseUrl = "https://vizotool.com";
   const now = new Date();
 
   // Tool pages stay in sync with the registry — new tools are indexed automatically

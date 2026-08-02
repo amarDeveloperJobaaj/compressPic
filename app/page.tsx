@@ -300,9 +300,9 @@ const formatBadges: { label: string; variant: CapsuleVariant; icon: LucideIcon }
 
 const faqs = [
   {
-    question: "How does CompressPix work?",
+    question: "How does Vizo Tool work?",
     answer:
-      "CompressPix uses advanced browser-based image processing technology. Your images are processed entirely within your browser using the Canvas API — nothing is ever uploaded to any server.",
+      "Vizo Tool uses advanced browser-based image processing technology. Your images are processed entirely within your browser using the Canvas API — nothing is ever uploaded to any server.",
   },
   {
     question: "What is the Resize & Crop tool?",
@@ -340,14 +340,14 @@ const faqs = [
       "There's no artificial limit, but very large images may take a moment to process since everything runs in your browser. For best results, keep images under 50MB.",
   },
   {
-    question: "Is CompressPix really free?",
+    question: "Is Vizo Tool really free?",
     answer:
-      "Yes! CompressPix is completely free with no hidden costs, no sign-ups, and no usage limits. We believe image compression should be accessible to everyone.",
+      "Yes! Vizo Tool is completely free with no hidden costs, no sign-ups, and no usage limits. We believe image compression should be accessible to everyone.",
   },
   {
     question: "Does it work on mobile?",
     answer:
-      "Yes! CompressPix is fully responsive and works perfectly on desktop, tablet, and mobile devices.",
+      "Yes! Vizo Tool is fully responsive and works perfectly on desktop, tablet, and mobile devices.",
   },
 ];
 
@@ -628,7 +628,7 @@ export default function HomePage() {
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <Capsule variant="primary" sm dot className="mb-4">
-              Why CompressPix
+              Why Vizo Tool
             </Capsule>
             <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
               Everything You Need, Nothing You Don&apos;t

@@ -18,9 +18,9 @@ interface WifiFields {
 }
 
 const DEFAULT_FIELDS: Record<string, string> = {
-  url: "https://compresspix.com",
-  text: "Hello from CompressPix!",
-  email: "hello@compresspix.com",
+  url: "https://vizotool.com",
+  text: "Hello from Vizo Tool!",
+  email: "hello@vizotool.com",
   phone: "+15551234567",
   sms: "+15551234567",
   whatsapp: "15551234567",

@@ -6,7 +6,7 @@ import type { ToolSeoContent } from "./seo-content";
  */
 export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   "json-formatter": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Beautify & minify", "Collapsible tree view", "Error line numbers", "100% browser-based"],
     intro: {
       heading: "JSON Formatter — Beautify, Minify & Validate JSON Online",
@@ -54,7 +54,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "json-validator": {
-    meta: { readTime: "3 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "3 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Real-time validation", "Error line numbers", "Plain-English errors", "Pretty print"],
     intro: {
       heading: "JSON Validator — Check Your JSON in Real Time",
@@ -102,7 +102,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "base64-encoder": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Text, file & image input", "UTF-8 safe", "Copy & download", "100% browser-based"],
     intro: {
       heading: "Base64 Encoder — Encode Text, Files & Images to Base64",
@@ -150,7 +150,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "base64-decoder": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Decode text & data URLs", "UTF-8 safe", "Image preview", "Copy & download"],
     intro: {
       heading: "Base64 Decoder — Decode Text, Files & Images Instantly",
@@ -198,7 +198,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "password-generator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Entropy calculation", "Strength meter", "Exclude similar chars", "Cryptographic randomness"],
     intro: {
       heading: "Password Generator — Strong, Random Passwords with Entropy",
@@ -247,7 +247,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "uuid-generator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["UUID v1 · v4 · v7", "Bulk generation", "Copy all", "Download as file"],
     intro: {
       heading: "UUID Generator — v1, v4 & v7 with Bulk Generation",
@@ -296,7 +296,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "qr-code-generator": {
-    meta: { readTime: "5 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "5 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["URL · WiFi · Email · UPI", "Custom colors & logo", "PNG · SVG · PDF export", "100% browser-based"],
     intro: {
       heading: "QR Code Generator — URL, WiFi, WhatsApp & More",
@@ -345,7 +345,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "css-gradient-generator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Linear · Radial · Conic", "Multi-color stops", "Angle & shape control", "Copy CSS in one click"],
     intro: {
       heading: "CSS Gradient Generator — Linear, Radial & Conic",
@@ -394,7 +394,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "css-box-shadow-generator": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["X · Y · Blur · Spread", "Opacity & inset", "Live preview", "Copy CSS in one click"],
     intro: {
       heading: "CSS Box Shadow Generator — Design Shadows Visually",
@@ -443,7 +443,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "jwt-decoder": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Header & payload decode", "Expiry & timestamps", "Human-readable times", "100% browser-based"],
     intro: {
       heading: "JWT Decoder — Decode Header, Payload & Expiry",
@@ -492,7 +492,7 @@ export const DEV_TOOL_SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
 
   "sql-formatter": {
-    meta: { readTime: "4 min read", updated: "August 2026", author: "CompressPix" },
+    meta: { readTime: "4 min read", updated: "August 2026", author: "Vizo Tool" },
     highlights: ["Beautify & minify", "Syntax highlighting", "Upload SQL files", "12+ SQL dialects"],
     intro: {
       heading: "SQL Formatter — Beautify & Minify SQL Queries",
