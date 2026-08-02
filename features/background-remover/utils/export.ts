@@ -5,17 +5,25 @@ import type { AdjustmentSettings } from "./adjustments";
 
 export type ExportFormat = "png-transparent" | "png-colored" | "jpeg" | "webp";
 
+/**
+ * Export resolution: "optimized" reuses the working copy (≤2048px, fast);
+ * "original" upscales the mask back to the source file's full resolution.
+ */
+export type ExportResolution = "optimized" | "original";
+
 export interface ExportSettings {
   format: ExportFormat;
   /** 0.1–1 for lossy formats */
   quality: number;
   fileName: string;
+  resolution: ExportResolution;
 }
 
 export const DEFAULT_EXPORT: ExportSettings = {
   format: "png-transparent",
   quality: 0.92,
   fileName: "",
+  resolution: "optimized",
 };
 
 export function exportLabel(format: ExportFormat): string {

@@ -25,16 +25,13 @@ function getStoredTheme(): Theme | null {
   return null;
 }
 
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-/** Resolve the current theme: explicit choice → stored → system preference. */
+/**
+ * Resolve the current theme: explicit choice → stored preference → dark.
+ * Dark is the product default (the site ships dark-first); users can still
+ * switch to light and their choice is persisted.
+ */
 function resolveTheme(): Theme {
-  return currentTheme ?? getStoredTheme() ?? getSystemTheme();
+  return currentTheme ?? getStoredTheme() ?? "dark";
 }
 
 function applyTheme(theme: Theme) {
@@ -65,7 +62,9 @@ function subscribe(listener: () => void) {
 }
 
 function getServerSnapshot(): Theme {
-  return "light";
+  // Dark is the product default, matching the pre-hydration script so there
+  // is no flash or hydration mismatch for first-time visitors.
+  return "dark";
 }
 
 export function useTheme() {

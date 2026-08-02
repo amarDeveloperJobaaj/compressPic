@@ -151,17 +151,47 @@
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  @media (min-width: 640px) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 @utility text-balance {
   text-wrap: balance;
 }
 
+/* Skip rendering off-screen page sections until they approach the viewport.
+   Keeps long-page scrolling smooth; the `auto` keyword remembers the
+   last-rendered height so the scrollbar doesn't jump around. */
+@utility content-visibility-auto {
+  content-visibility: auto;
+  /* `auto 900px`: use the last-rendered height once known, otherwise reserve
+     900px so the scrollbar doesn't visibly jump before a section renders. */
+  contain-intrinsic-size: auto 900px;
+}
+
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+  /* Keep anchored/skip-link jumps clear of the sticky header (h-16 + gap). */
+  scroll-padding-top: 5.5rem;
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+/* Buttons/links: prevent double-tap zoom delay on mobile */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
 }
 
 /* Respect users who prefer reduced motion — pause ambient animations */
@@ -169,12 +199,47 @@ html {
   .animate-marquee,
   .animate-glow-pulse,
   .animate-beam-slow,
-  .animate-beam-slow-reverse {
+  .animate-beam-slow-reverse,
+  .animate-spotlight {
     animation: none;
   }
   html {
     scroll-behavior: auto;
   }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Performance: on small screens (mobile) the ambient hero animations —
+ * drifting blurred beams, breathing glows, the spotlight sweep — burn
+ * GPU/CPU with little visual payoff. Freeze them to keep scrolling smooth.
+ */
+@media (max-width: 640px) {
+  .animate-beam-slow,
+  .animate-beam-slow-reverse,
+  .animate-glow-pulse,
+  .animate-spotlight,
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+/* Smooth theme switching — scope to structural containers only so hover
+   micro-interactions on buttons/cards keep their own snappy transitions. */
+body {
+  transition: background-color 0.25s ease;
+}
+
+header,
+footer,
+main {
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 /* Focus ring */

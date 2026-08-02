@@ -18,7 +18,14 @@ import {
 } from "lucide-react";
 import { useBackgroundRemoverStore } from "@/store/background-remover-store";
 import { composeImage, loadImage } from "@/features/background-remover/utils/compose";
+import { formatFileSize } from "@/features/compressor/utils/format";
 import { cn } from "@/lib/utils";
+
+/** Rough AI processing-time estimate (seconds) from working megapixels. */
+function estimateSeconds(workW: number, workH: number): number {
+  const mp = (workW * workH) / 1_000_000;
+  return Math.max(1, Math.round(mp * 0.9));
+}
 
 type ViewMode = "slider" | "side" | "split";
 
@@ -653,7 +660,13 @@ export function ComparisonViewer() {
             {item.workW}×{item.workH}px
           </span>
           <span className="text-text-muted">&middot;</span>
-          <span>{item.name}</span>
+          <span>{formatFileSize(item.size)}</span>
+          <span className="text-text-muted">&middot;</span>
+          <span>~{estimateSeconds(item.workW, item.workH)}s est.</span>
+          <span className="text-text-muted">&middot;</span>
+          <span className="max-w-40 truncate" title={item.name}>
+            {item.name}
+          </span>
         </div>
         {item.provider && (
           <span

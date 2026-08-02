@@ -44,13 +44,23 @@ export function Sparkles({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Respect OS-level reduce-motion: skip the animation loop entirely.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     let w = 0;
     let h = 0;
     let particles: Particle[] = [];
     let raf = 0;
+    let visible = true;
+
+    // Cap DPR at 1.5 on ALL devices: the canvas covers the whole hero, so a
+    // 2x buffer nearly doubles the per-frame paint cost for a barely visible
+    // gain. Re-evaluated on every resize so rotation is honored.
+    const isMobile = () => window.innerWidth < 640;
 
     const sizeCanvas = () => {
+      const mobile = isMobile();
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const rect = canvas.getBoundingClientRect();
       w = rect.width;
       h = rect.height;
@@ -59,7 +69,9 @@ export function Sparkles({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const area = (w * h) / 10000;
-      const count = Math.max(20, Math.min(160, Math.round(area * (particleDensity / 10))));
+      const density = mobile ? particleDensity * 0.5 : particleDensity;
+      // Cap at 120 on desktop (160 was pure overkill) and keep mobile minimal.
+      const count = Math.max(mobile ? 12 : 16, Math.min(120, Math.round(area * (density / 10))));
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -71,6 +83,11 @@ export function Sparkles({
     };
 
     const tick = (t: number) => {
+      // Skip frames while the canvas is off-screen (saves battery/CPU on scroll).
+      if (!visible) {
+        raf = 0;
+        return;
+      }
       ctx.clearRect(0, 0, w, h);
       for (const p of particles) {
         p.x += p.vx;
@@ -90,14 +107,31 @@ export function Sparkles({
       raf = requestAnimationFrame(tick);
     };
 
+    const start = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
     sizeCanvas();
-    raf = requestAnimationFrame(tick);
+    start();
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        visible = entry.isIntersecting;
+        if (visible) start();
+      },
+      { rootMargin: "100px" }
+    );
+    io.observe(canvas);
 
     const ro = new ResizeObserver(sizeCanvas);
     ro.observe(canvas);
 
     return () => {
       cancelAnimationFrame(raf);
+      raf = 0;
+      io.disconnect();
       ro.disconnect();
     };
   }, [particleColor, minSize, maxSize, speed, particleDensity]);

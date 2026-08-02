@@ -6,14 +6,23 @@ import type { AdjustmentSettings } from "@/features/background-remover/utils/adj
 import { DEFAULT_ADJUSTMENTS } from "@/features/background-remover/utils/adjustments";
 import {
   blurMask,
-  thresholdMask,
   stampBrush,
+  upscaleMask,
 } from "@/features/background-remover/utils/mask";
+import { loadImageData, removeIslands, fillHoles } from "@/features/background-remover/utils/refine";
+import { refineMaskInWorker } from "@/features/background-remover/utils/refineWorker";
 import type { ExportSettings } from "@/features/background-remover/utils/export";
 import { DEFAULT_EXPORT, renderExportBlob, downloadBlob, createZip, exportExt, baseName } from "@/features/background-remover/utils/export";
 
 /** Working-resolution cap (px on the longest edge) — bounds memory + model time. */
 export const WORK_MAX_EDGE = 2048;
+/**
+ * Cap for "Original" resolution exports — prevents OOM when a compressed
+ * source (e.g. a 10 MB PNG) decodes to extreme dimensions like 8000×6000.
+ * The cutout mask is upscaled to this size instead, keeping exports sharp
+ * without blowing up memory.
+ */
+export const EXPORT_MAX_EDGE = 6000;
 /** Max undo/redo snapshots per item (each is a full alpha array). */
 export const MAX_HISTORY = 8;
 
@@ -30,6 +39,9 @@ export interface BatchItem {
   workUrl: string;
   workW: number;
   workH: number;
+  /** Source file's full dimensions (used for original-resolution export). */
+  origW: number;
+  origH: number;
   /** Current alpha mask at working resolution (null until processed). */
   mask: Uint8ClampedArray | null;
   /** Pristine AI mask — restored by "Reset". */
@@ -70,6 +82,8 @@ interface BackgroundRemoverState {
   maskVersion: number;
   /** Bumped when the mask changes non-incrementally (stroke end, ops, undo). */
   fullRecompose: number;
+  /** True while the color-aware refinement pass is running on a mask. */
+  refining: boolean;
 
   background: BackgroundSettings;
   bgImage: HTMLImageElement | null;
@@ -90,6 +104,8 @@ interface BackgroundRemoverState {
   paintMask: (normalizedX: number, normalizedY: number) => void;
   endStroke: () => void;
   applyEdgeOp: (op: "smooth" | "feather" | "hair" | "cleanup") => void;
+  /** Full advanced refinement (specks → holes → defringe → smooth). */
+  refineActiveMask: () => Promise<void>;
   undoMask: () => void;
   redoMask: () => void;
   resetMask: () => void;
@@ -100,18 +116,66 @@ interface BackgroundRemoverState {
   setEdge: (patch: Partial<EdgeSettings>) => void;
   setExport: (patch: Partial<ExportSettings>) => void;
 
-  downloadActive: () => Promise<void>;
-  downloadAll: () => Promise<void>;
+  /** Copy the active composed image (PNG) to the system clipboard. */
+  copyActive: () => Promise<boolean>;
+  downloadActive: () => Promise<boolean>;
+  downloadAll: () => Promise<boolean>;
   reset: () => void;
 }
 
 let idCounter = 0;
 const nextId = () => `bg-${++idCounter}`;
 
+/**
+ * Resolve the source image, output dimensions and mask for an export.
+ *
+ * "Optimized" exports reuse the working copy (≤ WORK_MAX_EDGE). "Original"
+ * exports load the full-resolution source and upscale the mask back up —
+ * capped at EXPORT_MAX_EDGE so an extreme source (e.g. an 8000×6000 PNG)
+ * can't OOM the tab. When the capped size matches the working size the mask
+ * is passed through unchanged.
+ */
+function resolveExportSource(
+  item: BatchItem,
+  useOriginal: boolean
+): { src: string; width: number; height: number; mask: Uint8ClampedArray } {
+  // Self-guard: all current callers verify item.mask first, but the helper
+  // should fail loudly (not crash inside upscaleMask) if that ever changes.
+  if (!item.mask) throw new Error("No mask available to export");
+  if (!useOriginal || item.origW <= 0) {
+    return {
+      src: item.workUrl,
+      width: item.workW,
+      height: item.workH,
+      mask: item.mask!,
+    };
+  }
+  const { width, height } = capSize(item.origW, item.origH, EXPORT_MAX_EDGE);
+  return {
+    src: item.originalUrl,
+    width,
+    height,
+    mask:
+      width !== item.workW || height !== item.workH
+        ? upscaleMask(item.mask!, item.workW, item.workH, width, height)
+        : item.mask!,
+  };
+}
+
+/** Load an HTMLImageElement from a blob URL with a friendly error. */
+function loadExportImage(src: string): Promise<HTMLImageElement> {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Failed to load the image"));
+    image.src = src;
+  });
+}
+
 /** Downscale a File to the working resolution, returning a blob URL + size. */
 async function prepareWorkImage(
   file: File
-): Promise<{ workUrl: string; workW: number; workH: number }> {
+): Promise<{ workUrl: string; workW: number; workH: number; origW: number; origH: number }> {
   const url = URL.createObjectURL(file);
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -129,7 +193,13 @@ async function prepareWorkImage(
     ctx.drawImage(img, 0, 0, width, height);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("Failed to prepare the image");
-    return { workUrl: URL.createObjectURL(blob), workW: width, workH: height };
+    return {
+      workUrl: URL.createObjectURL(blob),
+      workW: width,
+      workH: height,
+      origW: img.naturalWidth,
+      origH: img.naturalHeight,
+    };
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -218,6 +288,7 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
     error: null,
     maskVersion: 0,
     fullRecompose: 0,
+    refining: false,
 
     background: { ...DEFAULT_BACKGROUND },
     bgImage: null,
@@ -250,6 +321,8 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
           workUrl: "",
           workW: 0,
           workH: 0,
+          origW: 0,
+          origH: 0,
           mask: null,
           originalMask: null,
           maskHistory: [],
@@ -289,6 +362,8 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
                   workUrl: p.workUrl,
                   workW: p.workW,
                   workH: p.workH,
+                  origW: p.origW,
+                  origH: p.origH,
                 };
               }
               return {
@@ -403,9 +478,13 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
             }
           }
           break;
-        case "cleanup":
-          next = thresholdMask(item.mask, 128);
+        case "cleanup": {
+          // Structural cleanup: drop stray specks and close enclosed holes
+          // (no color data needed — safe to run synchronously).
+          next = removeIslands(item.mask, item.workW, item.workH, 0.0002);
+          next = fillHoles(next, item.workW, item.workH, 0.05);
           break;
+        }
       }
 
       set((s) => ({
@@ -421,6 +500,42 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
         ),
         fullRecompose: s.fullRecompose + 1,
       }));
+    },
+
+    refineActiveMask: async () => {
+      const state = get();
+      const item = state.items[state.activeIndex];
+      if (!item || !item.mask || state.isProcessing || state.refining) return;
+      const snapshot = new Uint8ClampedArray(item.mask);
+      set({ refining: true, error: null });
+      try {
+        const img = await loadImageData(item.workUrl);
+        // Run the heavy pipeline in a Web Worker so the preview stays smooth.
+        const refined = await refineMaskInWorker(img, item.mask, {
+          removeIslands: true,
+          fillHoles: true,
+          defringe: true,
+          defringeStrength: 0.9,
+          smooth: 1,
+        });
+        set((s) => ({
+          items: s.items.map((it, i) =>
+            i === state.activeIndex
+              ? {
+                  ...it,
+                  mask: refined,
+                  maskHistory: [...it.maskHistory.slice(-(MAX_HISTORY - 1)), snapshot],
+                  maskFuture: [],
+                }
+              : it
+          ),
+          fullRecompose: s.fullRecompose + 1,
+        }));
+      } catch (err) {
+        set({ error: err instanceof Error ? err.message : "Refinement failed" });
+      } finally {
+        set({ refining: false });
+      }
     },
 
     undoMask: () => {
@@ -513,35 +628,68 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
     setExport: (patch) =>
       set((s) => ({ exportSettings: { ...s.exportSettings, ...patch } })),
 
-    downloadActive: async () => {
+    copyActive: async () => {
       const state = get();
       const item = state.items[state.activeIndex];
-      if (!item || !item.mask || state.isProcessing) return;
+      if (!item || !item.mask || state.isProcessing) return false;
+      if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+        set({ error: "Clipboard image copy isn't supported in this browser — use Download instead." });
+        return false;
+      }
       set({ isProcessing: true, stage: "Rendering…", error: null });
       try {
-        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const image = new Image();
-          image.onload = () => resolve(image);
-          image.onerror = () => reject(new Error("Failed to load the image"));
-          image.src = item.workUrl;
-        });
+        const useOriginal = state.exportSettings.resolution === "original";
+        const { src, width, height, mask } = resolveExportSource(item, useOriginal);
+        const img = await loadExportImage(src);
         const bgImage = state.background.type === "image" ? state.bgImage : null;
         const blob = await renderExportBlob(
           img,
-          item.mask,
+          mask,
           state.background,
           state.adjustments,
           bgImage,
-          item.workW,
-          item.workH,
+          width,
+          height,
+          { ...state.exportSettings, format: "png-transparent" }
+        );
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        return true;
+      } catch (err) {
+        set({ error: err instanceof Error ? err.message : "Copy failed" });
+        return false;
+      } finally {
+        set({ isProcessing: false });
+      }
+    },
+
+    downloadActive: async () => {
+      const state = get();
+      const item = state.items[state.activeIndex];
+      if (!item || !item.mask || state.isProcessing) return false;
+      set({ isProcessing: true, stage: "Rendering…", error: null });
+      try {
+        const useOriginal = state.exportSettings.resolution === "original";
+        const { src, width, height, mask } = resolveExportSource(item, useOriginal);
+        const img = await loadExportImage(src);
+        const bgImage = state.background.type === "image" ? state.bgImage : null;
+        const blob = await renderExportBlob(
+          img,
+          mask,
+          state.background,
+          state.adjustments,
+          bgImage,
+          width,
+          height,
           state.exportSettings
         );
         const name =
           state.exportSettings.fileName.trim() ||
           baseName(item.file.name) + "-bg-removed";
         downloadBlob(blob, `${name}.${exportExt(state.exportSettings.format)}`);
+        return true;
       } catch (err) {
         set({ error: err instanceof Error ? err.message : "Export failed" });
+        return false;
       } finally {
         set({ isProcessing: false });
       }
@@ -550,35 +698,34 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
     downloadAll: async () => {
       const state = get();
       const done = state.items.filter((it) => it.status === "done" && it.mask);
-      if (done.length === 0 || state.isProcessing) return;
+      if (done.length === 0 || state.isProcessing) return false;
       set({ isProcessing: true, stage: "Packaging ZIP…", error: null });
       try {
         const bgImage = state.background.type === "image" ? state.bgImage : null;
         const ext = exportExt(state.exportSettings.format);
         const files: { name: string; blob: Blob }[] = [];
         for (const item of done) {
-          const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-            const image = new Image();
-            image.onload = () => resolve(image);
-            image.onerror = () => reject(new Error("Failed to load an image"));
-            image.src = item.workUrl;
-          });
+          const useOriginal = state.exportSettings.resolution === "original";
+          const { src, width, height, mask } = resolveExportSource(item, useOriginal);
+          const img = await loadExportImage(src);
           const blob = await renderExportBlob(
             img,
-            item.mask!,
+            mask,
             state.background,
             state.adjustments,
             bgImage,
-            item.workW,
-            item.workH,
+            width,
+            height,
             state.exportSettings
           );
           files.push({ name: `${baseName(item.file.name)}-bg-removed.${ext}`, blob });
         }
         const zipBlob = await createZip(files);
         downloadBlob(zipBlob, "background-removed-images.zip");
+        return true;
       } catch (err) {
         set({ error: err instanceof Error ? err.message : "ZIP export failed" });
+        return false;
       } finally {
         set({ isProcessing: false });
       }
@@ -598,6 +745,7 @@ export const useBackgroundRemoverStore = create<BackgroundRemoverState>((set, ge
         progress: 0,
         stage: "",
         error: null,
+        refining: false,
         background: { ...DEFAULT_BACKGROUND },
         bgImage: null,
         bgImageUrl: null,

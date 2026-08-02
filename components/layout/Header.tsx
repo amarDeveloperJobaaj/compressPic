@@ -53,8 +53,10 @@ export function Header() {
   // Right-aligned categories sit near the viewport edge — anchor their panels right.
   const RIGHT_ALIGNED = new Set(["seo", "analysis"]);
 
+  // backdrop-blur is re-composited on every scroll frame, so keep the radius
+  // modest (md) on the sticky header — visually close to lg but much cheaper.
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-md">
       {/* Premium gradient hairline */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
 
@@ -62,7 +64,7 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="group flex items-center gap-2.5">
           <span className="relative isolate flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-sky-500 shadow-lg shadow-primary/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/50">
-            <span className="absolute inset-0 -z-10 animate-glow-pulse rounded-xl bg-primary/60 blur-md" />
+            <span className="absolute inset-0 -z-10 rounded-xl bg-primary/40 blur-md" />
             <ImageDown className="relative h-5 w-5 text-white" />
           </span>
           <span className="hidden text-lg font-bold tracking-tight text-text-primary sm:inline">

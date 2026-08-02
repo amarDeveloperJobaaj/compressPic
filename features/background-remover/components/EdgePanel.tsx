@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Brush, Eraser, MousePointer2, Undo2, Redo2, RotateCcw, Feather, Wand2, Grip, Circle } from "lucide-react";
+import { Brush, Eraser, MousePointer2, Undo2, Redo2, RotateCcw, Feather, Wand2, Sparkles, Grip, Circle, Loader2 } from "lucide-react";
 import { useBackgroundRemoverStore } from "@/store/background-remover-store";
 import { Slider } from "./Slider";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,8 @@ export function EdgePanel() {
   const edge = useBackgroundRemoverStore((s) => s.edge);
   const setEdge = useBackgroundRemoverStore((s) => s.setEdge);
   const applyEdgeOp = useBackgroundRemoverStore((s) => s.applyEdgeOp);
+  const refineActiveMask = useBackgroundRemoverStore((s) => s.refineActiveMask);
+  const refining = useBackgroundRemoverStore((s) => s.refining);
   const undoMask = useBackgroundRemoverStore((s) => s.undoMask);
   const redoMask = useBackgroundRemoverStore((s) => s.redoMask);
   const resetMask = useBackgroundRemoverStore((s) => s.resetMask);
@@ -45,7 +47,7 @@ export function EdgePanel() {
     {
       id: "cleanup" as const,
       label: "Cleanup",
-      desc: "Remove leftover fringe",
+      desc: "Remove specks & fill holes",
       icon: Circle,
     },
   ];
@@ -57,10 +59,39 @@ export function EdgePanel() {
       transition={{ duration: 0.25 }}
       className="space-y-5"
     >
-      {/* Auto edge ops */}
+      {/* Full AI refinement */}
       <div>
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-          Auto Refine
+          Advanced Refine
+        </p>
+        <button
+          type="button"
+          disabled={!hasMask || refining}
+          onClick={() => void refineActiveMask()}
+          className="group relative flex w-full items-center gap-3 overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r from-primary/15 via-fuchsia-500/10 to-sky-500/15 p-3 text-left transition-all hover:border-primary/60 hover:from-primary/25 hover:via-fuchsia-500/15 hover:to-sky-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-sky-500 text-white shadow-md shadow-primary/30">
+            {refining ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-text-primary">
+              {refining ? "Refining edges…" : "AI Edge Refine"}
+            </span>
+            <span className="block text-[11px] leading-tight text-text-muted">
+              Auto-clean specks, close holes &amp; remove halos for a perfect cut
+            </span>
+          </span>
+        </button>
+      </div>
+
+      {/* Quick edge ops */}
+      <div>
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          Quick Edits
         </p>
         <div className="grid grid-cols-2 gap-2">
           {ops.map((op) => (

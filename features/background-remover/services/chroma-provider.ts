@@ -1,5 +1,6 @@
 import type { BackgroundRemovalProvider, ProgressCallback, RemovalResult } from "./types";
-import { blurMask } from "../utils/mask";
+import { loadImageData } from "../utils/refine";
+import { refineMaskInWorker } from "../utils/refineWorker";
 
 /**
  * Classical fallback provider — works fully offline and with no model
@@ -7,26 +8,56 @@ import { blurMask } from "../utils/mask";
  * pixels connected to a border whose color is close to the border's dominant
  * color are treated as background; everything else (the subject) is kept.
  *
- * This handles human photos far better than a single global threshold —
- * a person's silhouette blocks the fill from crossing into them, so the
- * subject survives even on busy or non-uniform backgrounds.
+ * Advanced accuracy features over a naive threshold:
+ *  - Robust border statistics (median + median-absolute-deviation) so busy or
+ *    gradient borders don't poison the estimate.
+ *  - Gradient-aware filling: strong image edges (the subject outline) are
+ *    only crossed by near-perfect color matches, which stops the fill from
+ *    bleeding into the subject through low-contrast boundaries.
+ *  - A full refinement pass (speck removal, hole fill, color-based defringe,
+ *    edge smoothing) shared with the AI provider, so both engines produce the
+ *    same clean, natural cut.
  */
 
 interface BgEstimate {
   r: number;
   g: number;
   b: number;
-  /** Max color distance from the background color still treated as background. */
-  threshold: number;
+  /** Squared color distance from the background color still treated as bg. */
+  thresholdSq: number;
+  /** Sobel gradient above which filling requires a near-exact color match. */
+  gradientGate: number;
 }
 
-/** Robust per-channel median (ignores a few outlier border samples). */
+/** Weighted color distance (green weighted) — squared to avoid a sqrt. */
+function distSq(
+  r1: number, g1: number, b1: number,
+  r2: number, g2: number, b2: number
+): number {
+  const dr = r1 - r2;
+  const dg = g1 - g2;
+  const db = b1 - b2;
+  return dr * dr + 2 * dg * dg + db * db;
+}
+
+/** Robust median of an array (in-place sort is fine at this scale). */
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-/** Estimate the dominant background color from the image border. */
+/** p-th percentile (0..1) of an array. */
+function percentile(values: number[], p: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))];
+}
+
+/**
+ * Estimate the dominant background color + adaptive threshold from the image
+ * border. The threshold is driven by the actual border variance (p90 of the
+ * border samples' distance to the median color) and clamped so a busy border
+ * can't swallow a person standing in front of it.
+ */
 function estimateBackground(
   data: Uint8ClampedArray,
   width: number,
@@ -43,12 +74,10 @@ function estimateBackground(
     gs.push(data[i + 1]);
     bs.push(data[i + 2]);
   };
-  // Top / bottom edges
   for (let x = 0; x < width; x += step) {
     push(x, 0);
     push(x, height - 1);
   }
-  // Left / right edges
   for (let y = step; y < height - step; y += step) {
     push(0, y);
     push(width - 1, y);
@@ -58,20 +87,61 @@ function estimateBackground(
   const g = median(gs);
   const b = median(bs);
 
-  // Border variance drives the threshold — but cap it so a busy border can't
-  // swallow a person standing in front of it.
-  let spread = 0;
-  for (let i = 0; i < rs.length; i++) {
-    spread += Math.hypot(rs[i] - r, gs[i] - g, bs[i] - b);
-  }
-  const avgDist = spread / Math.max(1, rs.length);
-  return { r, g, b, threshold: Math.min(110, Math.max(30, avgDist * 2.2)) };
+  // p90 border distance → adaptive threshold; clamp to [26, 95].
+  const dists = rs.map((_, i) => Math.sqrt(distSq(rs[i], gs[i], bs[i], r, g, b)));
+  const p90 = percentile(dists, 0.9);
+  const threshold = Math.max(26, Math.min(95, p90 * 1.35));
+
+  return {
+    r,
+    g,
+    b,
+    thresholdSq: threshold * threshold,
+    // Pixels with a stronger gradient than this are likely part of the
+    // subject outline — they require a near-exact match to be filled.
+    gradientGate: 70,
+  };
 }
 
 /**
- * Flood-fill the background starting from every border pixel. Returns a
- * binary mask (255 = subject keep, 0 = background) plus the background pixel
- * count. Iterative BFS with a flat queue — safe for full working resolution.
+ * Sobel gradient magnitude (luminance-based). Used as a fill barrier: the
+ * subject's outline is almost always a strong gradient, and letting the fill
+ * cross it is what causes background bleeding into the subject.
+ */
+function sobelGradient(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number
+): Float32Array {
+  const total = width * height;
+  const grad = new Float32Array(total);
+  const luma = new Float32Array(total);
+  for (let i = 0; i < total; i++) {
+    luma[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+  }
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x;
+      const tl = luma[i - width - 1];
+      const tc = luma[i - width];
+      const tr = luma[i - width + 1];
+      const ml = luma[i - 1];
+      const mr = luma[i + 1];
+      const bl = luma[i + width - 1];
+      const bc = luma[i + width];
+      const br = luma[i + width + 1];
+      const gx = (tr + 2 * mr + br) - (tl + 2 * ml + bl);
+      const gy = (bl + 2 * bc + br) - (tl + 2 * tc + tr);
+      grad[i] = Math.sqrt(gx * gx + gy * gy);
+    }
+  }
+  return grad;
+}
+
+/**
+ * Gradient-aware flood fill of the background from every border pixel.
+ * Returns a binary mask (255 = subject keep, 0 = background) plus the
+ * background pixel count. Iterative BFS with a flat queue.
  */
 function floodFillMask(
   data: Uint8ClampedArray,
@@ -80,29 +150,33 @@ function floodFillMask(
   bg: BgEstimate
 ): { mask: Uint8ClampedArray; bgCount: number } {
   const total = width * height;
+  const grad = sobelGradient(data, width, height);
   const visited = new Uint8Array(total);
   const queue = new Int32Array(total);
   let head = 0;
   let tail = 0;
 
-  const thresholdSq = bg.threshold * bg.threshold;
-  const isBg = (i: number) => {
+  // Edge pixels need a much closer color match; smooth pixels can use the
+  // full adaptive threshold. Squared-space scaling of the threshold.
+  const edgeThresholdSq = bg.thresholdSq * 0.35;
+
+  const isBg = (idx: number, g: number) => {
+    const i = idx * 4;
     const dr = data[i] - bg.r;
     const dg = data[i + 1] - bg.g;
     const db = data[i + 2] - bg.b;
-    return dr * dr + dg * dg + db * db <= thresholdSq;
+    const tSq = g > bg.gradientGate ? edgeThresholdSq : bg.thresholdSq;
+    return dr * dr + 2 * dg * dg + db * db <= tSq;
   };
 
   const push = (x: number, y: number) => {
     const idx = y * width + x;
     if (visited[idx]) return;
-    const i = idx * 4;
-    if (!isBg(i)) return;
+    if (!isBg(idx, grad[idx])) return;
     visited[idx] = 1;
     queue[tail++] = idx;
   };
 
-  // Seed from every border pixel
   for (let x = 0; x < width; x++) {
     push(x, 0);
     push(x, height - 1);
@@ -140,58 +214,55 @@ export const chromaProvider: BackgroundRemovalProvider = {
   label: "Classic (Offline)",
 
   async removeBackground(blob: Blob, onProgress?: ProgressCallback): Promise<RemovalResult> {
-    onProgress?.({ percent: 10, stage: "Analyzing background…" });
+    onProgress?.({ percent: 8, stage: "Analyzing background…" });
+    const img = await loadImageData(blob);
+    const { data, width, height } = img;
+    const total = width * height;
 
-    const url = URL.createObjectURL(blob);
-    try {
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("Failed to read the image"));
-        image.src = url;
-      });
+    onProgress?.({ percent: 30, stage: "Estimating background color…" });
+    const bg = estimateBackground(data, width, height);
 
-      const width = img.naturalWidth;
-      const height = img.naturalHeight;
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas 2D is not supported");
-      ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const { data } = imageData;
+    onProgress?.({ percent: 45, stage: "Segmenting subject…" });
+    const { mask: mask1, bgCount: c1 } = floodFillMask(data, width, height, bg);
 
-      onProgress?.({ percent: 35, stage: "Estimating background color…" });
-      const bg = estimateBackground(data, width, height);
+    let finalMask = mask1;
+    const coverage = c1 / total;
 
-      onProgress?.({ percent: 55, stage: "Segmenting subject…" });
-      const { mask, bgCount } = floodFillMask(data, width, height, bg);
-
-      // If the fill barely covered the image, the background was estimated too
-      // aggressively and the subject may have been eaten — retry once with a
-      // tighter threshold before accepting the result.
-      let finalMask = mask;
-      if (bgCount > width * height * 0.97) {
-        const tighter = { ...bg, threshold: bg.threshold * 0.5 };
-        const retry = floodFillMask(data, width, height, tighter);
-        finalMask = retry.mask;
-      }
-
-      onProgress?.({ percent: 80, stage: "Smoothing edges…" });
-      // Soft feather so edges aren't hard silhouettes
-      finalMask = blurMask(finalMask, width, height, 2);
-
-      onProgress?.({ percent: 100, stage: "Done" });
-      return {
-        width,
-        height,
-        mask: finalMask,
-        provider: this.label,
-        usedFallback: true,
-      };
-    } finally {
-      URL.revokeObjectURL(url);
+    if (coverage > 0.97) {
+      // The fill ate the whole image — the background estimate was too
+      // aggressive (or the subject blends into the bg). Retry much tighter.
+      onProgress?.({ percent: 55, stage: "Re-segmenting with tighter tolerance…" });
+      finalMask = floodFillMask(data, width, height, {
+        ...bg,
+        thresholdSq: bg.thresholdSq * 0.3,
+      }).mask;
+    } else if (coverage < 0.04) {
+      // The fill barely covered anything — the border estimate was wrong
+      // (e.g. a heavily textured border). Loosen the threshold and gate.
+      onProgress?.({ percent: 55, stage: "Re-segmenting with wider tolerance…" });
+      finalMask = floodFillMask(data, width, height, {
+        ...bg,
+        thresholdSq: Math.min(1.2 * 255 * 255, bg.thresholdSq * 2.2),
+        gradientGate: 140,
+      }).mask;
     }
+
+    onProgress?.({ percent: 75, stage: "Cleaning up artifacts…" });
+    finalMask = await refineMaskInWorker(img, finalMask, {
+      removeIslands: true,
+      fillHoles: true,
+      defringe: true,
+      defringeStrength: 0.9,
+      smooth: 1,
+    });
+
+    onProgress?.({ percent: 100, stage: "Done" });
+    return {
+      width,
+      height,
+      mask: finalMask,
+      provider: this.label,
+      usedFallback: true,
+    };
   },
 };

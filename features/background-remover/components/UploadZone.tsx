@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, Sparkles, ShieldCheck, Layers } from "lucide-react";
 import { useBackgroundRemoverStore } from "@/store/background-remover-store";
+import { useToast } from "@/features/playground/components/Toast";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -11,6 +12,7 @@ export function UploadZone() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addFiles = useBackgroundRemoverStore((s) => s.addFiles);
+  const { toast } = useToast();
 
   const validateAndAdd = useCallback(
     (files: File[]) => {
@@ -20,12 +22,17 @@ export function UploadZone() {
         return true;
       });
       if (accepted.length === 0) {
-        alert("Please add JPG, PNG, or WEBP images up to 50 MB.");
+        toast("Please add JPG, PNG, or WEBP images up to 50 MB.", "error");
         return;
       }
       addFiles(accepted);
+      if (accepted.length === 1) {
+        toast("Image added — removing background…");
+      } else {
+        toast(`${accepted.length} images added to the batch queue.`);
+      }
     },
-    [addFiles]
+    [addFiles, toast]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {

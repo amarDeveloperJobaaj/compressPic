@@ -112,3 +112,47 @@ export function fillMask(
   mask.fill(value);
   return mask;
 }
+
+/**
+ * Bilinear-upscale a flat alpha mask to a new size. Used to lift a working-
+ * resolution mask (≤ WORK_MAX_EDGE) back up to the original image resolution
+ * for high-quality exports — the soft upscale keeps hair wisps and feathered
+ * rims smooth instead of pixelating them.
+ */
+export function upscaleMask(
+  mask: Uint8ClampedArray,
+  srcW: number,
+  srcH: number,
+  dstW: number,
+  dstH: number
+): Uint8ClampedArray {
+  if (srcW === dstW && srcH === dstH) return new Uint8ClampedArray(mask);
+
+  const out = new Uint8ClampedArray(dstW * dstH);
+  const xRatio = srcW / dstW;
+  const yRatio = srcH / dstH;
+
+  for (let y = 0; y < dstH; y++) {
+    const sy = y * yRatio;
+    const y0 = Math.floor(sy);
+    const y1 = Math.min(srcH - 1, y0 + 1);
+    const fy = sy - y0;
+
+    for (let x = 0; x < dstW; x++) {
+      const sx = x * xRatio;
+      const x0 = Math.floor(sx);
+      const x1 = Math.min(srcW - 1, x0 + 1);
+      const fx = sx - x0;
+
+      const i00 = y0 * srcW + x0;
+      const i10 = y0 * srcW + x1;
+      const i01 = y1 * srcW + x0;
+      const i11 = y1 * srcW + x1;
+
+      const top = mask[i00] + (mask[i10] - mask[i00]) * fx;
+      const bottom = mask[i01] + (mask[i11] - mask[i01]) * fx;
+      out[y * dstW + x] = Math.round(top + (bottom - top) * fy);
+    }
+  }
+  return out;
+}

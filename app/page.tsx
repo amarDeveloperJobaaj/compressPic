@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ImageDown,
@@ -365,20 +366,20 @@ function StepGrid({ steps }: { steps: Step[] }) {
           key={step.number}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "100px" }}
           transition={{ duration: 0.4, delay: index * 0.15 }}
           className="group relative"
         >
           {index < steps.length - 1 && (
             <span className="absolute left-[calc(50%+3.5rem)] top-16 hidden h-px w-[calc(100%-7rem)] bg-gradient-to-r from-primary/40 via-primary/20 to-transparent md:block" />
           )}
-          <div className="flex h-full flex-col items-center rounded-2xl border border-border bg-surface/60 p-8 text-center shadow-sm backdrop-blur transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/10">
+          <div className="flex h-full flex-col items-center rounded-2xl border border-border bg-surface/60 p-6 text-center shadow-sm backdrop-blur transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:shadow-xl group-hover:shadow-primary/10 sm:p-8">
             <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-sky-500 text-xl font-bold text-white shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-110">
               {step.number}
               <span className="absolute inset-0 -z-10 animate-glow-pulse rounded-2xl bg-primary/40 blur-md" />
             </div>
-            <h3 className="mt-6 text-xl font-semibold text-text-primary">{step.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-text-secondary">{step.description}</p>
+            <h3 className="mt-5 text-lg font-semibold text-text-primary sm:mt-6 sm:text-xl">{step.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary sm:mt-3">{step.description}</p>
           </div>
         </motion.div>
       ))}
@@ -418,12 +419,19 @@ function ToolSectionHeader({
   );
 }
 
-/** Tools sorted so featured (high-demand) ones come first. */
-const allTools = [...TOOL_CATEGORIES.flatMap((category) => category.tools)].sort(
-  (a, b) => Number(FEATURED_SLUGS.has(b.slug)) - Number(FEATURED_SLUGS.has(a.slug))
-);
+/** Sort tools so featured (high-demand) ones come first. */
+function sortTools(tools: Tool[]): Tool[] {
+  return [...tools].sort(
+    (a, b) => Number(FEATURED_SLUGS.has(b.slug)) - Number(FEATURED_SLUGS.has(a.slug))
+  );
+}
 
 export default function HomePage() {
+  const [activeCategory, setActiveCategory] = useState(TOOL_CATEGORIES[0].id);
+  const activeTools = sortTools(
+    TOOL_CATEGORIES.find((c) => c.id === activeCategory)?.tools ?? []
+  );
+
   return (
     <>
       {/* Hero Section */}
@@ -446,7 +454,7 @@ export default function HomePage() {
           particleDensity={45}
         />
 
-        <div className="container-page relative flex min-h-[60vh] flex-col items-center justify-center py-14 text-center sm:min-h-[70vh] sm:py-20">
+        <div className="container-page relative flex min-h-[60vh] flex-col items-center justify-center py-10 text-center sm:min-h-[70vh] sm:py-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -490,85 +498,133 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          {/* Tool cards — driven by the tools registry; featured tools get a spotlight */}
+          {/* Tool cards — category tabs driven by the tools registry; featured tools get a spotlight */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35, ease: "easeOut" }}
             className="mt-14 w-full"
           >
-            <BentoGrid>
-              {allTools.map((tool) => {
-                const Icon = toolCardIcons[tool.slug] ?? ImageDown;
-                const featured = FEATURED_SLUGS.has(tool.slug);
-
-                const card = (
-                  <Link href={tool.href} className="flex h-full flex-col p-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-4">
-                        <div
-                          className={cn(
-                            "flex shrink-0 items-center justify-center transition-all duration-300",
-                            featured
-                              ? "h-14 w-14 rounded-2xl bg-gradient-to-br from-primary via-fuchsia-500 to-sky-500 text-white shadow-lg shadow-primary/30"
-                              : "h-12 w-12 rounded-xl bg-primary-light group-hover:bg-primary"
-                          )}
-                        >
-                          <Icon
-                            className={cn(
-                              "h-6 w-6",
-                              featured
-                                ? "text-white"
-                                : "text-primary transition-colors duration-300 group-hover:text-white"
-                            )}
-                          />
-                        </div>
-                        <div className="min-w-0 text-left">
-                          <p className="text-sm font-semibold text-text-primary">{tool.tagline}</p>
-                          <p className="mt-0.5 text-xs text-text-muted">{tool.description}</p>
-                        </div>
-                      </div>
-                      {featured && (
-                        <Capsule variant="amber" icon={Flame} sm className="shrink-0">
-                          Popular
-                        </Capsule>
-                      )}
-                    </div>
-                    <div className="mt-auto flex items-center justify-between gap-2 rounded-xl bg-background p-3">
-                      <span className="text-xs text-text-secondary">{tool.stat}</span>
-                      <Capsule variant={badgeVariant(tool)} sm>
-                        {tool.badge}
-                      </Capsule>
-                    </div>
-                  </Link>
-                );
-
-                return featured ? (
-                  <div
-                    key={tool.slug}
-                    className="rounded-2xl bg-gradient-to-br from-primary via-fuchsia-500 to-sky-500 p-px shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/30 sm:col-span-2 lg:col-span-2"
+            {/* Category tabs — horizontally scrollable on mobile, centered wrap on desktop */}
+            <div
+              role="tablist"
+              aria-label="Browse tools by category"
+              className="mx-auto mb-8 flex w-full max-w-7xl flex-wrap justify-center gap-2 sm:flex-wrap md:flex-wrap lg:flex-wrap max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:pb-2 max-sm:[-ms-overflow-style:none] max-sm:[scrollbar-width:none] [&::-webkit-scrollbar]:max-sm:hidden"
+            >
+              {TOOL_CATEGORIES.map((category) => {
+                const active = category.id === activeCategory;
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={cn(
+                      "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
+                      active
+                        ? "border-primary bg-primary text-white shadow-lg shadow-primary/25"
+                        : "border-border bg-surface text-text-secondary hover:border-primary/40 hover:bg-primary-light/70 hover:text-primary"
+                    )}
                   >
-                    <BentoGridItem className="h-full border-transparent hover:border-transparent">
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 animate-glow-pulse rounded-full bg-fuchsia-500/25 blur-3xl"
-                      />
-                      {card}
-                    </BentoGridItem>
-                  </div>
-                ) : (
-                  <BentoGridItem key={tool.slug} className="h-full">
-                    {card}
-                  </BentoGridItem>
+                    {category.label}
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-px text-[11px] font-semibold",
+                        active
+                          ? "bg-white/20 text-white"
+                          : "bg-primary-light text-primary"
+                      )}
+                    >
+                      {category.tools.length}
+                    </span>
+                  </button>
                 );
               })}
-            </BentoGrid>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCategory}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              >
+                <BentoGrid>
+                  {activeTools.map((tool) => {
+                    const Icon = toolCardIcons[tool.slug] ?? ImageDown;
+                    const featured = FEATURED_SLUGS.has(tool.slug);
+
+                    const card = (
+                      <Link href={tool.href} className="flex h-full flex-col p-6">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-4">
+                            <div
+                              className={cn(
+                                "flex shrink-0 items-center justify-center transition-all duration-300",
+                                featured
+                                  ? "h-14 w-14 rounded-2xl bg-gradient-to-br from-primary via-fuchsia-500 to-sky-500 text-white shadow-lg shadow-primary/30"
+                                  : "h-12 w-12 rounded-xl bg-primary-light group-hover:bg-primary"
+                              )}
+                            >
+                              <Icon
+                                className={cn(
+                                  "h-6 w-6",
+                                  featured
+                                    ? "text-white"
+                                    : "text-primary transition-colors duration-300 group-hover:text-white"
+                                )}
+                              />
+                            </div>
+                            <div className="min-w-0 text-left">
+                              <p className="text-sm font-semibold text-text-primary">{tool.tagline}</p>
+                              <p className="mt-0.5 text-xs text-text-muted">{tool.description}</p>
+                            </div>
+                          </div>
+                          {featured && (
+                            <Capsule variant="amber" icon={Flame} sm className="shrink-0">
+                              Popular
+                            </Capsule>
+                          )}
+                        </div>
+                        <div className="mt-auto flex items-center justify-between gap-2 rounded-xl bg-background p-3">
+                          <span className="text-xs text-text-secondary">{tool.stat}</span>
+                          <Capsule variant={badgeVariant(tool)} sm>
+                            {tool.badge}
+                          </Capsule>
+                        </div>
+                      </Link>
+                    );
+
+                    return featured ? (
+                      <div
+                        key={tool.slug}
+                        className="rounded-2xl bg-gradient-to-br from-primary via-fuchsia-500 to-sky-500 p-px shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/30 sm:col-span-2 lg:col-span-2"
+                      >
+                        <BentoGridItem className="h-full border-transparent hover:border-transparent">
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 animate-glow-pulse rounded-full bg-fuchsia-500/25 blur-3xl"
+                          />
+                          {card}
+                        </BentoGridItem>
+                      </div>
+                    ) : (
+                      <BentoGridItem key={tool.slug} className="h-full">
+                        {card}
+                      </BentoGridItem>
+                    );
+                  })}
+                </BentoGrid>
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <Capsule variant="primary" sm dot className="mb-4">
@@ -585,7 +641,10 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            // rootMargin fires the reveal slightly BEFORE the section enters the
+            // viewport, so content-visibility:auto can't delay it (keeps cards
+            // from ever staying stuck at opacity 0 on slow browsers).
+            viewport={{ once: true, margin: "100px" }}
             transition={{ duration: 0.5 }}
             className="mt-10"
           >
@@ -601,7 +660,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works — Compress */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
             icon={Download}
@@ -621,7 +680,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works — Resize */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
             icon={Crop}
@@ -636,7 +695,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "100px" }}
             transition={{ duration: 0.4, delay: 0.3 }}
             className="mx-auto mt-10 max-w-2xl text-center"
           >
@@ -663,7 +722,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works — Flip */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
             icon={FlipHorizontal2}
@@ -684,7 +743,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works — Convert */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
             icon={Repeat}
@@ -699,11 +758,12 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "100px" }}
             transition={{ duration: 0.4, delay: 0.3 }}
             className="relative mt-12 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
           >
-            <div className="flex w-max animate-marquee gap-3 hover:[animation-play-state:paused]">
+            {/* marquee is frozen below 640px too, so drop will-change there */}
+            <div className="flex w-max animate-marquee will-change-transform max-sm:will-change-auto gap-3 hover:[animation-play-state:paused]">
               {[...formatBadges, ...formatBadges].map((badge, i) => (
                 <Capsule
                   key={`${badge.label}-${i}`}
@@ -728,7 +788,7 @@ export default function HomePage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
@@ -745,7 +805,7 @@ export default function HomePage() {
                 key={index}
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "100px" }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className="group cursor-pointer rounded-xl border border-border bg-background transition-all hover:border-primary/40 hover:shadow-md"
               >

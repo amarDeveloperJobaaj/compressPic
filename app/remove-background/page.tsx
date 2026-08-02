@@ -12,6 +12,8 @@ import { AdjustmentsPanel } from "@/features/background-remover/components/Adjus
 import { EdgePanel } from "@/features/background-remover/components/EdgePanel";
 import { ExportPanel } from "@/features/background-remover/components/ExportPanel";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { ToastProvider } from "@/features/playground/components/Toast";
+import { ToolErrorBoundary } from "@/features/background-remover/components/ToolErrorBoundary";
 import { cn } from "@/lib/utils";
 
 const UploadZone = dynamic(
@@ -39,13 +41,23 @@ const PANELS: { id: PanelId; label: string; icon: typeof Layers }[] = [
 ];
 
 export default function RemoveBackgroundPage() {
+  return (
+    <ToastProvider>
+      <PageTransition>
+        <RemoveBackgroundEditor />
+      </PageTransition>
+    </ToastProvider>
+  );
+}
+
+function RemoveBackgroundEditor() {
   const items = useBackgroundRemoverStore((s) => s.items);
   const error = useBackgroundRemoverStore((s) => s.error);
   const reset = useBackgroundRemoverStore((s) => s.reset);
   const [panel, setPanel] = useState<PanelId>("background");
 
   return (
-    <PageTransition>
+    <ToolErrorBoundary onReset={reset}>
       <div className="container-page py-10 sm:py-16">
         {/* Header */}
         <div className="mx-auto max-w-2xl text-center">
@@ -158,6 +170,6 @@ export default function RemoveBackgroundPage() {
           </div>
         )}
       </div>
-    </PageTransition>
+    </ToolErrorBoundary>
   );
 }

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, SITE_URL } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { AdSlot } from "@/components/seo/AdSlot";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = buildMetadata({
   title: "Remove Background from Image Online Free | CompressPix",
@@ -32,6 +33,28 @@ export default function RemoveBackgroundLayout({
 }) {
   return (
     <>
+      {/* WebPage structured data — complements the SoftwareApplication,
+          BreadcrumbList, FAQ and HowTo schemas emitted by the SEO components. */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: "Remove Background from Image Online Free | CompressPix",
+          url: `${SITE_URL}/remove-background`,
+          description:
+            "Remove image backgrounds instantly using AI. Create transparent PNGs, replace backgrounds with colors or images, and download in HD for free — 100% in your browser.",
+          isPartOf: {
+            "@type": "WebSite",
+            name: "CompressPix",
+            url: SITE_URL,
+          },
+          about: {
+            "@type": "SoftwareApplication",
+            name: "AI Background Remover",
+            applicationCategory: "MultimediaApplication",
+          },
+        }}
+      />
       <Breadcrumbs
         items={[{ label: "Image Tools" }, { label: "Remove Background", href: "/remove-background" }]}
       />

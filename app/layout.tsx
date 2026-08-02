@@ -4,6 +4,7 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "./globals.css";
+import { MotionProvider } from "@/components/shared/MotionProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AnalyticsScripts } from "@/components/seo/AnalyticsScripts";
@@ -39,8 +40,8 @@ const softwareAppSchema = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#0B1120" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -124,11 +125,18 @@ export default function RootLayout({
       itemType="https://schema.org/WebApplication"
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-background font-sans text-text-primary">
-        {/* Apply the saved/system theme before first paint to avoid a light flash */}
+      {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla's
+          cz-shortcut-listen) inject attributes onto <body> before hydration,
+          which would otherwise trigger a false-positive mismatch warning. */}
+      <body
+        className="flex min-h-full flex-col bg-background font-sans text-text-primary"
+        suppressHydrationWarning
+      >
+        {/* Apply the saved theme before first paint — dark is the default, so
+            there is never a light flash for first-time visitors. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("compresspix-theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;if(d){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("compresspix-theme");var d=t?t==="dark":true;if(d){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})();`,
           }}
         />
         {/* Skip to content link for keyboard users */}
@@ -143,11 +151,13 @@ export default function RootLayout({
         <JsonLd data={organizationSchema()} />
         <JsonLd data={softwareAppSchema} />
         <AnalyticsScripts />
-        <Header />
-        <main id="main-content" className="flex-1" tabIndex={-1}>
-          {children}
-        </main>
-        <Footer />
+        <MotionProvider>
+          <Header />
+          <main id="main-content" className="flex-1" tabIndex={-1}>
+            {children}
+          </main>
+          <Footer />
+        </MotionProvider>
       </body>
     </html>
   );

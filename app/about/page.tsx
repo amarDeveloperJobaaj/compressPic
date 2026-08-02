@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   ArrowRight,
   Atom,
@@ -316,6 +316,20 @@ function SectionHeader({
 export default function AboutPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
+  // Infinite float animations are nice on desktop but drain battery/CPU on
+  // small screens — disable them under 640px. SSR-safe via useSyncExternalStore.
+  const isMobile = useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(max-width: 639px)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(max-width: 639px)").matches,
+    () => false
+  );
+  const floatAnim = isMobile ? undefined : { y: [0, -7, 0] as number[] };
+  const floatChipAnim = isMobile ? undefined : { y: [0, -6, 0] as number[] };
+
   return (
     <>
       {/* FAQ structured data */}
@@ -413,7 +427,7 @@ export default function AboutPage() {
             ].map((badge) => (
               <motion.span
                 key={badge.pos}
-                animate={{ y: [0, -7, 0] }}
+                animate={floatAnim}
                 transition={{ duration: 3.2, repeat: Infinity, delay: badge.delay, ease: "easeInOut" }}
                 className={cn(
                   "absolute flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-lg shadow-lg",
@@ -441,7 +455,7 @@ export default function AboutPage() {
               ].map((chip) => (
                 <motion.span
                   key={chip.label}
-                  animate={{ y: [0, -6, 0] }}
+                  animate={floatChipAnim}
                   transition={{ duration: 3, repeat: Infinity, delay: chip.delay, ease: "easeInOut" }}
                   className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary shadow-sm"
                 >
