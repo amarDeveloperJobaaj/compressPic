@@ -56,6 +56,7 @@ export const metadata: Metadata = {
     default: HOME_TITLE,
     template: "%s | Vizo Tool",
   },
+  
   description: SITE_DESCRIPTION,
   keywords: [
     "compress image",
@@ -111,13 +112,11 @@ export const metadata: Metadata = {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
-  // Search-console verification — set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION /
-  // NEXT_PUBLIC_BING_SITE_VERIFICATION once and the meta tags are emitted
-  // automatically. No-op until configured, so no empty tags are ever sent.
+  // Search-console verification — Google is verified for vizotool.com and its
+  // meta tag is always emitted; Bing can be enabled by setting
+  // NEXT_PUBLIC_BING_SITE_VERIFICATION.
   verification: {
-    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-      ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
-      : {}),
+    google: "RTE8j-fnl2EGl_touOdZ1CPHX3ADNyuHKkjP1LaxkpE",
     ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
       ? { bing: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
       : {}),
