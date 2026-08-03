@@ -45,6 +45,7 @@ function buildSections(categoryId: string): NavDropdownSection[] {
 /** Short nav label override (kept out of the tools registry to avoid bloating it). */
 const NAV_LABELS: Record<string, string> = {
   analysis: "Analysis",
+  youtube: "YouTube",
 };
 
 export function Header() {

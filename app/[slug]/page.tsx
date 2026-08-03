@@ -5,6 +5,8 @@ import { ConversionPairPage } from "@/features/converter/components/ConversionPa
 import { ConversionSeoContent } from "@/components/seo/ConversionSeoContent";
 import { getFinanceConfig, FINANCE_SLUGS } from "@/features/finance/configs";
 import { FinanceCalculatorPage } from "@/features/finance/components/FinanceCalculatorPage";
+import { getYouTubeConfig, YOUTUBE_SLUGS } from "@/features/youtube/configs";
+import { YouTubeTool } from "@/features/youtube/components/YouTubeTool";
 import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { PageTransition } from "@/components/shared/PageTransition";
@@ -14,7 +16,11 @@ import { buildMetadata } from "@/lib/seo";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return [...CONVERSION_PAIRS.map((pair) => ({ slug: pair.slug })), ...FINANCE_SLUGS.map((slug) => ({ slug }))];
+  return [
+    ...CONVERSION_PAIRS.map((pair) => ({ slug: pair.slug })),
+    ...FINANCE_SLUGS.map((slug) => ({ slug })),
+    ...YOUTUBE_SLUGS.map((slug) => ({ slug })),
+  ];
 }
 
 export async function generateMetadata({
@@ -37,6 +43,21 @@ export async function generateMetadata({
         `${finance.name.toLowerCase()} calculator`,
         "finance calculator",
         "calculator online",
+      ],
+    });
+  }
+
+  const youtube = getYouTubeConfig(slug);
+  if (youtube) {
+    return buildMetadata({
+      title: youtube.title,
+      description: `${youtube.description} Free, private, and 100% in your browser.`,
+      path: `/${slug}`,
+      keywords: [
+        ...youtube.keywords,
+        "youtube tools",
+        "youtube creator tools",
+        "youtube seo",
       ],
     });
   }
@@ -84,6 +105,34 @@ export default async function SlugPage({
               </p>
             </div>
             <FinanceCalculatorPage slug={slug} />
+          </div>
+        </section>
+        <ToolSeoContent slug={slug} />
+      </PageTransition>
+    );
+  }
+
+  const youtube = getYouTubeConfig(slug);
+  if (youtube) {
+    return (
+      <PageTransition>
+        <Breadcrumbs
+          items={[
+            { label: "YouTube Tools" },
+            { label: youtube.name, href: `/${youtube.slug}` },
+          ]}
+        />
+        <section className="py-8 sm:py-10">
+          <div className="container-page">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+                {youtube.title}
+              </h1>
+              <p className="mt-3 max-w-2xl text-lg text-text-secondary">
+                {youtube.description}
+              </p>
+            </div>
+            <YouTubeTool slug={slug} />
           </div>
         </section>
         <ToolSeoContent slug={slug} />

@@ -1,4 +1,5 @@
 import {
+  AlignLeft,
   BadgePercent,
   BarChart3,
   Binary,
@@ -6,11 +7,13 @@ import {
   Box,
   Braces,
   CandlestickChart,
+  Captions,
   ChartLine,
   Coins,
   Code2,
   Crop,
   Database,
+  Download,
   FileImage,
   FileJson,
   FileText,
@@ -21,6 +24,7 @@ import {
   Heading,
   Home,
   IdCard,
+  ImageDown,
   KeyRound,
   Landmark,
   Layers,
@@ -44,6 +48,7 @@ import {
   TextCursorInput,
   TrendingDown,
   TrendingUp,
+  Type,
   Wallet,
   Wand2,
   type LucideIcon,
@@ -105,6 +110,13 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   "stock-average-calculator": CandlestickChart,
   "salary-calculator": Wallet,
   "inflation-calculator": TrendingDown,
+  // YouTube Tools
+  "youtube-thumbnail-downloader": ImageDown,
+  "youtube-tags-extractor": Tags,
+  "youtube-transcript": Captions,
+  "youtube-title-generator": Type,
+  "youtube-description-generator": AlignLeft,
+  "youtube-video-downloader": Download,
 };
 
 /** Fallback icon for slugs not in the map. */

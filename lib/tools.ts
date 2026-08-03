@@ -11,6 +11,7 @@
  * server files (sitemap.ts) without pulling client code into the server bundle.
  */
 import { FINANCE_CATEGORY } from "./finance-tools";
+import { YOUTUBE_CATEGORY } from "./youtube-tools";
 
 export interface Tool {
   slug: string;
@@ -412,6 +413,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     ],
   },
   FINANCE_CATEGORY,
+  YOUTUBE_CATEGORY,
 ];
 
 /** Flattened list of every tool across all categories. */

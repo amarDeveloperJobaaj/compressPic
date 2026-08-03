@@ -6,6 +6,7 @@ import { ANALYSIS_TOOL_SEO_CONTENT } from "@/lib/seo-content-analysis";
 import { PLAYGROUND_TOOL_SEO_CONTENT } from "@/lib/seo-content-playground";
 import { FINANCE_TOOL_SEO_CONTENT } from "@/lib/seo-content-finance";
 import { FINANCE_TOOL_SEO_CONTENT_2 } from "@/lib/seo-content-finance-2";
+import { YOUTUBE_TOOL_SEO_CONTENT } from "@/lib/seo-content-youtube";
 import { getToolBySlug } from "@/lib/tools";
 import { JsonLd } from "./JsonLd";
 import { HowToSection } from "./HowToSection";
@@ -27,7 +28,8 @@ export function ToolSeoContent({ slug }: { slug: string }) {
     ANALYSIS_TOOL_SEO_CONTENT[slug] ??
     PLAYGROUND_TOOL_SEO_CONTENT[slug] ??
     FINANCE_TOOL_SEO_CONTENT[slug] ??
-    FINANCE_TOOL_SEO_CONTENT_2[slug];
+    FINANCE_TOOL_SEO_CONTENT_2[slug] ??
+    YOUTUBE_TOOL_SEO_CONTENT[slug];
   if (!tool || !content) return null;
 
   const meta = content.meta ?? {
