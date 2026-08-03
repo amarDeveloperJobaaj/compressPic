@@ -1,59 +1,76 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo";
 import { ALL_TOOLS } from "@/lib/tools";
 import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
 
+/**
+ * Dynamic sitemap for vizotool.com.
+ *
+ * Everything is derived from the central registries (lib/tools.ts and the
+ * conversion-pairs config), so new tools, finance calculators and YouTube
+ * tools are indexed automatically — zero manual updates.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://vizotool.com";
   const now = new Date();
 
-  // Tool pages stay in sync with the registry — new tools are indexed automatically
+  // Every tool across all categories (Image, PDF, Developer, SEO, Finance,
+  // Website Analysis, YouTube) — driven by the tools registry
   const toolRoutes: MetadataRoute.Sitemap = ALL_TOOLS.map((tool) => ({
-    url: `${baseUrl}${tool.href}`,
-    lastModified: now,
-    changeFrequency: "monthly",
-    priority: 0.9,
-  }));
-
-  // Dedicated conversion pages (jpg-to-png, heic-to-jpg, ...) — driven by the pairs registry
-  const conversionRoutes: MetadataRoute.Sitemap = CONVERSION_PAIRS.map((pair) => ({
-    url: `${baseUrl}/${pair.slug}`,
+    url: `${SITE_URL}${tool.href}`,
     lastModified: now,
     changeFrequency: "monthly",
     priority: 0.8,
   }));
 
-  return [
+  // Dedicated conversion routes (jpg-to-png, heic-to-jpg, ...)
+  const conversionRoutes: MetadataRoute.Sitemap = CONVERSION_PAIRS.map((pair) => ({
+    url: `${SITE_URL}/${pair.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+
+  const entries: MetadataRoute.Sitemap = [
+    // Homepage — highest priority
     {
-      url: baseUrl,
+      url: SITE_URL,
       lastModified: now,
-      changeFrequency: "monthly",
+      changeFrequency: "weekly",
       priority: 1,
     },
     ...toolRoutes,
     ...conversionRoutes,
     {
-      url: `${baseUrl}/about`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/contact`,
+      url: `${SITE_URL}/about`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: `${baseUrl}/privacy`,
+      url: `${SITE_URL}/contact`,
       lastModified: now,
-      changeFrequency: "yearly",
+      changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/terms`,
+      url: `${SITE_URL}/privacy`,
       lastModified: now,
       changeFrequency: "yearly",
-      priority: 0.5,
+      priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
   ];
+
+  // Hard guarantee: no URL may ever appear twice, even as the registries evolve.
+  const seen = new Set<string>();
+  return entries.filter((entry) => {
+    if (seen.has(entry.url)) return false;
+    seen.add(entry.url);
+    return true;
+  });
 }
