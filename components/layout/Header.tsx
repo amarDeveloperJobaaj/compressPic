@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
+import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { getToolIcon } from "@/lib/tool-icons";
 import { Logo } from "@/components/ui/Logo";
 import { NavDropdown, CONVERT_NAV_ITEMS, type NavDropdownSection } from "./NavDropdown";
@@ -13,6 +14,7 @@ import { MobileDrawer } from "./MobileDrawer";
 import { cn } from "@/lib/utils";
 
 const pageLinks = [
+  { label: "Blog", href: "/blogs" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -94,14 +96,22 @@ export function Header() {
             Home
           </Link>
 
-          {TOOL_CATEGORIES.map((category) => (
-            <NavDropdown
-              key={category.id}
-              label={NAV_LABELS[category.id] ?? category.label}
-              sections={buildSections(category.id)}
-              align={RIGHT_ALIGNED.has(category.id) ? "right" : "left"}
-            />
-          ))}
+          {TOOL_CATEGORIES.map((category) => {
+            const categoryPage = CATEGORY_PAGE_BY_CATEGORY_ID[category.id];
+            return (
+              <NavDropdown
+                key={category.id}
+                label={NAV_LABELS[category.id] ?? category.label}
+                sections={buildSections(category.id)}
+                align={RIGHT_ALIGNED.has(category.id) ? "right" : "left"}
+                footerLink={
+                  categoryPage
+                    ? { label: `View all ${category.label}`, href: `/${categoryPage}` }
+                    : undefined
+                }
+              />
+            );
+          })}
 
           {pageLinks.map((link) => (
             <Link

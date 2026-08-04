@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, House, X } from "lucide-react";
+import { ArrowRight, ChevronDown, House, X } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
+import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { getToolIcon } from "@/lib/tool-icons";
 import { Logo } from "@/components/ui/Logo";
 import { CONVERT_NAV_ITEMS } from "./NavDropdown";
@@ -14,6 +15,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const pageLinks = [
+  { label: "Blog", href: "/blogs" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -224,7 +226,9 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 Home
               </Link>
 
-              {TOOL_CATEGORIES.map((category) => (
+              {TOOL_CATEGORIES.map((category) => {
+                const categoryPage = CATEGORY_PAGE_BY_CATEGORY_ID[category.id];
+                return (
                 <NavGroup
                   key={category.id}
                   title={category.label}
@@ -268,8 +272,21 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                       </div>
                     </>
                   )}
+
+                  {/* View all category link */}
+                  {categoryPage && (
+                    <Link
+                      href={`/${categoryPage}`}
+                      onClick={onClose}
+                      className="mt-2 inline-flex items-center gap-1 px-1 text-xs font-semibold text-primary transition-colors hover:text-primary-dark"
+                    >
+                      View all {category.label}
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  )}
                 </NavGroup>
-              ))}
+                );
+              })}
 
               <div className="my-2 h-px bg-border" />
 
