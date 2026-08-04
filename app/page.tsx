@@ -64,10 +64,12 @@ import {
   CandlestickChart,
   Wallet,
   TrendingDown,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import { TOOL_CATEGORIES, type Tool } from "@/lib/tools";
-import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
+import { CATEGORY_PAGES, getCategoryTools, CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
+import { CATEGORY_ICONS } from "@/components/category/CategoryIcon";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Sparkles } from "@/components/ui/sparkles";
 import { BackgroundBeams } from "@/components/ui/background-beams";
@@ -117,7 +119,6 @@ const toolCardIcons: Record<string, LucideIcon> = {
   "slug-generator": TextCursorInput,
   "meta-tag-analyzer": ScanSearch,
   "heading-checker": Heading,
-  // Website Analysis Tools
   "website-traffic-checker": BarChart3,
   // Developer Playground
   "html-css-js-playground": Code2,
@@ -639,6 +640,71 @@ export default function HomePage() {
               ) : null;
             })()}
           </motion.div>
+        </div>
+      </section>
+
+      {/* Browse by Category — one card per category landing page */}
+      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
+        <div className="container-page">
+          <ToolSectionHeader
+            icon={LayoutGrid}
+            title="Browse by Category"
+            subtitle="Explore every tool family — from image editing to finance calculators."
+            eyebrow="Tool Categories"
+            eyebrowVariant="violet"
+          />
+
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {CATEGORY_PAGES.map((category, index) => {
+              const Icon = CATEGORY_ICONS[category.slug] ?? ImageDown;
+              const toolCount = getCategoryTools(category).length;
+              return (
+                <motion.div
+                  key={category.slug}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "100px" }}
+                  transition={{ duration: 0.4, delay: (index % 3) * 0.08 }}
+                >
+                  <Link
+                    href={`/${category.slug}`}
+                    className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-background p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+                  >
+                    {/* Hover glow */}
+                    <span className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                    {/* Icon beside content — side by side on every screen size */}
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${category.gradient} text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                          <h3 className="text-lg font-semibold text-text-primary">
+                            {category.label}
+                          </h3>
+                          <Capsule variant={category.accent as CapsuleVariant} sm>
+                            {toolCount} tool{toolCount === 1 ? "" : "s"}
+                          </Capsule>
+                        </div>
+                        <p className="mt-1 text-sm leading-relaxed text-text-secondary line-clamp-2">
+                          {category.heroDescription}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex items-center gap-1.5 border-t border-border/70 pt-4 text-sm font-semibold text-primary">
+                      Explore all
+                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

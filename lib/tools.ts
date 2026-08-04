@@ -394,12 +394,6 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
         badge: "New",
         badgeTone: "primary",
       },
-    ],
-  },
-  {
-    id: "analysis",
-    label: "Website Analysis Tools",
-    tools: [
       {
         slug: "website-traffic-checker",
         name: "Traffic Checker",

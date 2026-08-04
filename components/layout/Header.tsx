@@ -46,7 +46,6 @@ function buildSections(categoryId: string): NavDropdownSection[] {
 
 /** Short nav label override (kept out of the tools registry to avoid bloating it). */
 const NAV_LABELS: Record<string, string> = {
-  analysis: "Analysis",
   youtube: "YouTube",
 };
 
@@ -55,7 +54,7 @@ export function Header() {
   const pathname = usePathname();
 
   // Right-aligned categories sit near the viewport edge — anchor their panels right.
-  const RIGHT_ALIGNED = new Set(["seo", "analysis"]);
+  const RIGHT_ALIGNED = new Set(["seo"]);
 
   // backdrop-blur is re-composited on every scroll frame, so keep the radius
   // modest (md) on the sticky header — visually close to lg but much cheaper.

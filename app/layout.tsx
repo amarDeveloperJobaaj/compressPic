@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AnalyticsScripts } from "@/components/seo/AnalyticsScripts";
 import { JsonLd } from "@/components/seo/JsonLd";
+import Script from "next/script";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,

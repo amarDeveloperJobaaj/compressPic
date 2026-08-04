@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   ArrowRight,
@@ -11,6 +11,9 @@ import {
   Braces,
   BrainCircuit,
   Briefcase,
+  Building2,
+  Cake,
+  Calendar,
   ChevronDown,
   Clock,
   Coffee,
@@ -24,15 +27,20 @@ import {
   Gamepad2,
   Globe,
   GraduationCap,
+  Hand,
   Image as ImageIcon,
+  Laptop,
   Layers,
   Mail,
+  MapPin,
   MessageSquare,
+  Moon,
   Network,
   Rocket,
   Search,
   Server,
   Sparkles,
+  Swords,
   Table2,
   Target,
   Triangle,
@@ -59,14 +67,14 @@ import { JsonLd } from "@/components/seo/JsonLd";
 
 const roles = ["Software Engineer", "Product Builder", "AI Explorer", "Problem Solver"];
 
-const funFacts = [
-  { emoji: "🎮", title: "PUBG Mobile Player", text: "Ranked grinds & squad wipes in my free time." },
-  { emoji: "🌙", title: "Night Owl Coder", text: "My best code happens after 1 AM." },
-  { emoji: "☕", title: "Turning Coffee into Code", text: "The brew-to-bug-fix pipeline never stops." },
-  { emoji: "🚀", title: "Loves Shipping", text: "Ideas that ship beat ideas that wait." },
-  { emoji: "🤖", title: "Exploring AI Every Day", text: "RAG, LLMs, and whatever the AI world throws next." },
-  { emoji: "⚡", title: "Performance Obsessed", text: "If a page takes a second, I'm already annoyed." },
-  { emoji: "🎯", title: "Loves Solving Problems", text: "Real problems, real people, real fixes." },
+const funFacts: { icon: LucideIcon; title: string; text: string }[] = [
+  { icon: Gamepad2, title: "PUBG Mobile Player", text: "Ranked grinds & squad wipes in my free time." },
+  { icon: Moon, title: "Night Owl Coder", text: "My best code happens after 1 AM." },
+  { icon: Coffee, title: "Turning Coffee into Code", text: "The brew-to-bug-fix pipeline never stops." },
+  { icon: Rocket, title: "Loves Shipping", text: "Ideas that ship beat ideas that wait." },
+  { icon: Bot, title: "Exploring AI Every Day", text: "RAG, LLMs, and whatever the AI world throws next." },
+  { icon: Zap, title: "Performance Obsessed", text: "If a page takes a second, I'm already annoyed." },
+  { icon: Target, title: "Loves Solving Problems", text: "Real problems, real people, real fixes." },
 ];
 
 const whyBuilt = [
@@ -249,13 +257,15 @@ const faqs = [
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
+  const reduceMotion = useReducedMotion();
   const [value, setValue] = useState(0);
 
   useEffect(() => {
     if (!inView) return;
     let raf = 0;
     const start = performance.now();
-    const duration = 1600;
+    // Reduced motion: jump straight to the final value (first rAF tick).
+    const duration = reduceMotion ? 0 : 1600;
     const tick = (now: number) => {
       const p = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - p, 3);
@@ -264,7 +274,7 @@ function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [inView, to]);
+  }, [inView, to, reduceMotion]);
 
   return (
     <span ref={ref}>
@@ -291,7 +301,7 @@ function SectionHeader({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: "100px" }}
       transition={{ duration: 0.5 }}
       className="mx-auto max-w-2xl text-center"
     >
@@ -318,6 +328,8 @@ export default function AboutPage() {
 
   // Infinite float animations are nice on desktop but drain battery/CPU on
   // small screens — disable them under 640px. SSR-safe via useSyncExternalStore.
+  // Also respect users who prefer reduced motion (framer-motion JS animations
+  // aren't covered by the CSS prefers-reduced-motion rules in globals.css).
   const isMobile = useSyncExternalStore(
     (onChange) => {
       const mq = window.matchMedia("(max-width: 639px)");
@@ -327,8 +339,9 @@ export default function AboutPage() {
     () => window.matchMedia("(max-width: 639px)").matches,
     () => false
   );
-  const floatAnim = isMobile ? undefined : { y: [0, -7, 0] as number[] };
-  const floatChipAnim = isMobile ? undefined : { y: [0, -6, 0] as number[] };
+  const reduceMotion = useReducedMotion();
+  const floatAnim = isMobile || reduceMotion ? undefined : { y: [0, -7, 0] as number[] };
+  const floatChipAnim = isMobile || reduceMotion ? undefined : { y: [0, -6, 0] as number[] };
 
   return (
     <>
@@ -353,11 +366,11 @@ export default function AboutPage() {
             transition={{ duration: 0.5 }}
             className="mb-8 flex flex-wrap items-center justify-center gap-2 text-xs text-text-muted"
           >
-            <Capsule variant="sky" sm interactive={false}>📍 Mathura, India</Capsule>
-            <Capsule variant="violet" sm interactive={false}>🎂 22 years old</Capsule>
-            <Capsule variant="primary" sm interactive={false}>💼 Software Engineer</Capsule>
-            <Capsule variant="teal" sm interactive={false}>☕ 4 min read</Capsule>
-            <Capsule variant="purple" sm interactive={false}>📅 Updated Aug 2026</Capsule>
+            <Capsule variant="sky" sm interactive={false}><MapPin className="h-3.5 w-3.5" /> Mathura, India</Capsule>
+            <Capsule variant="violet" sm interactive={false}><Cake className="h-3.5 w-3.5" /> 22 years old</Capsule>
+            <Capsule variant="primary" sm interactive={false}><Briefcase className="h-3.5 w-3.5" /> Software Engineer</Capsule>
+            <Capsule variant="teal" sm interactive={false}><Coffee className="h-3.5 w-3.5" /> 4 min read</Capsule>
+            <Capsule variant="purple" sm interactive={false}><Calendar className="h-3.5 w-3.5" /> Updated Aug 2026</Capsule>
           </motion.div>
 
           <motion.h1
@@ -366,7 +379,11 @@ export default function AboutPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl"
           >
-            <span className="block text-text-primary">Hi 👋 I&apos;m Amar.</span>
+            <span className="block text-text-primary">
+              Hi{" "}
+              <Hand className="inline-block h-8 w-8 animate-wave origin-[70%_70%] text-primary sm:h-9 sm:w-9" />
+              {" "}I&apos;m Amar.
+            </span>
             <span className="mt-3 block bg-gradient-to-r from-primary via-sky-500 to-primary bg-clip-text text-3xl text-transparent sm:text-4xl md:text-5xl">
               <FlipWords words={roles} duration={2800} />
             </span>
@@ -420,23 +437,26 @@ export default function AboutPage() {
             </span>
             {/* Floating badges around the avatar */}
             {[
-              { emoji: "🏏", pos: "-left-2 top-2", delay: 0.4 },
-              { emoji: "💻", pos: "-right-3 top-6", delay: 1.2 },
-              { emoji: "🌆", pos: "-left-4 bottom-4", delay: 2 },
-              { emoji: "🎯", pos: "-right-4 bottom-0", delay: 0.8 },
-            ].map((badge) => (
-              <motion.span
-                key={badge.pos}
-                animate={floatAnim}
-                transition={{ duration: 3.2, repeat: Infinity, delay: badge.delay, ease: "easeInOut" }}
-                className={cn(
-                  "absolute flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-lg shadow-lg",
-                  badge.pos
-                )}
-              >
-                {badge.emoji}
-              </motion.span>
-            ))}
+              { icon: Swords, pos: "-left-2 top-2", delay: 0.4 },
+              { icon: Laptop, pos: "-right-3 top-6", delay: 1.2 },
+              { icon: Building2, pos: "-left-4 bottom-4", delay: 2 },
+              { icon: Target, pos: "-right-4 bottom-0", delay: 0.8 },
+            ].map((badge) => {
+              const BadgeIcon = badge.icon;
+              return (
+                <motion.span
+                  key={badge.pos}
+                  animate={floatAnim}
+                  transition={{ duration: 3.2, repeat: Infinity, delay: badge.delay, ease: "easeInOut" }}
+                  className={cn(
+                    "absolute flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-primary shadow-lg",
+                    badge.pos
+                  )}
+                >
+                  <BadgeIcon className="h-5 w-5" />
+                </motion.span>
+              );
+            })}
           </motion.div>
 
           {/* Floating personality chips */}
@@ -448,21 +468,24 @@ export default function AboutPage() {
           >
             <div className="relative flex flex-wrap items-center justify-center gap-3">
               {[
-                { emoji: "🎮", label: "PUBG Mobile", delay: 0 },
-                { emoji: "🤖", label: "AI Explorer", delay: 0.6 },
-                { emoji: "⚡", label: "Performance Freak", delay: 1.2 },
-                { emoji: "🚀", label: "Ships Fast", delay: 1.8 },
-              ].map((chip) => (
-                <motion.span
-                  key={chip.label}
-                  animate={floatChipAnim}
-                  transition={{ duration: 3, repeat: Infinity, delay: chip.delay, ease: "easeInOut" }}
-                  className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary shadow-sm"
-                >
-                  <span className="text-base">{chip.emoji}</span>
-                  {chip.label}
-                </motion.span>
-              ))}
+                { icon: Gamepad2, label: "PUBG Mobile", delay: 0 },
+                { icon: Bot, label: "AI Explorer", delay: 0.6 },
+                { icon: Zap, label: "Performance Freak", delay: 1.2 },
+                { icon: Rocket, label: "Ships Fast", delay: 1.8 },
+              ].map((chip) => {
+                const ChipIcon = chip.icon;
+                return (
+                  <motion.span
+                    key={chip.label}
+                    animate={floatChipAnim}
+                    transition={{ duration: 3, repeat: Infinity, delay: chip.delay, ease: "easeInOut" }}
+                    className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-secondary shadow-sm"
+                  >
+                    <ChipIcon className="h-4 w-4 text-primary" />
+                    {chip.label}
+                  </motion.span>
+                );
+              })}
             </div>
           </motion.div>
         </div>
@@ -474,7 +497,7 @@ export default function AboutPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "100px" }}
           transition={{ duration: 0.5 }}
           className="container-page text-center"
         >
@@ -489,7 +512,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ MY STORY ============ */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={GraduationCap}
@@ -508,7 +531,7 @@ export default function AboutPage() {
                 key={i}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "100px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="text-lg leading-relaxed text-text-secondary"
               >
@@ -520,7 +543,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ WHY I BUILT THIS ============ */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="border-t border-border bg-surface content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={Flame}
@@ -535,7 +558,7 @@ export default function AboutPage() {
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "100px" }}
                 transition={{ duration: 0.5, delay: i * 0.12 }}
                 className="group relative overflow-hidden rounded-2xl border border-border bg-background p-6 transition-all duration-300 hover:-translate-y-1 hover:border-error/40 hover:shadow-xl hover:shadow-error/10"
               >
@@ -552,7 +575,7 @@ export default function AboutPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "100px" }}
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mx-auto mt-8 max-w-4xl rounded-2xl bg-gradient-to-r from-primary via-sky-500 to-primary p-px shadow-lg shadow-primary/20"
           >
@@ -567,7 +590,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ TECH STACK ============ */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={Code2}
@@ -582,7 +605,7 @@ export default function AboutPage() {
                 key={group.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "100px" }}
                 transition={{ duration: 0.5, delay: gi * 0.1 }}
                 className="group rounded-2xl border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
               >
@@ -606,7 +629,7 @@ export default function AboutPage() {
                         <motion.div
                           initial={{ width: 0 }}
                           whileInView={{ width: `${skill.level}%` }}
-                          viewport={{ once: true }}
+                          viewport={{ once: true, margin: "100px" }}
                           transition={{ duration: 1, delay: 0.2 + gi * 0.1, ease: "easeOut" }}
                           className="h-full rounded-full bg-gradient-to-r from-primary to-sky-500"
                         />
@@ -621,7 +644,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ WHAT I'M BUILDING ============ */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="border-t border-border bg-surface content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={Rocket}
@@ -636,7 +659,7 @@ export default function AboutPage() {
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "100px" }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
               >
                 <Link
@@ -659,7 +682,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ FUN FACTS ============ */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={Gamepad2}
@@ -669,28 +692,33 @@ export default function AboutPage() {
             eyebrowVariant="fuchsia"
           />
           <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {funFacts.map((fact, i) => (
-              <motion.div
-                key={fact.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.07 }}
-                whileHover={{ y: -4 }}
-                className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-primary/10"
-              >
-                <span className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
-                <span className="text-4xl">{fact.emoji}</span>
-                <h3 className="mt-3 font-semibold text-text-primary">{fact.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{fact.text}</p>
-              </motion.div>
-            ))}
+            {funFacts.map((fact, i) => {
+              const FactIcon = fact.icon;
+              return (
+                <motion.div
+                  key={fact.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "100px" }}
+                  transition={{ duration: 0.4, delay: i * 0.07 }}
+                  whileHover={{ y: -4 }}
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl hover:shadow-primary/10"
+                >
+                  <span className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-sky-500 text-white shadow-md shadow-primary/25 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                    <FactIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-3 font-semibold text-text-primary">{fact.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{fact.text}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* ============ TIMELINE ============ */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="border-t border-border bg-surface content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={Globe}
@@ -708,7 +736,7 @@ export default function AboutPage() {
                   key={item.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: "100px" }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   className={cn(
                     "relative flex flex-col gap-2 pl-12 sm:w-1/2 sm:pl-0",
@@ -738,13 +766,13 @@ export default function AboutPage() {
       </section>
 
       {/* ============ MISSION & VISION ============ */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <div className="mx-auto grid max-w-4xl gap-5 sm:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "100px" }}
               transition={{ duration: 0.5 }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-sky-500 to-primary p-px shadow-lg shadow-primary/20"
             >
@@ -763,7 +791,7 @@ export default function AboutPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "100px" }}
               transition={{ duration: 0.5, delay: 0.15 }}
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-sky-500 to-primary p-px shadow-lg shadow-primary/20"
             >
@@ -783,7 +811,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ STATS ============ */}
-      <section className="border-t border-border bg-surface py-16 sm:py-20">
+      <section className="border-t border-border bg-surface content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={BarChart3}
@@ -798,7 +826,7 @@ export default function AboutPage() {
                 key={stat.label}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "100px" }}
                 transition={{ duration: 0.4, delay: i * 0.08 }}
                 className="group rounded-2xl border border-border bg-background p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
               >
@@ -816,7 +844,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ FAQ ============ */}
-      <section className="py-16 sm:py-20">
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <SectionHeader
             icon={MessageSquare}
@@ -833,7 +861,7 @@ export default function AboutPage() {
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: "100px" }}
                   transition={{ duration: 0.3, delay: i * 0.03 }}
                   className={cn(
                     "overflow-hidden rounded-xl border transition-all duration-300",
@@ -876,7 +904,7 @@ export default function AboutPage() {
       </section>
 
       {/* ============ CTA ============ */}
-      <section className="relative overflow-hidden border-t border-border bg-surface py-16 sm:py-20">
+      <section className="relative overflow-hidden border-t border-border bg-surface content-visibility-auto py-16 sm:py-20">
         <div className="absolute inset-0 -z-10">
           <BackgroundBeams />
           <GridPattern className="text-primary opacity-60" />
@@ -885,7 +913,7 @@ export default function AboutPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "100px" }}
             transition={{ duration: 0.5 }}
             className="mx-auto max-w-2xl"
           >

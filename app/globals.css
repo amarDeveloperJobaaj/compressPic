@@ -43,6 +43,7 @@
   --animate-beam-slow-reverse: beam-slow 20s ease-in-out infinite reverse;
   --animate-glow-pulse: glow-pulse 3.5s ease-in-out infinite;
   --animate-marquee: marquee 30s linear infinite;
+  --animate-wave: wave 2.4s ease-in-out 3;
   --animate-logo-shine: logo-shine 4.5s ease-in-out infinite;
   --animate-logo-spark: logo-spark 2.8s ease-in-out infinite;
 }
@@ -146,6 +147,30 @@
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* Greeting hand wave — transform only, GPU cheap, plays a few times then stops */
+@keyframes wave {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(16deg);
+  }
+  20% {
+    transform: rotate(-8deg);
+  }
+  30% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(8deg);
   }
 }
 

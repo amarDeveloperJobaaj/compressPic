@@ -1,5 +1,4 @@
 import {
-  BarChart3,
   Code2,
   FileText,
   Image as ImageIcon,
@@ -15,7 +14,6 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "pdf-tools": FileText,
   "developer-tools": Code2,
   "seo-tools": Search,
-  "website-analysis-tools": BarChart3,
   "finance-tools": TrendingUp,
   "youtube-tools": Youtube,
 };

@@ -27,7 +27,7 @@ export default function WebsiteTrafficCheckerLayout({
     <>
       <Breadcrumbs
         items={[
-          { label: "Website Analysis Tools" },
+          { label: "SEO Tools" },
           { label: "Traffic Checker", href: "/website-traffic-checker" },
         ]}
       />
