@@ -90,7 +90,7 @@ export default async function SlugPage({
       <PageTransition>
         <Breadcrumbs
           items={[
-            { label: "Finance Tools" },
+            { label: "Finance Tools", href: "/finance-tools" },
             { label: finance.name, href: `/${finance.slug}` },
           ]}
         />
@@ -118,7 +118,7 @@ export default async function SlugPage({
       <PageTransition>
         <Breadcrumbs
           items={[
-            { label: "YouTube Tools" },
+            { label: "YouTube Tools", href: "/youtube-tools" },
             { label: youtube.name, href: `/${youtube.slug}` },
           ]}
         />
@@ -147,7 +147,7 @@ export default async function SlugPage({
     <PageTransition>
       <Breadcrumbs
         items={[
-          { label: "Image Tools" },
+          { label: "Image Tools", href: "/image-tools" },
           { label: "Convert", href: "/convert" },
           { label: `${pair.from.label} to ${pair.to.label}`, href: `/${pair.slug}` },
         ]}

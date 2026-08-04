@@ -171,3 +171,117 @@ export function howToSchema({
     })),
   };
 }
+
+export function articleSchema({
+  title,
+  description,
+  url,
+  image,
+  publishedTime,
+  modifiedTime,
+  authorName,
+  keywords,
+}: {
+  title: string;
+  description: string;
+  url: string;
+  image: string;
+  publishedTime: string;
+  modifiedTime?: string;
+  authorName: string;
+  keywords?: string[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    image: `${SITE_URL}${image}`,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}${url}`,
+    },
+    datePublished: publishedTime,
+    ...(modifiedTime ? { dateModified: modifiedTime } : {}),
+    ...(keywords?.length ? { keywords: keywords.join(", ") } : {}),
+    author: {
+      "@type": "Person",
+      name: authorName,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/og?title=${encodeURIComponent(SITE_NAME)}`,
+      },
+    },
+  };
+}
+
+export function webPageSchema({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name,
+    description,
+    url: `${SITE_URL}${url}`,
+  };
+}
+
+export function collectionPageSchema({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url: `${SITE_URL}${url}`,
+  };
+}
+
+export function itemListSchema(items: { name: string; url: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: `${SITE_URL}${item.url}`,
+    })),
+  };
+}
+
+export function personSchema({
+  name,
+  role,
+  description,
+}: {
+  name: string;
+  role: string;
+  description: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name,
+    jobTitle: role,
+    description,
+  };
+}

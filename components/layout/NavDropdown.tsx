@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeftRight,
+  ArrowRight,
   ChevronDown,
   FileImage,
   Globe,
@@ -68,6 +69,8 @@ interface NavDropdownProps {
   sections: NavDropdownSection[];
   /** Align the panel to the right edge of the trigger (avoids viewport overflow). */
   align?: "left" | "right";
+  /** Optional "View all" link rendered in the footer strip (internal linking). */
+  footerLink?: { label: string; href: string };
 }
 
 /** Static column classes so Tailwind can see them at build time. */
@@ -99,7 +102,7 @@ function panelWidth(count: number): string {
  * Items render in a horizontal multi-column grid (like Vercel/Linear menus)
  * instead of a long vertical list.
  */
-export function NavDropdown({ label, sections, align = "left" }: NavDropdownProps) {
+export function NavDropdown({ label, sections, align = "left", footerLink }: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -268,8 +271,20 @@ export function NavDropdown({ label, sections, align = "left" }: NavDropdownProp
             </div>
 
             {/* Footer strip */}
-            <div className="border-t border-border/60 bg-background/40 px-4 py-2 text-center text-[11px] font-medium text-text-muted">
-              100% free · No sign-up · Files never leave your device
+            <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-background/40 px-4 py-2">
+              <span className="text-[11px] font-medium text-text-muted">
+                100% free · No sign-up
+              </span>
+              {footerLink && (
+                <Link
+                  href={footerLink.href}
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition-colors hover:text-primary-dark"
+                >
+                  {footerLink.label}
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

@@ -67,6 +67,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { TOOL_CATEGORIES, type Tool } from "@/lib/tools";
+import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Sparkles } from "@/components/ui/sparkles";
 import { BackgroundBeams } from "@/components/ui/background-beams";
@@ -619,6 +620,24 @@ export default function HomePage() {
                 </BentoGrid>
               </motion.div>
             </AnimatePresence>
+
+            {/* Link to the full category landing page for the active tab */}
+            {(() => {
+              const categoryPage = CATEGORY_PAGE_BY_CATEGORY_ID[activeCategory];
+              const activeLabel =
+                TOOL_CATEGORIES.find((c) => c.id === activeCategory)?.label ?? "tools";
+              return categoryPage ? (
+                <div className="mt-8 text-center">
+                  <Link
+                    href={`/${categoryPage}`}
+                    className="group inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary-light/40 px-6 py-2.5 text-sm font-semibold text-primary shadow-sm transition-all duration-300 hover:border-primary hover:bg-primary hover:text-white hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+                  >
+                    View all {activeLabel}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              ) : null;
+            })()}
           </motion.div>
         </div>
       </section>

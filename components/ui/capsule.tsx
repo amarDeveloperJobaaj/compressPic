@@ -9,6 +9,7 @@ export type CapsuleVariant =
   | "sky"
   | "rose"
   | "amber"
+  | "warning"
   | "violet"
   | "teal"
   | "fuchsia"
@@ -115,6 +116,12 @@ const VARIANT_STYLES: Record<CapsuleVariant, { pill: string; dot: string; glow: 
     dot: "bg-amber-500",
     text: "text-amber-600 dark:text-amber-300",
     glow: "shadow-[0_0_14px_rgba(245,158,11,0.3)] hover:shadow-[0_0_24px_rgba(245,158,11,0.55)]",
+  },
+  warning: {
+    pill: "border-yellow-400/40 bg-yellow-500/10 text-yellow-700 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-300",
+    dot: "bg-yellow-500",
+    text: "text-yellow-600 dark:text-yellow-300",
+    glow: "shadow-[0_0_14px_rgba(234,179,8,0.3)] hover:shadow-[0_0_24px_rgba(234,179,8,0.55)]",
   },
   violet: {
     pill: "border-violet-400/40 bg-violet-500/10 text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300",

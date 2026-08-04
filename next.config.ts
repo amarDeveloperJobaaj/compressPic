@@ -17,8 +17,10 @@ const nextConfig: NextConfig = {
           value: "nosniff",
         },
         {
+          // SAMEORIGIN (not DENY): the blog embeds live Vizo Tool tools in
+          // same-origin iframes (see features/blog ToolEmbed blocks).
           key: "X-Frame-Options",
-          value: "DENY",
+          value: "SAMEORIGIN",
         },
         {
           key: "X-XSS-Protection",
