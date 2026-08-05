@@ -289,12 +289,22 @@ export const supabaseBlogRepository: BlogRepository = {
       countMap.set(row.category_id, (countMap.get(row.category_id) ?? 0) + 1);
     }
 
-    return (cats.data ?? []).map<BlogCategory & { count: number }>((c) => ({
-      slug: c.slug,
-      name: c.name,
-      description: c.description ?? "",
-      count: countMap.get(c.id) ?? 0,
-    }));
+    // Dedupe by name — duplicate names (e.g. same category created under two
+    // slugs) would otherwise cause React key collisions in dropdowns and
+    // filters. Keep the first occurrence per name.
+    const seen = new Set<string>();
+    const result: (BlogCategory & { count: number })[] = [];
+    for (const c of cats.data ?? []) {
+      if (seen.has(c.name)) continue;
+      seen.add(c.name);
+      result.push({
+        slug: c.slug,
+        name: c.name,
+        description: c.description ?? "",
+        count: countMap.get(c.id) ?? 0,
+      });
+    }
+    return result;
   },
 
   async getTags() {

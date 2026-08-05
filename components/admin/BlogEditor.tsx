@@ -318,7 +318,7 @@ export function BlogEditor({
                     onChange={(e) => setCategory(e.target.value)}
                     className={inputClass}
                   >
-                    {categories.map((c) => (
+                    {Array.from(new Set(categories)).map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
