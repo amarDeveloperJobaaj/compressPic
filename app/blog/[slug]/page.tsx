@@ -37,21 +37,24 @@ import {
   webPageSchema,
 } from "@/lib/seo";
 import { buildHeadingRefs } from "@/lib/blog/utils";
+import { getBlogRepository } from "@/lib/blog/repository";
 import {
-  getCategories,
   getEmbeddedToolSlugs,
-  getPostBySlug,
-  getPrevNext,
-  getPublishedPosts,
-  getRelatedPosts,
   getRelatedTools,
   getToolRef,
 } from "@/lib/blog/service";
 
 export const revalidate = 30;
 
-export function generateStaticParams() {
-  return getPublishedPosts().map((post) => ({ slug: post.slug }));
+export async function generateStaticParams() {
+  // Repository may be Supabase-backed (cookies() unavailable at build time) —
+  // fall back to on-demand ISR rendering rather than failing the build.
+  try {
+    const { items } = await getBlogRepository().listPublished({ pageSize: 100 });
+    return items.map((post) => ({ slug: post.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -60,7 +63,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getBlogRepository().getPostBySlug(slug);
   if (!post) return {};
 
   const seo = post.seo;
@@ -94,18 +97,24 @@ function formatDate(iso: string): string {
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const repo = getBlogRepository();
+  const post = await repo.getPostBySlug(slug);
   // Drafts are never served publicly — even with a known slug.
   if (!post || post.status !== "published") notFound();
 
   const url = `/blog/${post.slug}`;
   const absoluteUrl = `${SITE_URL}${url}`;
   const tocItems = buildHeadingRefs(post.content);
-  const relatedPosts = getRelatedPosts(post);
+  const [relatedPosts, prevNext, categories, initialComments] = await Promise.all([
+    repo.getRelatedPosts(post),
+    repo.getPrevNext(post),
+    repo.getCategories(),
+    repo.listComments(post.id),
+  ]);
+  const { prev, next } = prevNext;
   const relatedTools = getRelatedTools(post);
   const embeddedSlugs = getEmbeddedToolSlugs(post);
-  const { prev, next } = getPrevNext(post);
-  const categorySlug = getCategories().find((c) => c.name === post.category)?.slug;
+  const categorySlug = categories.find((c) => c.name === post.category)?.slug;
 
   // Schema content from the post's own blocks
   const faqItems = post.content
@@ -216,6 +225,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </Capsule>
               </Link>
             ))}
+            {post.authorSlug && (
+              <Link href={`/blog/author/${post.authorSlug}`}>
+                <Capsule variant="success" sm glow={false}>
+                  By {post.author}
+                </Capsule>
+              </Link>
+            )}
           </div>
 
           <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-text-primary sm:text-4xl">
@@ -249,7 +265,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <ShareButtons title={post.title} url={absoluteUrl} />
-            <ArticleActions slug={post.slug} />
+            <ArticleActions slug={post.slug} postId={post.id} />
           </div>
         </header>
 
@@ -285,7 +301,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <p className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-text-muted">
                   <UserRound className="h-3.5 w-3.5" /> Author
                 </p>
-                <p className="mt-2 text-sm font-semibold text-text-primary">{post.author}</p>
+                {post.authorSlug ? (
+                  <Link
+                    href={`/blog/author/${post.authorSlug}`}
+                    className="mt-2 block text-sm font-semibold text-text-primary transition-colors hover:text-primary"
+                  >
+                    {post.author}
+                  </Link>
+                ) : (
+                  <p className="mt-2 text-sm font-semibold text-text-primary">{post.author}</p>
+                )}
                 <p className="mt-0.5 text-xs text-text-muted">{post.authorRole}</p>
               </div>
             </div>
@@ -341,7 +366,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Newsletter + comments */}
         <div className="mx-auto mt-14 max-w-3xl space-y-12">
           <NewsletterForm />
-          <CommentSection slug={post.slug} />
+          <CommentSection postId={post.id} initialComments={initialComments} />
         </div>
       </article>
     </PageTransition>

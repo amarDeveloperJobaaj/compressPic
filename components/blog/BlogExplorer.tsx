@@ -3,8 +3,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Flame, Search, SlidersHorizontal, Star, Timer, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { BlogCategory } from "@/lib/blog/types";
+import type { BlogBlock, BlogCategory } from "@/lib/blog/types";
 import type { BlogSummary } from "@/lib/blog/service";
+import { blocksToText } from "@/lib/blog/utils";
 import { BlogCard } from "./BlogCard";
 import { cn } from "@/lib/utils";
 
@@ -25,12 +26,14 @@ export function BlogExplorer({
   posts,
   categories,
   tags,
+  initialQuery = "",
 }: {
   posts: BlogSummary[];
   categories: (BlogCategory & { count: number })[];
   tags: { name: string; count: number }[];
+  initialQuery?: string;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [sort, setSort] = useState<SortMode>("newest");
@@ -42,7 +45,16 @@ export function BlogExplorer({
       if (category !== "all" && p.category !== category) return false;
       if (activeTag && !p.tags.some((t) => t.toLowerCase() === activeTag.toLowerCase())) return false;
       if (q) {
-        const haystack = [p.title, p.subtitle, p.excerpt, p.category, p.tags.join(" ")]
+        const content = (p as BlogSummary & { content?: BlogBlock[] }).content;
+        const haystack = [
+          p.title,
+          p.subtitle,
+          p.excerpt,
+          p.category,
+          p.author,
+          p.tags.join(" "),
+          content ? blocksToText(content) : "",
+        ]
           .join(" ")
           .toLowerCase();
         if (!haystack.includes(q)) return false;

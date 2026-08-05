@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { BlogEditor } from "@/components/admin/BlogEditor";
-import { getCategories, getPostById } from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,11 @@ export default async function AdminEditBlogPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = getPostById(id);
+  const repo = getBlogRepository();
+  const [post, categories] = await Promise.all([
+    repo.getPostById(id),
+    repo.getCategories(),
+  ]);
   if (!post) notFound();
-  return <BlogEditor initial={post} categories={getCategories().map((c) => c.name)} />;
+  return <BlogEditor initial={post} categories={categories.map((c) => c.name)} />;
 }

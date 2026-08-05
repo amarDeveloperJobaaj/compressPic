@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
-import {
-  deletePost,
-  duplicatePost,
-  getPostById,
-  updatePost,
-  type BlogInput,
-} from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
+import { blogInputSchema } from "@/lib/blog/validation";
 
 export async function GET(
   _request: Request,
@@ -16,11 +11,18 @@ export async function GET(
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const post = getPostById(id);
-  if (!post) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  try {
+    const post = await getBlogRepository().getPostById(id);
+    if (!post) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, post });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "Failed to load post" },
+      { status: 500 }
+    );
   }
-  return NextResponse.json({ ok: true, post });
 }
 
 export async function PATCH(
@@ -32,27 +34,44 @@ export async function PATCH(
   }
   const { id } = await params;
 
-  let body: BlogInput & { duplicate?: boolean };
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
   }
 
-  // Duplicate is a convenience action handled by the repository.
-  if (body.duplicate === true) {
-    const copy = duplicatePost(id);
-    if (!copy) {
+  const repo = getBlogRepository();
+
+  try {
+    // Duplicate is a convenience action handled by the repository.
+    if (body.duplicate === true) {
+      const copy = await repo.duplicatePost(id);
+      if (!copy) {
+        return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true, post: copy });
+    }
+
+    const parsed = blogInputSchema.partial().safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid blog data" },
+        { status: 400 }
+      );
+    }
+
+    const post = await repo.updatePost(id, parsed.data);
+    if (!post) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json({ ok: true, post: copy });
+    return NextResponse.json({ ok: true, post });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "Failed to update post" },
+      { status: 500 }
+    );
   }
-
-  const post = updatePost(id, body);
-  if (!post) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-  }
-  return NextResponse.json({ ok: true, post });
 }
 
 export async function DELETE(
@@ -63,9 +82,16 @@ export async function DELETE(
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const deleted = deletePost(id);
-  if (!deleted) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  try {
+    const deleted = await getBlogRepository().deletePost(id);
+    if (!deleted) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "Failed to delete post" },
+      { status: 500 }
+    );
   }
-  return NextResponse.json({ ok: true });
 }

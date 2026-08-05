@@ -23,7 +23,10 @@ import {
   Trash2,
   Video,
   Wand2,
+  Workflow,
   Wrench,
+  MousePointerClick,
+  Sigma,
 } from "lucide-react";
 import { useState } from "react";
 import { ALL_TOOLS } from "@/lib/tools";
@@ -91,6 +94,12 @@ export const DEFAULT_BLOCKS: Record<BlogBlock["type"], () => BlogBlock> = {
   newsletterCard: () => ({ type: "newsletterCard" }),
   divider: () => ({ type: "divider" }),
   customHtml: () => ({ type: "customHtml", html: "<p>Custom HTML</p>" }),
+  tabs: () => ({ type: "tabs", tabs: [{ title: "Tab 1", text: "Content for the first tab" }] }),
+  button: () => ({ type: "button", label: "Click me", href: "/", variant: "primary" }),
+  tweetEmbed: () => ({ type: "tweetEmbed", url: "https://twitter.com/username/status/1234567890" }),
+  githubEmbed: () => ({ type: "githubEmbed", url: "https://github.com/owner/repo" }),
+  mermaid: () => ({ type: "mermaid", code: "graph TD\nA[Start] --> B[End]" }),
+  math: () => ({ type: "math", formula: "E = mc^2" }),
 };
 
 const BLOCK_LABELS: Record<BlogBlock["type"], string> = {
@@ -123,6 +132,12 @@ const BLOCK_LABELS: Record<BlogBlock["type"], string> = {
   newsletterCard: "Newsletter card",
   divider: "Divider",
   customHtml: "Custom HTML",
+  tabs: "Tabs",
+  button: "Button",
+  tweetEmbed: "Tweet embed",
+  githubEmbed: "GitHub embed",
+  mermaid: "Mermaid diagram",
+  math: "Math formula",
 };
 
 interface PaletteItem {
@@ -149,6 +164,7 @@ const PALETTE: { group: string; items: PaletteItem[] }[] = [
       { type: "code", label: "Code block", description: "Syntax + copy", Icon: Code2 },
       { type: "terminal", label: "Terminal", description: "CLI output", Icon: SquareCode },
       { type: "customHtml", label: "Custom HTML", description: "Raw markup", Icon: FileCode2 },
+      { type: "mermaid", label: "Mermaid diagram", description: "Flowchart / sequence", Icon: Workflow },
     ],
   },
   {
@@ -158,6 +174,8 @@ const PALETTE: { group: string; items: PaletteItem[] }[] = [
       { type: "gallery", label: "Gallery", description: "Image grid", Icon: ImageIcon },
       { type: "beforeAfter", label: "Before / After", description: "Slider", Icon: SlidersHorizontal },
       { type: "video", label: "Video", description: "YouTube / Vimeo", Icon: Video },
+      { type: "tweetEmbed", label: "Tweet embed", description: "Twitter / X post", Icon: MessageSquare },
+      { type: "githubEmbed", label: "GitHub embed", description: "Repo card", Icon: Code2 },
     ],
   },
   {
@@ -169,10 +187,16 @@ const PALETTE: { group: string; items: PaletteItem[] }[] = [
       { type: "steps", label: "Steps", description: "Numbered guide", Icon: ArrowDown },
       { type: "accordion", label: "Accordion", description: "Collapsible", Icon: ArrowUp },
       { type: "faq", label: "FAQ", description: "Q&A accordion", Icon: MessageSquare },
+      { type: "tabs", label: "Tabs", description: "Tabbed content", Icon: Rows3 },
       { type: "stats", label: "Statistics", description: "Big numbers", Icon: Sparkles },
       { type: "chartPlaceholder", label: "Chart", description: "Placeholder", Icon: SlidersHorizontal },
+      { type: "button", label: "Button", description: "CTA button", Icon: MousePointerClick },
       { type: "divider", label: "Divider", description: "Section break", Icon: Minus },
     ],
+  },
+  {
+    group: "Advanced",
+    items: [{ type: "math", label: "Math formula", description: "LaTeX (KaTeX)", Icon: Sigma }],
   },
   {
     group: "Tools & CTA",
@@ -657,6 +681,77 @@ function BlockFieldsEditor({
             <Field label="Button label" value={block.buttonLabel} onChange={(buttonLabel) => patch({ buttonLabel })} />
           </div>
         </div>
+      );
+    case "tabs":
+      return (
+        <PairRowsEditor
+          label="Tabs"
+          keyLabel="Tab title"
+          valueLabel="Content"
+          value={block.tabs.map((t) => ({ key: t.title, value: t.text }))}
+          onChange={(rows) =>
+            patch({
+              tabs: rows
+                .filter((r) => r.key.trim() || r.value.trim())
+                .map((r) => ({ title: r.key, text: r.value })),
+            })
+          }
+        />
+      );
+    case "button":
+      return (
+        <div className="grid gap-2.5">
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <Field label="Label" value={block.label} onChange={(label) => patch({ label })} />
+            <Field label="Link href" value={block.href} onChange={(href) => patch({ href })} />
+          </div>
+          <Select
+            label="Variant"
+            value={block.variant ?? "primary"}
+            options={[
+              { value: "primary", label: "Primary (filled)" },
+              { value: "secondary", label: "Secondary (soft)" },
+              { value: "outline", label: "Outline" },
+            ]}
+            onChange={(variant) => patch({ variant: variant as "primary" | "secondary" | "outline" })}
+          />
+        </div>
+      );
+    case "tweetEmbed":
+    case "githubEmbed":
+      return (
+        <Field
+          label={block.type === "tweetEmbed" ? "Tweet URL" : "Repository URL"}
+          value={block.url}
+          onChange={(url) => patch({ url })}
+          placeholder={
+            block.type === "tweetEmbed"
+              ? "https://twitter.com/username/status/…"
+              : "https://github.com/owner/repo"
+          }
+        />
+      );
+    case "mermaid":
+      return (
+        <Area
+          label="Mermaid source"
+          value={block.code}
+          onChange={(code) => patch({ code })}
+          rows={6}
+          mono
+          placeholder="graph TD&#10;A[Start] --> B[End]"
+        />
+      );
+    case "math":
+      return (
+        <Area
+          label="LaTeX formula"
+          value={block.formula}
+          onChange={(formula) => patch({ formula })}
+          rows={3}
+          mono
+          placeholder="E = mc^2"
+        />
       );
     case "customHtml":
       return (

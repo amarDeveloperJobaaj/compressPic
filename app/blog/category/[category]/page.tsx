@@ -8,17 +8,19 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { buildMetadata, breadcrumbListSchema } from "@/lib/seo";
-import {
-  getCategories,
-  getCategoryBySlug,
-  getPostsByCategory,
-  toSummary,
-} from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
 
 export const revalidate = 60;
 
-export function generateStaticParams() {
-  return getCategories().map((category) => ({ category: category.slug }));
+export async function generateStaticParams() {
+  // Repository may be Supabase-backed (cookies() unavailable at build time) —
+  // fall back to on-demand ISR rendering rather than failing the build.
+  try {
+    const categories = await getBlogRepository().getCategories();
+    return categories.map((category) => ({ category: category.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -27,7 +29,8 @@ export async function generateMetadata({
   params: Promise<{ category: string }>;
 }): Promise<Metadata> {
   const { category } = await params;
-  const cat = getCategoryBySlug(category);
+  const categories = await getBlogRepository().getCategories();
+  const cat = categories.find((c) => c.slug === category);
   if (!cat) return {};
   return buildMetadata({
     title: `${cat.name} Articles & Guides`,
@@ -43,11 +46,16 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  const cat = getCategoryBySlug(category);
+  const repo = getBlogRepository();
+  const [categories, listing] = await Promise.all([
+    repo.getCategories(),
+    repo.listPublished({ category, pageSize: 100 }),
+  ]);
+  const cat = categories.find((c) => c.slug === category);
   if (!cat) notFound();
 
-  const posts = getPostsByCategory(category).map(toSummary);
-  const others = getCategories().filter((c) => c.slug !== category);
+  const posts = listing.items;
+  const others = categories.filter((c) => c.slug !== category);
 
   return (
     <PageTransition>

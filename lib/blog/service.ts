@@ -3,10 +3,12 @@ import "server-only";
 import { ALL_TOOLS } from "@/lib/tools";
 import { BLOG_CATEGORIES, BLOG_POSTS } from "./data";
 import { estimateReadTime, slugify } from "./utils";
+import type { BlogStats } from "./types";
 import type {
   BlogBlock,
   BlogCategory,
   BlogPost,
+  BlogSummary,
   BlogToolRef,
 } from "./types";
 
@@ -33,13 +35,12 @@ const store: BlogPost[] = [...BLOG_POSTS];
 // Serialization helpers
 // ---------------------------------------------------------------------------
 
-/** Lightweight post shape for list pages — drops the heavy content blocks. */
-export type BlogSummary = Omit<BlogPost, "content">;
+export type { BlogSummary } from "./types";
 
 export function toSummary(post: BlogPost): BlogSummary {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { content: _content, ...rest } = post;
-  return rest;
+  return { ...rest, authorSlug: rest.authorSlug ?? slugify(rest.author) };
 }
 
 // ---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ export function toSummary(post: BlogPost): BlogSummary {
 // ---------------------------------------------------------------------------
 
 export function getAllPosts(): BlogPost[] {
-  return store;
+  return store.filter((p) => !p.deleted);
 }
 
 export function getPublishedPosts(): BlogPost[] {
@@ -138,6 +139,17 @@ function blockText(block: BlogBlock): string {
       return block.items.map((i) => `${i.question} ${i.answer}`).join(" ");
     case "stats":
       return block.items.map((i) => `${i.value} ${i.label}`).join(" ");
+    case "tabs":
+      return block.tabs.map((t) => `${t.title} ${t.text}`).join(" ");
+    case "button":
+      return block.label;
+    case "tweetEmbed":
+    case "githubEmbed":
+      return block.url;
+    case "mermaid":
+      return block.code;
+    case "math":
+      return block.formula;
     case "video":
     case "image":
     case "gallery":
@@ -292,10 +304,11 @@ export interface BlogInput {
   authorRole?: string;
   publishedAt?: string;
   updatedAt?: string;
-  status?: "published" | "draft";
+  status?: "published" | "draft" | "scheduled" | "archived";
   featured?: boolean;
   trending?: boolean;
   editorsPick?: boolean;
+  pinned?: boolean;
   readCount?: number;
   seo?: BlogPost["seo"];
   content?: BlogBlock[];
@@ -334,6 +347,7 @@ export function createPost(input: BlogInput): BlogPost {
     featured: input.featured ?? false,
     trending: input.trending ?? false,
     editorsPick: input.editorsPick ?? false,
+    pinned: input.pinned ?? false,
     readCount: input.readCount ?? 0,
     seo: input.seo,
     content,
@@ -360,10 +374,33 @@ export function updatePost(id: string, input: BlogInput): BlogPost | undefined {
 }
 
 export function deletePost(id: string): boolean {
+  // Soft delete: the post stays in the store (so /blog/<slug> 404s are avoided
+  // during the trash window) but is flagged + archived and hidden everywhere.
+  const index = store.findIndex((p) => p.id === id);
+  if (index === -1) return false;
+  store[index] = { ...store[index], deleted: true, status: "archived" };
+  return true;
+}
+
+/** Bring a soft-deleted post back as a draft. */
+export function restorePost(id: string): boolean {
+  const index = store.findIndex((p) => p.id === id);
+  if (index === -1) return false;
+  store[index] = { ...store[index], deleted: false, status: "draft" };
+  return true;
+}
+
+/** Permanently remove a post (only used from the trash view). */
+export function purgePost(id: string): boolean {
   const index = store.findIndex((p) => p.id === id);
   if (index === -1) return false;
   store.splice(index, 1);
   return true;
+}
+
+/** Admin trash list — soft-deleted posts only. */
+export function listTrashedPosts(): BlogPost[] {
+  return store.filter((p) => p.deleted);
 }
 
 export function duplicatePost(id: string): BlogPost | undefined {
@@ -382,16 +419,22 @@ export function duplicatePost(id: string): BlogPost | undefined {
   return copy;
 }
 
-export function getBlogStats() {
-  const published = store.filter((p) => p.status === "published");
-  const drafts = store.filter((p) => p.status === "draft");
+export function getBlogStats(): BlogStats {
+  const live = store.filter((p) => !p.deleted);
+  const published = live.filter((p) => p.status === "published");
+  const drafts = live.filter((p) => p.status === "draft");
+  const scheduled = live.filter((p) => p.status === "scheduled");
   return {
-    total: store.length,
+    total: live.length,
     published: published.length,
     drafts: drafts.length,
+    scheduled: scheduled.length,
     trending: published.filter((p) => p.trending).length,
     featured: published.filter((p) => p.featured).length,
     categories: getCategories().length,
     totalReads: published.reduce((sum, p) => sum + p.readCount, 0),
+    tags: getTags().length,
+    authors: 1,
+    trashed: store.length - live.length,
   };
 }

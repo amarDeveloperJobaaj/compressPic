@@ -1,6 +1,8 @@
 import { Database, KeyRound, RefreshCw, ShieldCheck } from "lucide-react";
+import { SettingsEditor } from "@/components/admin/SettingsEditor";
 import { Capsule } from "@/components/ui/capsule";
 import { ADMIN_CONFIG } from "@/lib/admin/config";
+import { getBlogRepository, getBlogStorage } from "@/lib/blog/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -23,16 +25,22 @@ function InfoCard({
   );
 }
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  const [settings, storageMode] = await Promise.all([
+    getBlogRepository().getSettings(),
+    Promise.resolve(getBlogStorage()),
+  ]);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-text-primary">Settings</h1>
         <p className="mt-0.5 text-sm text-text-muted">
-          Authentication and data-layer status. All values are read server-side from environment
-          variables.
+          Site-wide defaults, analytics placeholders and data-layer status.
         </p>
       </div>
+
+      <SettingsEditor initial={settings} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoCard Icon={ShieldCheck} title="Authentication">
@@ -49,14 +57,8 @@ export default function AdminSettingsPage() {
               </Capsule>
             </li>
             <li className="flex items-center justify-between rounded-lg bg-background/60 px-3 py-2">
-              <span>Session secret</span>
-              <code className="font-mono text-text-primary">
-                {ADMIN_CONFIG.sessionSecret.includes("change-me") ? "dev fallback" : "configured"}
-              </code>
-            </li>
-            <li className="flex items-center justify-between rounded-lg bg-background/60 px-3 py-2">
-              <span>Session lifetime</span>
-              <span>{ADMIN_CONFIG.sessionDays} days (30 when “Remember me”)</span>
+              <span>Session</span>
+              <span>HMAC cookie · {ADMIN_CONFIG.sessionDays}d (30d remember)</span>
             </li>
           </ul>
         </InfoCard>
@@ -64,32 +66,32 @@ export default function AdminSettingsPage() {
         <InfoCard Icon={KeyRound} title="Session strategy">
           <p>
             Stateless HMAC-signed cookie (<code className="font-mono text-xs">httpOnly</code>,{" "}
-            <code className="font-mono text-xs">sameSite=lax</code>, secure in production). No
-            server-side session table, so sessions survive restarts and scale across instances.
+            <code className="font-mono text-xs">sameSite=lax</code>, secure in production). Swap
+            path to Supabase Auth: replace <code className="font-mono text-xs">createAdminSession</code>{" "}
+            with <code className="font-mono text-xs">supabase.auth.signInWithPassword()</code> — UI unchanged.
           </p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <Capsule variant="primary" sm>Proxy optimistic guard</Capsule>
-            <Capsule variant="primary" sm>Layout verification</Capsule>
-            <Capsule variant="primary" sm>API 401 checks</Capsule>
-          </div>
         </InfoCard>
 
-        <InfoCard Icon={Database} title="Data layer (future-ready)">
+        <InfoCard Icon={Database} title="Data layer">
           <p>
-            The blog currently uses the in-memory dummy repository seeded with 20 posts. The
-            repository interface is the exact seam where Supabase replaces the data — no UI, route
-            or component changes required.
+            Every admin mutation flows through the repository. Flip{" "}
+            <code className="font-mono text-xs">BLOG_STORAGE=supabase</code> to switch the admin CMS
+            to the live database — the UI is identical either way.
           </p>
           <div className="mt-3">
-            <Capsule variant="warning" sm>Dummy data (local memory)</Capsule>
+            <Capsule variant={storageMode === "supabase" ? "success" : "warning"} sm>
+              {storageMode === "supabase" ? "Supabase connected" : "Memory store (Supabase-ready)"}
+            </Capsule>
           </div>
         </InfoCard>
 
-        <InfoCard Icon={RefreshCw} title="Supabase migration">
+        <InfoCard Icon={RefreshCw} title="Going live">
           <p>
-            Follow <code className="font-mono text-xs">docs/supabase-migration.md</code>. In short:
-            implement the same repository functions with Supabase queries, swap the auth helpers for{" "}
-            <code className="font-mono text-xs">supabase.auth</code>, then delete the dummy store.
+            1. Run <code className="font-mono text-xs">supabase/schema.sql</code> +{" "}
+            <code className="font-mono text-xs">storage.sql</code> in your project. 2. Set the Supabase
+            env vars in <code className="font-mono text-xs">.env.local</code>. 3. Run{" "}
+            <code className="font-mono text-xs">npm run migrate:blogs -- --apply</code> to import the
+            existing 23 posts. 4. Set <code className="font-mono text-xs">BLOG_STORAGE=supabase</code>.
           </p>
         </InfoCard>
       </div>

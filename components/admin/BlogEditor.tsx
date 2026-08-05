@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Capsule } from "@/components/ui/capsule";
 import type { BlogBlock, BlogPost } from "@/lib/blog/types";
 import { slugify } from "@/lib/blog/utils";
@@ -88,10 +88,13 @@ export function BlogEditor({
     initial ? initial.publishedAt.slice(0, 10) : new Date().toISOString().slice(0, 10)
   );
 
-  const [status] = useState<"published" | "draft">(initial?.status ?? "draft");
+  const [status, setStatus] = useState<"published" | "draft" | "scheduled">(
+    initial?.status === "scheduled" ? "scheduled" : initial?.status === "published" ? "published" : "draft"
+  );
   const [featured, setFeatured] = useState(initial?.featured ?? false);
   const [trending, setTrending] = useState(initial?.trending ?? false);
   const [editorsPick, setEditorsPick] = useState(initial?.editorsPick ?? false);
+  const [pinned, setPinned] = useState(initial?.pinned ?? false);
 
   const [metaTitle, setMetaTitle] = useState(initial?.seo?.metaTitle ?? "");
   const [metaDescription, setMetaDescription] = useState(initial?.seo?.metaDescription ?? "");
@@ -101,6 +104,7 @@ export function BlogEditor({
 
   const [blocks, setBlocks] = useState<BlogBlock[]>(initial?.content ?? []);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -108,7 +112,7 @@ export function BlogEditor({
     if (title.trim()) setSlug(slugify(title));
   };
 
-  const save = async (targetStatus: "published" | "draft") => {
+  const save = async (targetStatus: "published" | "draft" | "scheduled", redirect = true) => {
     setError("");
     setNotice("");
     if (!title.trim()) {
@@ -117,6 +121,7 @@ export function BlogEditor({
     }
     const finalSlug = slug || slugify(title) || "untitled-post";
     setSaving(true);
+    savingRef.current = true;
     try {
       const payload = {
         title: title.trim(),
@@ -137,6 +142,7 @@ export function BlogEditor({
         featured,
         trending,
         editorsPick,
+        pinned,
         seo: {
           metaTitle: metaTitle.trim() || undefined,
           metaDescription: metaDescription.trim() || undefined,
@@ -163,15 +169,35 @@ export function BlogEditor({
         setError(data.error ?? "Failed to save");
         return;
       }
-      setNotice(targetStatus === "published" ? "Published! 🎉" : "Draft saved.");
+      const noticeMap: Record<string, string> = {
+        published: "Published! 🎉",
+        scheduled: "Scheduled for publishing.",
+        draft: redirect ? "Draft saved." : "Draft auto-saved ✓",
+      };
+      setNotice(noticeMap[targetStatus] ?? "Saved.");
       setSlug(finalSlug);
-      setTimeout(() => router.push("/admin/blogs"), 600);
+      if (redirect) setTimeout(() => router.push("/admin/blogs"), 600);
     } catch {
       setError("Network error while saving.");
     } finally {
       setSaving(false);
+      savingRef.current = false;
     }
   };
+
+  // Autosave (edit mode only): 20s after the last change, save silently as a draft.
+  useEffect(() => {
+    if (!isEdit || !initial) return;
+    const t = setTimeout(() => {
+      if (!savingRef.current) void save("draft", false);
+    }, 20000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    title, slug, subtitle, excerpt, cover, coverAlt, category, tags, author, authorRole,
+    publishedDate, featured, trending, editorsPick, pinned,
+    metaTitle, metaDescription, keywords, ogImage, twitterImage, blocks, status,
+  ]);
 
   const remove = async () => {
     if (!initial) return;
@@ -225,12 +251,12 @@ export function BlogEditor({
           </button>
           <button
             type="button"
-            onClick={() => void save("published")}
+            onClick={() => void save(status)}
             disabled={saving}
             className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            {status === "published" ? "Update" : "Publish"}
+            {status === "published" ? (isEdit ? "Update" : "Publish") : status === "scheduled" ? "Schedule" : "Save draft"}
           </button>
         </div>
       </div>
@@ -381,8 +407,21 @@ export function BlogEditor({
               <Toggle label="Featured" checked={featured} onChange={setFeatured} />
               <Toggle label="Trending" checked={trending} onChange={setTrending} />
               <Toggle label="Editor's pick" checked={editorsPick} onChange={setEditorsPick} />
+              <Toggle label="Pinned" checked={pinned} onChange={setPinned} />
               <label className="block pt-2">
-                <span className="mb-1.5 block text-sm font-medium text-text-primary">Published date</span>
+                <span className="mb-1.5 block text-sm font-medium text-text-primary">Status</span>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as "published" | "draft" | "scheduled")}
+                  className={inputClass}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+              </label>
+              <label className="block pt-2">
+                <span className="mb-1.5 block text-sm font-medium text-text-primary">Publish / schedule date</span>
                 <input
                   type="date"
                   value={publishedDate}
