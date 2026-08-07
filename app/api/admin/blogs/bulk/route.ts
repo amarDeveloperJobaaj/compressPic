@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
 import { getBlogRepository } from "@/lib/blog/repository";
+import { revalidateBlogPages } from "@/lib/blog/revalidation";
 
 const ACTIONS = ["publish", "draft", "archive", "delete"] as const;
 
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       const post = await repo.updatePost(id, { status });
       if (post) updated++;
     }
+    if (updated) revalidateBlogPages();
     return NextResponse.json({ ok: true, updated });
   } catch (e) {
     return NextResponse.json(

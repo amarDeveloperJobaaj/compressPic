@@ -16,8 +16,7 @@ import { z } from "zod";
 import { isAdmin } from "@/lib/admin/session";
 
 import { getBlogRepository } from "./repository";
-import { slugify } from "./utils";
-import type { BlogPost } from "./types";
+import { revalidateBlogPages, revalidateSitemap } from "./revalidation";
 import {
   authorInputSchema,
   blogInputSchema,
@@ -37,17 +36,6 @@ export type ActionResult<T> =
 
 function fail(error: string, issues?: string[]): { ok: false; error: string; issues?: string[] } {
   return { ok: false, error, ...(issues ? { issues } : {}) };
-}
-
-/** Revalidate every surface a post can appear on (listing, category, tag, article). */
-function revalidateBlogPages(post?: Pick<BlogPost, "slug" | "category" | "tags">) {
-  revalidatePath("/blogs");
-  revalidatePath("/blog");
-  if (post) {
-    revalidatePath(`/blog/${post.slug}`, "page");
-    if (post.category) revalidatePath(`/blog/category/${slugify(post.category)}`, "page");
-    for (const tag of post.tags) revalidatePath(`/blog/tag/${slugify(tag)}`, "page");
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -252,6 +240,7 @@ export async function saveCategoryAction(
 
   revalidatePath("/admin/categories");
   revalidatePath("/blogs");
+  revalidateSitemap();
   return { ok: true, data: { slug: parsed.data.slug || parsed.data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") } };
 }
 
@@ -262,6 +251,7 @@ export async function deleteCategoryAction(
   const deleted = await getBlogRepository().deleteCategory(slug);
   revalidatePath("/admin/categories");
   revalidatePath("/blogs");
+  revalidateSitemap();
   return { ok: true, data: { deleted } };
 }
 
@@ -283,6 +273,7 @@ export async function saveTagAction(
   }
 
   revalidatePath("/admin/tags");
+  revalidateSitemap();
   return { ok: true, data: { slug: parsed.data.slug || parsed.data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") } };
 }
 
@@ -292,6 +283,7 @@ export async function deleteTagAction(
   if (!(await isAdmin())) return fail("Unauthorized");
   const deleted = await getBlogRepository().deleteTag(slug);
   revalidatePath("/admin/tags");
+  revalidateSitemap();
   return { ok: true, data: { deleted } };
 }
 
@@ -303,6 +295,7 @@ export async function mergeTagsAction(
   const merged = await getBlogRepository().mergeTags(sourceSlug, targetSlug);
   revalidatePath("/admin/tags");
   revalidatePath("/blogs");
+  revalidateSitemap();
   return { ok: true, data: { merged } };
 }
 
@@ -324,6 +317,7 @@ export async function saveAuthorAction(
   }
 
   revalidatePath("/admin/authors");
+  revalidateSitemap();
   return { ok: true, data: { slug: parsed.data.slug || parsed.data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") } };
 }
 
@@ -333,6 +327,7 @@ export async function deleteAuthorAction(
   if (!(await isAdmin())) return fail("Unauthorized");
   const deleted = await getBlogRepository().deleteAuthor(slug);
   revalidatePath("/admin/authors");
+  revalidateSitemap();
   return { ok: true, data: { deleted } };
 }
 

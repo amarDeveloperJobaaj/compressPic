@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
 import { getBlogRepository } from "@/lib/blog/repository";
+import { revalidateBlogPages } from "@/lib/blog/revalidation";
 import { blogInputSchema } from "@/lib/blog/validation";
 
 export async function GET(
@@ -50,6 +51,7 @@ export async function PATCH(
       if (!copy) {
         return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       }
+      revalidateBlogPages();
       return NextResponse.json({ ok: true, post: copy });
     }
 
@@ -65,6 +67,7 @@ export async function PATCH(
     if (!post) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
+    revalidateBlogPages(post);
     return NextResponse.json({ ok: true, post });
   } catch (e) {
     return NextResponse.json(
@@ -87,6 +90,7 @@ export async function DELETE(
     if (!deleted) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
+    revalidateBlogPages();
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(

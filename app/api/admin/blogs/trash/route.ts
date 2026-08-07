@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
 import { getBlogRepository } from "@/lib/blog/repository";
+import { revalidateBlogPages } from "@/lib/blog/revalidation";
 
 export async function GET() {
   if (!(await isAdmin())) {
@@ -38,6 +39,8 @@ export async function POST(request: Request) {
   try {
     const ok = action === "restore" ? await repo.restorePost(id) : await repo.purgePost(id);
     if (!ok) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    // Restoring re-exposes a soft-deleted post (and its sitemap entry) — refresh public surfaces.
+    revalidateBlogPages();
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(

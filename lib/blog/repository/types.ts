@@ -52,6 +52,9 @@ export interface PostEngagement {
 export interface BlogRepository {
   // --- Reads (public) -------------------------------------------------------
   getPostBySlug(slug: string): Promise<BlogPost | null>;
+  /** Admin preview — any status (draft/scheduled/published), not deleted.
+   *  Only call after verifying an admin session. */
+  getPostBySlugForPreview(slug: string): Promise<BlogPost | null>;
   listPublished(filters?: PostFilters): Promise<{ items: BlogSummary[]; meta: PageMeta }>;
   getCategories(): Promise<(BlogCategory & { count: number })[]>;
   getTags(): Promise<{ name: string; count: number }[]>;

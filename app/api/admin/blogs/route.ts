@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
 import { getBlogRepository } from "@/lib/blog/repository";
+import { revalidateBlogPages } from "@/lib/blog/revalidation";
 import { blogInputSchema } from "@/lib/blog/validation";
 
 export async function GET(request: Request) {
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
 
   try {
     const post = await getBlogRepository().createPost(parsed.data);
+    revalidateBlogPages(post);
     return NextResponse.json({ ok: true, post }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

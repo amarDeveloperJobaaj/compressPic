@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Database, Json } from "@/lib/supabase/database.types";
 
 import { estimateReadTime, slugify } from "../utils";
@@ -16,9 +16,11 @@ import type { BlogInputValidated } from "../validation";
 /**
  * Supabase BlogRepository — the production data layer.
  *
- * - Public reads  -> anon client (lib/supabase/server.ts): RLS enforces that
- *   visitors only ever see published posts, approved comments and public
- *   settings — even if a future query forgets a filter.
+ * - Public reads  -> cookie-free anon client (lib/supabase/public.ts): RLS
+ *   enforces that visitors only ever see published posts, approved comments
+ *   and public settings — even if a future query forgets a filter. Being
+ *   cookie-free keeps the SSG blog routes (generateStaticParams / ISR) from
+ *   tripping Next.js's DYNAMIC_SERVER_USAGE guard on `cookies()`.
  * - Admin reads + all writes -> service-role client (lib/supabase/admin.ts):
  *   full access for the admin panel and the server actions.
  *
@@ -230,7 +232,7 @@ export const supabaseBlogRepository: BlogRepository = {
   // --- Public reads ---------------------------------------------------------
 
   async getPostBySlug(slug) {
-    const { data, error } = await (await createServerClient())
+    const { data, error } = await createPublicClient()
       .from("blogs")
       .select(FULL_SELECT)
       .eq("slug", slug)
@@ -242,9 +244,26 @@ export const supabaseBlogRepository: BlogRepository = {
     return data ? rowToPost(data as PostRow) : null;
   },
 
+  /**
+   * Admin preview — any status (draft/scheduled/published), not deleted.
+   * Uses the service-role client so RLS never hides drafts from the author.
+   * Only call this after verifying an admin session (see app/blog/[slug]).
+   */
+  async getPostBySlugForPreview(slug) {
+    const { data, error } = await createAdminClient()
+      .from("blogs")
+      .select(FULL_SELECT)
+      .eq("slug", slug)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) throw new Error(`getPostBySlugForPreview failed: ${error.message}`);
+    return data ? rowToPost(data as PostRow) : null;
+  },
+
   async listPublished(filters) {
     const f = normalizePostFilters(filters);
-    let q: Query = (await createServerClient())
+    let q: Query = createPublicClient()
       .from("blogs")
       .select(SUMMARY_SELECT, { count: "exact" })
       .eq("status", "published")
@@ -271,12 +290,12 @@ export const supabaseBlogRepository: BlogRepository = {
 
   async getCategories() {
     const [cats, counts] = await Promise.all([
-      (await createServerClient())
+      createPublicClient()
         .from("categories")
         .select("id, slug, name, description")
         .is("deleted_at", null)
         .order("name"),
-      (await createServerClient())
+      createPublicClient()
         .from("blogs")
         .select("category_id")
         .eq("status", "published")
@@ -309,8 +328,8 @@ export const supabaseBlogRepository: BlogRepository = {
 
   async getTags() {
     const [tags, links] = await Promise.all([
-      (await createServerClient()).from("tags").select("id, name").order("name"),
-      (await createServerClient())
+      createPublicClient().from("tags").select("id, name").order("name"),
+      createPublicClient()
         .from("blog_tags")
         .select("tag_id, blog:blogs(status)")
         .eq("blog.status", "published"),
@@ -778,7 +797,7 @@ export const supabaseBlogRepository: BlogRepository = {
   // --- Authors (admin CRUD, keyed by unique slug) ---------------------------
 
   async getAuthorBySlug(slug) {
-    const { data, error } = await (await createServerClient())
+    const { data, error } = await createPublicClient()
       .from("authors")
       .select("id, name, slug, role, bio, avatar_url, email, twitter, website, instagram, linkedin, created_at, updated_at")
       .eq("slug", slug)
@@ -978,7 +997,7 @@ export const supabaseBlogRepository: BlogRepository = {
   },
 
   async listComments(blogId) {
-    const { data, error } = await (await createServerClient())
+    const { data, error } = await createPublicClient()
       .from("comments")
       .select("id, blog_id, parent_id, author_name, content, created_at")
       .eq("blog_id", blogId)

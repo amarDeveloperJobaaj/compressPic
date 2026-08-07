@@ -200,7 +200,16 @@ export function ShareButtons({ title, url }: { title: string; url: string }) {
 /* Like + bookmark (localStorage)                                      */
 /* ------------------------------------------------------------------ */
 
-export function ArticleActions({ slug, postId }: { slug: string; postId: string }) {
+export function ArticleActions({
+  slug,
+  postId,
+  preview = false,
+}: {
+  slug: string;
+  postId: string;
+  /** Render in admin preview mode — skip recording views/engagement. */
+  preview?: boolean;
+}) {
   const likeKey = `vizotool-blog-like:${slug}`;
   const bookmarkKey = `vizotool-blog-bookmark:${slug}`;
 
@@ -212,6 +221,7 @@ export function ArticleActions({ slug, postId }: { slug: string; postId: string 
   const recorded = useRef(false);
 
   // Restore local state + record one view + fetch real engagement (deferred).
+  // Preview renders never record views — a draft must not pollute the stats.
   useEffect(() => {
     const id = setTimeout(() => {
       try {
@@ -220,7 +230,7 @@ export function ArticleActions({ slug, postId }: { slug: string; postId: string 
       } catch {
         /* private mode */
       }
-      if (!recorded.current) {
+      if (!preview && !recorded.current) {
         recorded.current = true;
         recordViewAction({ blogId: postId, visitorId: getVisitorId() }).catch(() => {});
       }
@@ -232,7 +242,7 @@ export function ArticleActions({ slug, postId }: { slug: string; postId: string 
       }).catch(() => {});
     }, 0);
     return () => clearTimeout(id);
-  }, [likeKey, bookmarkKey, slug, postId]);
+  }, [likeKey, bookmarkKey, slug, postId, preview]);
 
   const toggleLike = async () => {
     if (busy) return;

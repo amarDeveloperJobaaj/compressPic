@@ -30,7 +30,9 @@ export function validateDomain(domain: string): string | null {
 /* ------------------------------------------------------------------ */
 
 /**
- * Fetch raw text through the public CORS proxy with a timeout.
+ * Fetch raw text through our server-side fetcher first, falling back to a
+ * chain of public CORS proxies — a single flaky proxy can no longer surface
+ * as "Failed to fetch".
  *
  * Returns null on abort/timeout/non-OK so an AbortError ("signal is aborted
  * without reason") can never surface as an unhandled runtime error. The
@@ -39,26 +41,51 @@ export function validateDomain(domain: string): string | null {
  */
 async function fetchViaProxy(url: string, external?: AbortSignal): Promise<string | null> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
   const onExternalAbort = () => controller.abort();
   if (external) {
     if (external.aborted) controller.abort();
     else external.addEventListener("abort", onExternalAbort, { once: true });
   }
+
+  // Fetch one URL with its own timeout while honoring the shared controller
+  // (external cancel or a superseded analysis). Never throws — returns null on
+  // any failure so a timeout/abort can't surface as an unhandled rejection.
+  const attempt = async (input: string): Promise<string | null> => {
+    const attemptController = new AbortController();
+    const timer = setTimeout(() => attemptController.abort(), 8000);
+    const onAbort = () => attemptController.abort();
+    if (controller.signal.aborted) attemptController.abort();
+    else controller.signal.addEventListener("abort", onAbort, { once: true });
+    try {
+      const res = await fetch(input, { signal: attemptController.signal });
+      if (!res.ok) return null;
+      const text = await res.text();
+      return text && text.length > 10 ? text : null;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+      controller.signal.removeEventListener("abort", onAbort);
+    }
+  };
+
   try {
-    const target = encodeURIComponent(url);
-    const res = await fetch(`https://api.allorigins.win/raw?url=${target}`, {
-      signal: controller.signal,
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    return text && text.length > 10 ? text : null;
-  } catch (err) {
-    // Swallow aborts (timeout or external cancel); rethrow real network errors.
-    if (err instanceof Error && err.name === "AbortError") return null;
-    throw err;
+    // 1) Server-side fetch via our API route (no CORS, follows redirects,
+    //    browser UA). Validation failures (400) simply return null.
+    const api = await attempt(`/api/fetch-url?url=${encodeURIComponent(url)}`);
+    if (api) return api;
+
+    // 2) Public CORS proxy chain (keeps the tool working on static hosting).
+    const proxies = [
+      (target: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+      (target: string) => `https://corsproxy.io/?url=${encodeURIComponent(target)}`,
+    ];
+    for (const build of proxies) {
+      const text = await attempt(build(url));
+      if (text) return text;
+    }
+    return null;
   } finally {
-    clearTimeout(timer);
     external?.removeEventListener("abort", onExternalAbort);
   }
 }
@@ -189,13 +216,38 @@ export function computeScores(groups: {
   };
 }
 
-/** Public helper: fetch + extract raw signals for a domain. */
+/** Extract `Sitemap:` URLs declared inside a robots.txt body. */
+function parseSitemapUrls(robotsText: string): string[] {
+  const urls: string[] = [];
+  for (const line of robotsText.split(/\r?\n/)) {
+    const m = line.match(/^\s*Sitemap\s*:\s*(\S+)\s*$/i);
+    if (m && /^https?:\/\//i.test(m[1])) urls.push(m[1]);
+  }
+  return urls;
+}
+
+/**
+ * Public helper: fetch + extract raw signals for a domain.
+ *
+ * The sitemap is discovered the way real crawlers do it — `Sitemap:`
+ * declarations inside robots.txt take priority, because many large sites
+ * (Adobe, enterprise sites) never serve a sitemap at the canonical
+ * `/sitemap.xml` path. `/sitemap.xml` is only a fallback.
+ */
 export async function fetchSignals(url: string, onSignal?: () => void, signal?: AbortSignal) {
   const html = await tryFetch(url, signal);
   onSignal?.();
   const robots = await tryFetch(`${url}/robots.txt`, signal);
   onSignal?.();
-  const sitemap = await tryFetch(`${url}/sitemap.xml`, signal);
+
+  // robots.txt declarations first (up to 2), then the canonical path.
+  const declared = robots ? parseSitemapUrls(robots) : [];
+  const candidates = [...new Set([...declared.slice(0, 2), `${url}/sitemap.xml`])];
+  let sitemap: string | null = null;
+  for (const candidate of candidates) {
+    sitemap = await tryFetch(candidate, signal);
+    if (sitemap) break;
+  }
   onSignal?.();
   return { html, robots, sitemap };
 }

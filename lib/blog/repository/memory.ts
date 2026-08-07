@@ -66,6 +66,13 @@ export const memoryBlogRepository: BlogRepository = {
     return { ...post, authorSlug: post.authorSlug ?? slugifyName(post.author) };
   },
 
+  async getPostBySlugForPreview(slug) {
+    // Admin preview: any status, not deleted.
+    const post = service.getPostBySlug(slug);
+    if (!post || post.deleted) return null;
+    return { ...post, authorSlug: post.authorSlug ?? slugifyName(post.author) };
+  },
+
   async listPublished(filters) {
     const f = normalizePostFilters(filters);
     // searchPosts() already returns only published posts and matches content text.
