@@ -13,6 +13,8 @@ export function InterviewCta() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
             <div className="absolute -right-16 -top-16 h-72 w-72 animate-glow-pulse rounded-full bg-white/10 blur-3xl" />
             <div className="absolute -bottom-24 -left-16 h-80 w-80 rounded-full bg-cyan-300/20 blur-3xl" />
+            <div className="absolute -left-24 -top-24 h-72 w-72 animate-[aurora-drift_18s_ease-in-out_infinite] rounded-full bg-cyan-300/15 blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 h-56 w-56 animate-[hue-pulse_9s_ease-in-out_infinite] rounded-full bg-violet-300/15 blur-3xl" />
             {/* Abstract head silhouette */}
             <div className="absolute right-[12%] top-1/2 hidden h-44 w-36 -translate-y-1/2 rounded-t-full border border-white/15 bg-white/5 lg:block" />
             <div className="absolute right-[15%] top-[22%] hidden h-2 w-2 rounded-full bg-cyan-300/80 shadow-[0_0_12px_3px_rgba(34,211,238,0.5)] lg:block" />

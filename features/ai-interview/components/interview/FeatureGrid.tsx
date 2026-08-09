@@ -13,6 +13,7 @@ import {
 import { Capsule } from "@/components/ui/capsule";
 import { Reveal } from "../motion/Reveal";
 import { TiltCard } from "../motion/TiltCard";
+import { Aurora } from "./Aurora";
 
 /** Feature cards (§17) — 8 concise, premium cards. */
 interface Feature {
@@ -66,15 +67,18 @@ const FEATURES: Feature[] = [
 
 export function FeatureGrid() {
   return (
-    <section className="border-t border-border bg-background py-16 sm:py-20">
-      <div className="container-page">
+    <section className="relative overflow-hidden border-t border-border bg-background py-16 sm:py-20">
+      <Aurora />
+      <div className="container-page relative">
         <div className="mx-auto max-w-2xl text-center">
           <Capsule variant="primary" sm dot className="mb-4">
             Everything You Need
           </Capsule>
-          <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            One platform, every interview type
-          </h2>
+          <Reveal variant="blur">
+            <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              One platform, every interview type
+            </h2>
+          </Reveal>
           <p className="mt-3 text-lg text-text-secondary">
             Technical, HR, behavioral, coding, voice — the AI interviewer covers
             the formats real interviews use.

@@ -21,6 +21,9 @@ import type { AvatarState } from "./types";
  *   speaking  — soft rhythmic pulse + slight nod
  *   analyzing — steady glow + orbital progress ring fills around the bust
  *   success   — warm, calm glow
+ *
+ * Around the model: a hue-cycling additive "energy field" aura and boosted
+ * state-driven emissive give the page a colorful AI feel.
  */
 
 const MODEL_URL = "/models/ai-bot.glb";
@@ -29,14 +32,14 @@ const MODEL_URL = "/models/ai-bot.glb";
 // dynamically imported, so this never blocks first paint).
 useGLTF.preload(MODEL_URL);
 
-/** State-driven glow: intensity multiplier + emissive tint. */
-const STATE_GLOW: Record<AvatarState, { intensity: number; color: string }> = {
-  idle: { intensity: 1.0, color: "#FFFFFF" },
-  listening: { intensity: 1.22, color: "#CFF2FF" },
-  thinking: { intensity: 1.3, color: "#D6E8FF" },
-  speaking: { intensity: 1.24, color: "#E4F7FF" },
-  analyzing: { intensity: 1.34, color: "#CAEDFF" },
-  success: { intensity: 1.12, color: "#FFEED8" },
+/** State-driven glow: intensity multiplier + emissive hue (cyan family). */
+const STATE_GLOW: Record<AvatarState, { intensity: number; hue: number }> = {
+  idle: { intensity: 1.05, hue: 0.58 },
+  listening: { intensity: 1.35, hue: 0.55 },
+  thinking: { intensity: 1.45, hue: 0.62 },
+  speaking: { intensity: 1.3, hue: 0.5 },
+  analyzing: { intensity: 1.5, hue: 0.52 },
+  success: { intensity: 1.2, hue: 0.09 },
 };
 
 export function AIAvatarModel({ state }: { state: AvatarState }) {
@@ -48,6 +51,23 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
   const ringArc = useRef<THREE.Mesh>(null);
   const ringMat = useRef<THREE.MeshBasicMaterial>(null);
   const glowMat = useRef<THREE.MeshStandardMaterial | null>(null);
+  const auraRef = useRef<THREE.Mesh>(null);
+  const auraMat = useRef<THREE.MeshBasicMaterial>(null);
+
+  // Soft radial "energy field" texture for the halo behind the model.
+  const auraTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gradient.addColorStop(0, "rgba(255,255,255,0.9)");
+    gradient.addColorStop(0.35, "rgba(255,255,255,0.3)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(canvas);
+  }, []);
 
   // Clone the cached scene once — and give it its own material — so the
   // per-state glow never mutates the useGLTF cache shared across mounts.
@@ -81,6 +101,11 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
     glowMat.current = found;
   }, []);
 
+  // Dispose the canvas texture on unmount.
+  useEffect(() => {
+    return () => auraTexture?.dispose();
+  }, [auraTexture]);
+
   useFrame(({ clock }, delta) => {
     const t = clock.getElapsedTime();
 
@@ -92,7 +117,7 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
         Math.sin(t * 0.3 + 1) * 0.018 + (state === "speaking" ? Math.sin(t * 3.2) * 0.012 : 0);
     }
 
-    // State-driven emissive glow.
+    // State-driven emissive glow with a slow hue drift (colorful AI feel).
     if (glowMat.current) {
       const cfg = STATE_GLOW[state];
       let pulse = 1;
@@ -101,7 +126,16 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
       else if (state === "speaking") pulse = 1 + Math.sin(t * 6) * 0.11;
       else if (state === "idle") pulse = 1 + Math.sin(t * 2) * 0.05;
       glowMat.current.emissiveIntensity = cfg.intensity * pulse;
-      glowMat.current.emissive.set(cfg.color);
+      // Gentle cyan tint (kept moderate so the white robot stays white-ish).
+      glowMat.current.emissive.setHSL(cfg.hue + Math.sin(t * 0.22) * 0.04, 0.38, 0.62);
+    }
+
+    // Hue-cycling aura halo pulses with the state.
+    if (auraMat.current) {
+      const stateBoost =
+        state === "listening" || state === "thinking" || state === "analyzing" ? 0.18 : 0;
+      auraMat.current.opacity = Math.min(0.85, 0.42 + Math.sin(t * 1.5) * 0.12 + stateBoost);
+      auraMat.current.color.setHSL((t * 0.035) % 1, 0.8, 0.55);
     }
 
     // Slow orbit + analyzing progress arc (fills 0 → full over ~3s).
@@ -124,6 +158,19 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
           in the upper third of the frame, scaled to a bust-sized hero fill. */}
       <group position={[0, -3.0, 0]}>
         <primitive ref={modelRef} object={model} scale={0.85} />
+
+        {/* Hue-cycling energy-field aura behind the head */}
+        <mesh ref={auraRef} position={[0, 4.0, -0.85]} scale={2.5}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial
+            ref={auraMat}
+            map={auraTexture ?? undefined}
+            transparent
+            opacity={0.4}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
 
         {/* Orbital ring + progress arc at bust height */}
         <mesh ref={ring} position={[0, 3.55, 0]} rotation={[Math.PI / 2.1, 0, 0]}>

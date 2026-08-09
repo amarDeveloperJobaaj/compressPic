@@ -14,6 +14,8 @@ import {
 
 import { Capsule } from "@/components/ui/capsule";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { Aurora } from "./Aurora";
+import { Reveal } from "../motion/Reveal";
 
 /**
  * Interactive process section (§15): 6 steps with animated connecting lines.
@@ -70,15 +72,21 @@ export function HowItWorks() {
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   return (
-    <section id="how-it-works" className="scroll-mt-24 border-t border-border bg-surface py-16 sm:py-20">
-      <div className="container-page">
+    <section
+      id="how-it-works"
+      className="relative scroll-mt-24 overflow-hidden border-t border-border bg-surface py-16 sm:py-20"
+    >
+      <Aurora />
+      <div className="container-page relative">
         <div className="mx-auto max-w-2xl text-center">
           <Capsule variant="violet" sm dot className="mb-4">
             How It Works
           </Capsule>
-          <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            From resume to report in six steps
-          </h2>
+          <Reveal variant="blur">
+            <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              From resume to report in six steps
+            </h2>
+          </Reveal>
           <p className="mt-3 text-lg text-text-secondary">
             One focused flow — every step prepares you for the real interview.
           </p>

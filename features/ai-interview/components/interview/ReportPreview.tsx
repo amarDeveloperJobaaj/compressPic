@@ -5,6 +5,8 @@ import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 
 import { Capsule } from "@/components/ui/capsule";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { Aurora } from "./Aurora";
+import { Reveal } from "../motion/Reveal";
 
 /**
  * Report preview (§21): animated score rings + weak/strong areas +
@@ -74,15 +76,18 @@ export function ReportPreview() {
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   return (
-    <section className="border-t border-border bg-surface py-16 sm:py-20">
-      <div className="container-page">
+    <section className="relative overflow-hidden border-t border-border bg-surface py-16 sm:py-20">
+      <Aurora />
+      <div className="container-page relative">
         <div className="mx-auto max-w-2xl text-center">
           <Capsule variant="success" sm dot className="mb-4">
             Detailed AI Feedback
           </Capsule>
-          <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            Get a professional interview report
-          </h2>
+          <Reveal variant="blur">
+            <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              Get a professional interview report
+            </h2>
+          </Reveal>
           <p className="mt-3 text-lg text-text-secondary">
             Overall score, category scores, strengths, weaknesses, and a
             prioritized improvement plan — after every interview.

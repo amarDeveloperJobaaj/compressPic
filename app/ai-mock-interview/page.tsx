@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { FaqSection } from "@/components/seo/FaqSection";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { AI_INTERVIEW_FAQS } from "@/features/ai-interview/data/faqs";
+import { ScrollProgress } from "@/features/ai-interview/components/motion/ScrollProgress";
 import { InterviewHero } from "@/features/ai-interview/components/interview/InterviewHero";
 import { TrustBar } from "@/features/ai-interview/components/interview/TrustBar";
 import { HowItWorks } from "@/features/ai-interview/components/interview/HowItWorks";
@@ -65,6 +66,7 @@ export const metadata: Metadata = {
 export default function AiMockInterviewLandingPage() {
   return (
     <PageTransition>
+      <ScrollProgress />
       <JsonLd
         data={softwareApplicationSchema({
           name: "Vizo Tool AI Mock Interview",

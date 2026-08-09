@@ -14,6 +14,8 @@ import {
 
 import { Capsule } from "@/components/ui/capsule";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { Aurora } from "./Aurora";
+import { Reveal } from "../motion/Reveal";
 
 /**
  * Adaptive AI section (§18): the interviewer is an engine, not a question
@@ -39,15 +41,18 @@ export function AdaptiveFlow() {
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   return (
-    <section className="border-t border-border bg-background py-16 sm:py-20">
-      <div className="container-page">
+    <section className="relative overflow-hidden border-t border-border bg-background py-16 sm:py-20">
+      <Aurora />
+      <div className="container-page relative">
         <div className="mx-auto max-w-2xl text-center">
           <Capsule variant="cyan" sm dot className="mb-4">
             Adaptive AI
           </Capsule>
-          <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            An interviewer that thinks, not a question generator
-          </h2>
+          <Reveal variant="blur">
+            <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              An interviewer that thinks, not a question generator
+            </h2>
+          </Reveal>
           <p className="mt-3 text-lg text-text-secondary">
             Every answer reshapes the interview — the AI evaluates, adapts, and
             follows up the way a senior interviewer would.
