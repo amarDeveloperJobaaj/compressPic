@@ -10,15 +10,9 @@ import { TOOL_CATEGORIES } from "@/lib/tools";
 import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { getToolIcon } from "@/lib/tool-icons";
 import { Logo } from "@/components/ui/Logo";
-import { CONVERT_NAV_ITEMS } from "./NavDropdown";
+import { CONVERT_NAV_ITEMS, MORE_NAV_ITEMS } from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
-
-const pageLinks = [
-  { label: "Blog", href: "/blogs" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -29,11 +23,14 @@ interface MobileDrawerProps {
 function NavGroup({
   title,
   count,
+  badge,
   defaultOpen = true,
   children,
 }: {
   title: string;
   count: number;
+  /** Small gradient pill shown next to the title (e.g. "Popular"). */
+  badge?: string;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
@@ -47,7 +44,20 @@ function NavGroup({
         aria-expanded={isOpen}
         className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-text-primary transition-colors hover:bg-primary-light/60"
       >
-        <span>{title}</span>
+        <span
+          className={cn(
+            "flex items-center gap-2",
+            badge &&
+              "bg-gradient-to-r from-blue-600 via-cyan-500 to-violet-600 bg-clip-text text-transparent"
+          )}
+        >
+          {title}
+          {badge && (
+            <span className="rounded-full bg-gradient-to-r from-blue-600 via-cyan-600 to-violet-600 px-1.5 py-px text-[9px] font-bold text-white">
+              {badge}
+            </span>
+          )}
+        </span>
         <span className="flex items-center gap-2">
           <span className="rounded-full bg-primary-light px-2 py-0.5 text-xs font-semibold text-primary">
             {count}
@@ -232,6 +242,7 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 <NavGroup
                   key={category.id}
                   title={category.label}
+                  badge={category.id === "ai" ? "Popular" : undefined}
                   count={
                     category.id === "image"
                       ? category.tools.length + CONVERT_NAV_ITEMS.length
@@ -290,21 +301,21 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
               <div className="my-2 h-px bg-border" />
 
-              {pageLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={onClose}
-                  className={cn(
-                    "mb-1 flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                    pathname === link.href
-                      ? "bg-primary-light text-primary"
-                      : "text-text-secondary hover:bg-primary-light hover:text-primary"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {/* Secondary pages live under "More" (mobile parity with desktop) */}
+              <NavGroup title="More" count={MORE_NAV_ITEMS.length} defaultOpen={false}>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {MORE_NAV_ITEMS.map((item) => (
+                    <ToolTile
+                      key={item.href}
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      active={pathname === item.href}
+                      onClick={onClose}
+                    />
+                  ))}
+                </div>
+              </NavGroup>
             </nav>
 
             {/* Footer */}

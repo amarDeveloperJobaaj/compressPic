@@ -229,6 +229,27 @@
   }
 }
 
+@keyframes nav-ai-glow {
+  0%, 100% {
+    box-shadow: 0 0 14px -2px rgba(59, 130, 246, 0.6), 0 0 2px 1px rgba(56, 189, 248, 0.45);
+  }
+  33% {
+    box-shadow: 0 0 18px -2px rgba(139, 92, 246, 0.6), 0 0 2px 1px rgba(129, 140, 248, 0.45);
+  }
+  66% {
+    box-shadow: 0 0 14px -2px rgba(34, 211, 238, 0.6), 0 0 2px 1px rgba(34, 211, 238, 0.45);
+  }
+}
+
+@keyframes nav-ai-bg {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 @keyframes logo-spark {
   0%,
   100% {
