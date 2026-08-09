@@ -15,3 +15,11 @@ export const AVATAR_STATES: AvatarState[] = [
   "analyzing",
   "success",
 ];
+
+/** Device quality tiers (§34) — drives particle counts & effects. */
+export type QualityTier = "high" | "medium" | "low";
+
+export interface AvatarSceneProps {
+  state: AvatarState;
+  quality: QualityTier;
+}
