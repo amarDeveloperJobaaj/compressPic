@@ -315,6 +315,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-09 | Landing polish merged to `main` (`c6cc41d`) — 3D hero scene (React Three Fiber), GLTF robot avatar, spatial tilt cards, glass live-interview preview, skills marquee — SEO copy untouched | — | `main` |
 | 2026-08-09 | Landing polish (outside phase flow): 3D hero scene (React Three Fiber), spatial tilt cards, glass live-interview preview, skills marquee — SEO copy untouched | — | `feature/ai-interview/landing-polish` |
 | 2026-08-09 | Phase 1 merged to `main` (`cbf75a3`) — marked COMPLETED | 1 | `main` |
 | 2026-08-09 | Phase 0 merged to `main` (`63db455`) — marked COMPLETED | 0 | `main` |
