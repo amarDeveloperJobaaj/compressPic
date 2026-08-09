@@ -24,7 +24,7 @@
 |---|---|---|---|---|
 | 0 | Architecture & Research | `phase-0-research` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED · merged ✓` | 2026-08-09 |
-| 2 | Resume Intelligence | `phase-2-resume` | `NOT STARTED` | — |
+| 2 | Resume Intelligence | `phase-2-resume` | `IN PROGRESS` | 2026-08-09 |
 | 3 | Interview Session Engine | `phase-3-session` | `NOT STARTED` | — |
 | 4 | Interview Room UI | `phase-4-room` | `NOT STARTED` | — |
 | 5 | AI Question Engine | `phase-5-question-engine` | `NOT STARTED` | — |
@@ -62,10 +62,11 @@
 #### Phase 2 — Resume Intelligence
 | Task | Done? |
 |---|---|
-| Resume upload API + Supabase storage | [ ] |
-| Resume analyze API → CandidateProfile (Zod) | [ ] |
-| services/ai + prompts/resume (versioned) | [ ] |
-| Resume uploader UI + "Skip resume" | [ ] |
+| Resume upload API + Supabase storage (`resumes` bucket, private) | [x] |
+| Resume analyze API → CandidateProfile (Zod §19) | [x] |
+| services/ai (provider abstraction + heuristic fallback) + prompts/resume (versioned) | [x] |
+| Resume uploader UI (progress, analyzing state, retry, fallback) + "Skip resume" | [x] |
+| Client-side pdf.js fallback extraction (storage-less) | [x] |
 
 #### Phase 3 — Interview Session Engine
 | Task | Done? |
@@ -315,6 +316,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-09 | Phase 2 built: resume upload API (private `resumes` bucket), analyze API → Zod CandidateProfile, services/ai provider abstraction + heuristic fallback, versioned prompts, uploader UI with progress/analyzing/retry/skip — lint+build green; awaiting approval | 2 | `feature/ai-interview/phase-2-resume` |
 | 2026-08-09 | Landing polish merged to `main` (`c6cc41d`) — 3D hero scene (React Three Fiber), GLTF robot avatar, spatial tilt cards, glass live-interview preview, skills marquee — SEO copy untouched | — | `main` |
 | 2026-08-09 | Landing polish (outside phase flow): 3D hero scene (React Three Fiber), spatial tilt cards, glass live-interview preview, skills marquee — SEO copy untouched | — | `feature/ai-interview/landing-polish` |
 | 2026-08-09 | Phase 1 merged to `main` (`cbf75a3`) — marked COMPLETED | 1 | `main` |
