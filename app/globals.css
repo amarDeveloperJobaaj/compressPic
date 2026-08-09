@@ -44,6 +44,7 @@
   --animate-glow-pulse: glow-pulse 3.5s ease-in-out infinite;
   --animate-marquee: marquee 30s linear infinite;
   --animate-wave: wave 2.4s ease-in-out 3;
+  --animate-waveform: waveform 1.1s ease-in-out infinite;
   --animate-logo-shine: logo-shine 4.5s ease-in-out infinite;
   --animate-logo-spark: logo-spark 2.8s ease-in-out infinite;
 }
@@ -171,6 +172,17 @@
   }
   50% {
     transform: rotate(8deg);
+  }
+}
+
+/* Audio waveform bars — vertical scale pulse, GPU cheap, infinite */
+@keyframes waveform {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
   }
 }
 
