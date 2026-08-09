@@ -8,6 +8,7 @@ import {
   Quote,
   TrendingUp,
   XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import type { BlogBlock as Block } from "@/lib/blog/types";
 import { buildHeadingRefs } from "@/lib/blog/utils";
@@ -39,7 +40,7 @@ function videoEmbed(url: string): { kind: "youtube" | "vimeo"; id: string } | nu
   return null;
 }
 
-const ALERT_STYLES: Record<string, { box: string; titleColor: string; Icon: React.ElementType }> = {
+const ALERT_STYLES: Record<string, { box: string; titleColor: string; Icon: LucideIcon }> = {
   info: {
     box: "border-sky-500/30 bg-sky-500/10",
     titleColor: "text-sky-700 dark:text-sky-300",
