@@ -5,6 +5,21 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useProgress } from "@react-three/drei";
 import * as THREE from "three";
 
+// three r185 deprecated THREE.Clock, but @react-three/fiber's internal store
+// still constructs one on every Canvas mount (our code never creates a Clock,
+// and drei's useAnimations doesn't either). Filter that single library-internal
+// deprecation message — everything else passes through untouched.
+const originalWarn = console.warn.bind(console);
+console.warn = (...args: unknown[]) => {
+  if (
+    typeof args[0] === "string" &&
+    args[0].includes("Clock: This module has been deprecated")
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
+
 import { AIAvatarFallback } from "./AIAvatarFallback";
 import { AIAvatarLights } from "./AIAvatarLights";
 import { AIAvatarModel } from "./AIAvatarModel";
