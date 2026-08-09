@@ -22,8 +22,8 @@
 
 | # | Phase | Branch (`feature/ai-interview/…`) | Status | Last updated |
 |---|---|---|---|---|
-| 0 | Architecture & Research | `phase-0-research` | `IN PROGRESS` | 2026-08-09 |
-| 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `IN PROGRESS` | 2026-08-09 |
+| 0 | Architecture & Research | `phase-0-research` | `COMPLETED ✓ (merged)` | 2026-08-09 |
+| 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED ✓ (merged)` | 2026-08-09 |
 | 2 | Resume Intelligence | `phase-2-resume` | `NOT STARTED` | — |
 | 3 | Interview Session Engine | `phase-3-session` | `NOT STARTED` | — |
 | 4 | Interview Room UI | `phase-4-room` | `NOT STARTED` | — |
@@ -47,7 +47,7 @@
 | Architecture notes (ai-interview-tool/architecture-notes.md) | [x] | created on phase-0-research |
 | Risk list (media, streaming, RLS) | [x] | §9 of architecture-notes.md |
 
-> Status: `IN PROGRESS` — work complete on branch `feature/ai-interview/phase-0-research`; lint+build green. Awaiting user review/merge before marking `COMPLETED`.
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-09 (merge commit `63db455`).
 
 #### Phase 1 — Product Foundation
 | Task | Done? | Notes |
@@ -57,7 +57,7 @@
 | Setup wizard (role → company → type + resume) | [x] | 3 steps, zod per step, progress bar, noindex, resume capture (analysis in Phase 2) |
 | `lib/tools.ts` registry + sitemap update | [x] | new "AI Tools" category; sitemap auto-derived from ALL_TOOLS |
 
-> Status: `IN PROGRESS` — work complete on branch `feature/ai-interview/phase-1-foundation`; lint+build green. Awaiting user review/merge before marking `COMPLETED`.
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-09 (merge commit `cbf75a3`).
 
 #### Phase 2 — Resume Intelligence
 | Task | Done? |
@@ -315,6 +315,8 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-09 | Phase 1 merged to `main` (`cbf75a3`) — marked COMPLETED | 1 | `main` |
+| 2026-08-09 | Phase 0 merged to `main` (`63db455`) — marked COMPLETED | 0 | `main` |
 | 2026-08-09 | Phase 1 built: feature skeleton + data, SEO landing, 3-step setup wizard + resume capture, registry (AI Tools) + sitemap; lint+build green; awaiting approval | 1 | `feature/ai-interview/phase-1-foundation` |
 | 2026-08-09 | Phase 0 executed: full repo audit + architecture-notes.md written; build green; awaiting approval | 0 | `feature/ai-interview/phase-0-research` |
 | 2026-08-09 | Docs initialised (master spec §1-117 + §118 admin AI config, SEO/Git/Rules, phase commands) | — | — |
