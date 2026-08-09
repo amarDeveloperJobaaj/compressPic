@@ -95,21 +95,27 @@ export function AIInterviewer3D() {
   const showScene = webgl && !reduced;
 
   return (
-    <div className="relative mx-auto aspect-[4/5] w-full max-w-[460px] select-none">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-[6%] -z-10 rounded-[50%] bg-primary/12 blur-3xl"
-      />
-      {/* Scene (or static fallback) fills the stage */}
-      <div className="absolute inset-0">
-        {showScene ? (
-          <AIAvatarScene state={state} quality={quality} />
-        ) : (
-          <AIAvatarFallback />
-        )}
+    <div className="relative">
+      <div className="relative mx-auto aspect-[4/5] w-full max-w-[460px] select-none">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-[6%] -z-10 rounded-[50%] bg-primary/12 blur-3xl"
+        />
+        {/* Scene (or static fallback) fills the stage */}
+        <div className="absolute inset-0">
+          {showScene ? (
+            <AIAvatarScene state={state} quality={quality} />
+          ) : (
+            <AIAvatarFallback />
+          )}
+        </div>
+        {/* Floating product-UI cards */}
+        <AIAvatarUIOverlay state={state} showScores={state === "success"} />
       </div>
-      {/* Floating product-UI cards */}
-      <AIAvatarUIOverlay state={state} showScores={state === "success"} />
+      {/* CC BY 4.0 attribution for the hero 3D model */}
+      <p className="mt-1 text-center text-[10px] leading-tight text-text-muted/70">
+        3D model “Cute Robot Mascot” by hoangvt1403 · CC BY 4.0
+      </p>
     </div>
   );
 }
