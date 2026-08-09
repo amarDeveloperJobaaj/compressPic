@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { DEFAULT_DURATION_MINUTES } from "../data/durations";
 import { DEFAULT_INTERVIEW_TYPE_ID } from "../data/interview-types";
+import type { CandidateProfile, ResumeAnalysisSource } from "../schemas/resume";
 import type { Difficulty } from "../types";
 
 export const SETUP_STEPS = [
@@ -12,9 +13,9 @@ export const SETUP_STEPS = [
 
 export const TOTAL_STEPS = SETUP_STEPS.length;
 
-export type ResumeStatus = "idle" | "ready";
+export type ResumeStatus = "idle" | "ready" | "uploading" | "analyzing" | "analyzed" | "error";
 
-/** Client-side resume cap (PDF). Server-side validation lands in Phase 2. */
+/** Client-side resume cap (PDF) — mirrored server-side in lib/supabase/storage.ts. */
 export const MAX_RESUME_SIZE = 10 * 1024 * 1024;
 
 /** Map an experience level to a starting interview depth (§25). */
@@ -51,9 +52,18 @@ interface InterviewSetupState {
   /** Interview depth — preselected from the experience level (§25). */
   difficulty: Difficulty;
 
-  // Resume (capture + client validation now; AI analysis in Phase 2)
+  // Resume (Phase 2: capture → upload → analyze → candidate profile)
   resumeFile: File | null;
   resumeStatus: ResumeStatus;
+  resumeError: string | null;
+  /** Storage path returned by /resume/upload (null when skipped/storage off). */
+  resumePath: string | null;
+  /** Structured candidate profile from the analyze step (§19). */
+  candidateProfile: CandidateProfile | null;
+  /** Whether the profile came from the AI or the local heuristic analyzer. */
+  resumeAnalysisSource: ResumeAnalysisSource | null;
+  /** Set when the user explicitly chose to skip the resume. */
+  resumeSkipped: boolean;
 
   // Actions
   setStep: (step: number) => void;
@@ -67,6 +77,11 @@ interface InterviewSetupState {
   setInterviewTypeId: (interviewTypeId: string) => void;
   setDurationMinutes: (minutes: number) => void;
   setResumeFile: (file: File | null) => void;
+  setResumeStatus: (status: ResumeStatus) => void;
+  setResumeError: (message: string | null) => void;
+  setResumePath: (path: string | null) => void;
+  setCandidateProfile: (profile: CandidateProfile | null, source?: ResumeAnalysisSource) => void;
+  setResumeSkipped: (skipped: boolean) => void;
   clearResume: () => void;
   reset: () => void;
 }
@@ -87,6 +102,11 @@ export const useInterviewStore = create<InterviewSetupState>((set) => ({
 
   resumeFile: null,
   resumeStatus: "idle",
+  resumeError: null,
+  resumePath: null,
+  candidateProfile: null,
+  resumeAnalysisSource: null,
+  resumeSkipped: false,
 
   setStep: (step) => set({ step: Math.max(0, Math.min(TOTAL_STEPS - 1, step)) }),
   nextStep: () => set((s) => ({ step: Math.min(TOTAL_STEPS - 1, s.step + 1) })),
@@ -104,8 +124,43 @@ export const useInterviewStore = create<InterviewSetupState>((set) => ({
     set({
       resumeFile,
       resumeStatus: resumeFile ? "ready" : "idle",
+      resumeError: null,
+      resumePath: null,
+      candidateProfile: null,
+      resumeAnalysisSource: null,
+      resumeSkipped: false,
     }),
-  clearResume: () => set({ resumeFile: null, resumeStatus: "idle" }),
+  setResumeStatus: (resumeStatus) => set({ resumeStatus }),
+  setResumeError: (resumeError) => set({ resumeError }),
+  setResumePath: (resumePath) => set({ resumePath }),
+  setCandidateProfile: (candidateProfile, resumeAnalysisSource) =>
+    set({
+      candidateProfile,
+      resumeAnalysisSource: resumeAnalysisSource ?? null,
+    }),
+  setResumeSkipped: (resumeSkipped) =>
+    set(
+      resumeSkipped
+        ? {
+            resumeSkipped: true,
+            resumeFile: null,
+            resumeStatus: "idle",
+            resumePath: null,
+            candidateProfile: null,
+            resumeAnalysisSource: null,
+          }
+        : { resumeSkipped: false }
+    ),
+  clearResume: () =>
+    set({
+      resumeFile: null,
+      resumeStatus: "idle",
+      resumeError: null,
+      resumePath: null,
+      candidateProfile: null,
+      resumeAnalysisSource: null,
+      resumeSkipped: false,
+    }),
 
   reset: () =>
     set({
@@ -120,5 +175,10 @@ export const useInterviewStore = create<InterviewSetupState>((set) => ({
       difficulty: "intermediate",
       resumeFile: null,
       resumeStatus: "idle",
+      resumeError: null,
+      resumePath: null,
+      candidateProfile: null,
+      resumeAnalysisSource: null,
+      resumeSkipped: false,
     }),
 }));
