@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 
 import { Capsule } from "@/components/ui/capsule";
+import { Reveal } from "../motion/Reveal";
+import { TiltCard } from "../motion/TiltCard";
 
 interface Feature {
   icon: LucideIcon;
@@ -74,17 +76,18 @@ export function FeaturesSection() {
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="group rounded-2xl border border-border bg-background p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10"
-            >
+          {features.map(({ icon: Icon, title, description }, index) => (
+            <Reveal key={title} delay={(index % 3) * 0.08} className="h-full">
+            <TiltCard maxTilt={7} className="h-full">
+            <div className="group h-full rounded-2xl border border-border bg-background p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary transition-all duration-300 group-hover:-rotate-3 group-hover:scale-110 group-hover:bg-primary group-hover:text-white">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-text-primary">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-text-secondary">{description}</p>
             </div>
+            </TiltCard>
+            </Reveal>
           ))}
         </div>
       </div>

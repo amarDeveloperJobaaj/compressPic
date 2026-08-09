@@ -13,6 +13,8 @@ import {
 
 import { Capsule } from "@/components/ui/capsule";
 import { ROLES } from "@/features/ai-interview/data/roles";
+import { Reveal } from "../motion/Reveal";
+import { TiltCard } from "../motion/TiltCard";
 
 /** Icon per role — extend when a new role is registered. */
 const roleIcons: Record<string, LucideIcon> = {
@@ -44,11 +46,12 @@ export function RolesSection() {
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {ROLES.map((role) => {
+          {ROLES.map((role, index) => {
             const Icon = roleIcons[role.id] ?? Code2;
             return (
+              <Reveal key={role.id} delay={(index % 3) * 0.08} className="h-full">
+              <TiltCard maxTilt={7} className="h-full">
               <Link
-                key={role.id}
                 href="/ai-mock-interview/setup"
                 className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
               >
@@ -72,6 +75,8 @@ export function RolesSection() {
                   <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </div>
               </Link>
+              </TiltCard>
+              </Reveal>
             );
           })}
         </div>

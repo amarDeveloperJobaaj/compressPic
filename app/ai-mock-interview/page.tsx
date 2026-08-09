@@ -5,6 +5,7 @@ import { FaqSection } from "@/components/seo/FaqSection";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { AI_INTERVIEW_FAQS } from "@/features/ai-interview/data/faqs";
 import { HeroSection } from "@/features/ai-interview/components/landing/HeroSection";
+import { SkillsMarquee } from "@/features/ai-interview/components/landing/SkillsMarquee";
 import { HowItWorksSection } from "@/features/ai-interview/components/landing/HowItWorksSection";
 import { RolesSection } from "@/features/ai-interview/components/landing/RolesSection";
 import { FeaturesSection } from "@/features/ai-interview/components/landing/FeaturesSection";
@@ -61,6 +62,7 @@ export default function AiMockInterviewLandingPage() {
         })}
       />
       <HeroSection />
+      <SkillsMarquee />
       <HowItWorksSection />
       <RolesSection />
       <FeaturesSection />
