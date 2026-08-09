@@ -2,31 +2,28 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import type { AvatarState } from "./types";
 
 /**
- * AI interviewer — the "Cute Robot Mascot" model (CC BY 4.0) loaded from
- * /models/ai-bot.glb. Attribution: "Cute Robot Mascot" by hoangvt1403,
- * https://sketchfab.com/3d-models/cute-robot-mascot-2b3c7c0b2bce4f0e813c4d85221ea17d
+ * AI interviewer — the "AI Kitchen 🧪 just a bit fun" model (CC BY 4.0) loaded
+ * from /models/ai-bot2.glb. Attribution: "AI Kitchen 🧪 just a bit fun" by
+ * smice, https://sketchfab.com/3d-models/ai-kitchen-just-a-bit-fun-afa0ca2339c14ff68c69b79db205690a
  * (see docs/3D_ASSET_LICENSE.md).
  *
- * The GLB ships without animation clips, so the avatar stays alive through
- * procedural motion (§ AI states):
- *   idle      — gentle float + sway, subtle glow breathing
- *   listening — cyan emissive pulse
- *   thinking  — brighter scanning tint
- *   speaking  — soft rhythmic pulse + slight nod
- *   analyzing — steady glow + orbital progress ring fills around the bust
- *   success   — warm, calm glow
+ * The GLB ships with a walking loop, so the avatar plays it (slowed down to a
+ * calm pace) plus procedural motion: gentle float, a state-driven emissive
+ * glow, a hue-cycling aura halo, and an orbital progress ring that fills
+ * while analyzing.
  *
- * Around the model: a hue-cycling additive "energy field" aura and boosted
- * state-driven emissive give the page a colorful AI feel.
+ * Note: the model is skinned, so the cached scene is used directly (a plain
+ * deep-clone would break the skeleton binding) and the animation is driven by
+ * drei's useAnimations.
  */
 
-const MODEL_URL = "/models/ai-bot.glb";
+const MODEL_URL = "/models/ai-bot2.glb";
 
 // Preload the model when this chunk loads (client-only — the scene is
 // dynamically imported, so this never blocks first paint).
@@ -43,16 +40,36 @@ const STATE_GLOW: Record<AvatarState, { intensity: number; hue: number }> = {
 };
 
 export function AIAvatarModel({ state }: { state: AvatarState }) {
-  const { scene } = useGLTF(MODEL_URL);
+  const { scene, animations } = useGLTF(MODEL_URL);
 
   const root = useRef<THREE.Group>(null);
-  const modelRef = useRef<THREE.Group>(null);
   const ring = useRef<THREE.Mesh>(null);
   const ringArc = useRef<THREE.Mesh>(null);
   const ringMat = useRef<THREE.MeshBasicMaterial>(null);
   const glowMat = useRef<THREE.MeshStandardMaterial | null>(null);
   const auraRef = useRef<THREE.Mesh>(null);
   const auraMat = useRef<THREE.MeshBasicMaterial>(null);
+
+  // Play the model's walk loop at a calmer pace. Mutations go through an
+  // owned ref so the compiler doesn't flag the hook-returned action. Deps are
+  // stable values only (`actions` identity + clip name string) — drei rebuilds
+  // `names` every render, so depending on it would restart the walk on every
+  // AI state change.
+  const clipName = animations[0]?.name;
+  const { actions } = useAnimations(animations, root);
+  const actionRef = useRef<THREE.AnimationAction | null>(null);
+  useEffect(() => {
+    const action = clipName ? actions[clipName] : null;
+    if (!action) return;
+    actionRef.current = action;
+    actionRef.current.reset();
+    actionRef.current.play();
+    actionRef.current.timeScale = 0.75;
+    return () => {
+      actionRef.current?.stop();
+      actionRef.current = null;
+    };
+  }, [actions, clipName]);
 
   // Soft radial "energy field" texture for the halo behind the model.
   const auraTexture = useMemo(() => {
@@ -69,37 +86,16 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // Clone the cached scene once — and give it its own material — so the
-  // per-state glow never mutates the useGLTF cache shared across mounts.
-  const model = useMemo(() => {
-    const clone = scene.clone(true) as THREE.Group;
-    let shared: THREE.MeshStandardMaterial | null = null;
-    clone.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.material) return;
-      const mat = (
-        Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
-      ) as THREE.MeshStandardMaterial;
-      if (!mat.isMeshStandardMaterial) return;
-      if (!shared) {
-        shared = mat.clone();
-        shared.needsUpdate = true;
-      }
-      mesh.material = shared;
-    });
-    return clone;
-  }, [scene]);
-
-  // Capture the (cloned) material for the state glow — ref set in an effect.
+  // Capture the model material for the state glow — ref set in an effect.
   useEffect(() => {
     let found: THREE.MeshStandardMaterial | null = null;
-    modelRef.current?.traverse((obj) => {
+    scene.traverse((obj) => {
       if (found || !(obj as THREE.Mesh).isMesh) return;
       const mat = (obj as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (mat?.isMeshStandardMaterial) found = mat;
     });
     glowMat.current = found;
-  }, []);
+  }, [scene]);
 
   // Dispose the canvas texture on unmount.
   useEffect(() => {
@@ -126,7 +122,7 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
       else if (state === "speaking") pulse = 1 + Math.sin(t * 6) * 0.11;
       else if (state === "idle") pulse = 1 + Math.sin(t * 2) * 0.05;
       glowMat.current.emissiveIntensity = cfg.intensity * pulse;
-      // Gentle cyan tint (kept moderate so the white robot stays white-ish).
+      // Gentle cyan tint (kept moderate so the model keeps its colors).
       glowMat.current.emissive.setHSL(cfg.hue + Math.sin(t * 0.22) * 0.04, 0.38, 0.62);
     }
 
@@ -154,13 +150,14 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
 
   return (
     <group ref={root}>
-      {/* The model's origin sits at its feet — shift it up so the head lands
-          in the upper third of the frame, scaled to a bust-sized hero fill. */}
-      <group position={[0, -3.0, 0]}>
-        <primitive ref={modelRef} object={model} scale={0.85} />
+      {/* The model is a ~1.74-unit standing figure — shift it up so the head
+          sits in the upper third of the frame, scaled to fill the hero. */}
+      <group position={[0, -1.15, 0]}>
+        <primitive object={scene} scale={1.5} />
 
-        {/* Hue-cycling energy-field aura behind the head */}
-        <mesh ref={auraRef} position={[0, 4.0, -0.85]} scale={2.5}>
+        {/* Hue-cycling energy-field aura behind the upper body (behind the
+            model's back extent so depth testing keeps the halo clean) */}
+        <mesh ref={auraRef} position={[0, 1.8, -0.8]} scale={2.2}>
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial
             ref={auraMat}
@@ -172,13 +169,13 @@ export function AIAvatarModel({ state }: { state: AvatarState }) {
           />
         </mesh>
 
-        {/* Orbital ring + progress arc at bust height */}
-        <mesh ref={ring} position={[0, 3.55, 0]} rotation={[Math.PI / 2.1, 0, 0]}>
-          <torusGeometry args={[1.15, 0.008, 12, 96]} />
+        {/* Orbital ring + progress arc around the torso */}
+        <mesh ref={ring} position={[0, 1.5, 0]} rotation={[Math.PI / 2.1, 0, 0]}>
+          <torusGeometry args={[0.95, 0.008, 12, 96]} />
           <meshBasicMaterial color="#38BDF8" transparent opacity={0.28} />
         </mesh>
-        <mesh ref={ringArc} position={[0, 3.55, 0]} rotation={[Math.PI / 2.1, 0, 0]}>
-          <torusGeometry args={[1.24, 0.018, 12, 64, Math.PI * 0.66]} />
+        <mesh ref={ringArc} position={[0, 1.5, 0]} rotation={[Math.PI / 2.1, 0, 0]}>
+          <torusGeometry args={[1.02, 0.018, 12, 64, Math.PI * 0.66]} />
           <meshBasicMaterial ref={ringMat} color="#22D3EE" transparent opacity={0.3} />
         </mesh>
       </group>

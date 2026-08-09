@@ -114,7 +114,7 @@ export function AIInterviewer3D() {
       </div>
       {/* CC BY 4.0 attribution for the hero 3D model */}
       <p className="mt-1 text-center text-[10px] leading-tight text-text-muted/70">
-        3D model “Cute Robot Mascot” by hoangvt1403 · CC BY 4.0
+        3D model “AI Kitchen 🧪” by smice · CC BY 4.0
       </p>
     </div>
   );
