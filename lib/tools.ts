@@ -408,6 +408,22 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
   },
   FINANCE_CATEGORY,
   YOUTUBE_CATEGORY,
+  {
+    id: "ai",
+    label: "AI Tools",
+    tools: [
+      {
+        slug: "ai-mock-interview",
+        name: "AI Interview",
+        href: "/ai-mock-interview",
+        description: "Practice mock interviews with an AI interviewer",
+        tagline: "AI Mock Interview",
+        stat: "Voice · Camera · Scored feedback",
+        badge: "AI",
+        badgeTone: "primary",
+      },
+    ],
+  },
 ];
 
 /** Flattened list of every tool across all categories. */

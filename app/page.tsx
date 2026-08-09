@@ -123,6 +123,8 @@ const toolCardIcons: Record<string, LucideIcon> = {
   // Developer Playground
   "html-css-js-playground": Code2,
   "sql-playground": Database,
+  // AI Tools
+  "ai-mock-interview": Bot,
   // Finance Tools
   "sip-calculator": TrendingUp,
   "compound-interest-calculator": Layers,
