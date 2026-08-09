@@ -2,15 +2,19 @@ import type { MetadataRoute } from "next";
 import { ALL_TOOLS } from "@/lib/tools";
 import { CATEGORY_PAGES } from "@/lib/category-pages";
 import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
-import {
-  getCategories,
-  getPublishedPosts,
-  getTags,
-} from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://vizotool.com";
   const now = new Date();
+
+  // Blog data comes from the active repository (memory today, Supabase when configured).
+  const [blogCategories, blogTags, blogPosts] = await Promise.all([
+    getBlogRepository().getCategories(),
+    getBlogRepository().getTags(),
+    getBlogRepository().listPublished({ pageSize: 100 }),
+  ]);
+  const publishedPosts = blogPosts.items;
 
   // Tool pages stay in sync with the registry — new tools are indexed automatically
   const toolRoutes: MetadataRoute.Sitemap = ALL_TOOLS.map((tool) => ({
@@ -45,29 +49,46 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
   ];
-  const categoryRoutes: MetadataRoute.Sitemap = getCategories().map((category) => ({
+  const categoryRoutes: MetadataRoute.Sitemap = blogCategories.map((category) => ({
     url: `${baseUrl}/blog/category/${category.slug}`,
     lastModified: now,
     changeFrequency: "weekly",
     priority: 0.6,
   }));
-  const tagRoutes: MetadataRoute.Sitemap = getTags().map((tag) => ({
+  const tagRoutes: MetadataRoute.Sitemap = blogTags.map((tag) => ({
     url: `${baseUrl}/blog/tag/${encodeURIComponent(tag.name.toLowerCase())}`,
     lastModified: now,
     changeFrequency: "weekly",
     priority: 0.5,
   }));
-  const postRoutes: MetadataRoute.Sitemap = getPublishedPosts().map((post) => ({
+  const postRoutes: MetadataRoute.Sitemap = publishedPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(post.updatedAt),
     changeFrequency: "monthly",
     priority: 0.7,
   }));
+  const authorSlugs = [...new Set(publishedPosts.map((p) => p.authorSlug).filter(Boolean))] as string[];
+  const authorRoutes: MetadataRoute.Sitemap = authorSlugs.map((slug) => ({
+    url: `${baseUrl}/blog/author/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.5,
+  }));
+  const searchRoute: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/blog/search`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.4,
+    },
+  ];
   const blogRoutes: MetadataRoute.Sitemap = [
     ...blogIndex,
     ...categoryRoutes,
     ...tagRoutes,
     ...postRoutes,
+    ...authorRoutes,
+    ...searchRoute,
   ];
 
   return [

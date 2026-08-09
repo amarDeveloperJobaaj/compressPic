@@ -8,12 +8,19 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { BlogCard } from "@/components/blog/BlogCard";
 import { buildMetadata, breadcrumbListSchema } from "@/lib/seo";
-import { getPostsByTag, getTags, toSummary } from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
 
 export const revalidate = 60;
 
-export function generateStaticParams() {
-  return getTags().map((tag) => ({ tag: tag.name.toLowerCase() }));
+export async function generateStaticParams() {
+  // Repository may be Supabase-backed (cookies() unavailable at build time) —
+  // fall back to on-demand ISR rendering rather than failing the build.
+  try {
+    const tags = await getBlogRepository().getTags();
+    return tags.map((tag) => ({ tag: tag.name.toLowerCase() }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -22,7 +29,8 @@ export async function generateMetadata({
   params: Promise<{ tag: string }>;
 }): Promise<Metadata> {
   const { tag } = await params;
-  const match = getTags().find((t) => t.name.toLowerCase() === tag.toLowerCase());
+  const tags = await getBlogRepository().getTags();
+  const match = tags.find((t) => t.name.toLowerCase() === tag.toLowerCase());
   if (!match) return {};
   return buildMetadata({
     title: `${match.name} — Articles & Guides`,
@@ -34,11 +42,18 @@ export async function generateMetadata({
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
   const { tag } = await params;
-  const match = getTags().find((t) => t.name.toLowerCase() === tag.toLowerCase());
+  const repo = getBlogRepository();
+  const [tags, listing] = await Promise.all([
+    repo.getTags(),
+    repo.listPublished({ tag, pageSize: 100 }),
+  ]);
+  const match = tags.find((t) => t.name.toLowerCase() === tag.toLowerCase());
   if (!match) notFound();
 
-  const posts = getPostsByTag(tag).map(toSummary);
-  const otherTags = getTags().filter((t) => t.name.toLowerCase() !== tag.toLowerCase()).slice(0, 12);
+  const posts = listing.items;
+  const otherTags = tags
+    .filter((t) => t.name.toLowerCase() !== tag.toLowerCase())
+    .slice(0, 12);
 
   return (
     <PageTransition>

@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
-import {
-  createPost,
-  getAllPosts,
-  toSummary,
-  type BlogInput,
-} from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
+import { revalidateBlogPages } from "@/lib/blog/revalidation";
+import { blogInputSchema } from "@/lib/blog/validation";
 
 export async function GET(request: Request) {
   if (!(await isAdmin())) {
@@ -14,30 +11,27 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") ?? "";
-  const status = searchParams.get("status");
+  const status = (searchParams.get("status") ?? "all") as
+    | "all"
+    | "published"
+    | "draft"
+    | "scheduled";
+  const page = Math.max(1, Number(searchParams.get("page") ?? 1));
 
-  // Admin search must cover drafts too (unlike the public searchPosts).
-  let posts = getAllPosts();
-  if (query.trim()) {
-    const q = query.toLowerCase();
-    posts = posts.filter((p) =>
-      [p.title, p.slug, p.category, p.tags.join(" "), p.subtitle, p.excerpt]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
+  try {
+    const { items, meta } = await getBlogRepository().listAdminPosts({
+      query,
+      status,
+      page,
+      pageSize: 25,
+    });
+    return NextResponse.json({ ok: true, posts: items, meta });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "Failed to load posts" },
+      { status: 500 }
     );
   }
-  if (status === "draft") {
-    posts = posts.filter((p) => p.status === "draft");
-  } else if (status === "published") {
-    posts = posts.filter((p) => p.status === "published");
-  }
-
-  const summaries = posts
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    .map(toSummary);
-
-  return NextResponse.json({ ok: true, posts: summaries });
 }
 
 export async function POST(request: Request) {
@@ -45,17 +39,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: BlogInput;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!body.title?.trim()) {
-    return NextResponse.json({ ok: false, error: "Title is required" }, { status: 400 });
+  const parsed = blogInputSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid blog data" },
+      { status: 400 }
+    );
   }
 
-  const post = createPost(body);
-  return NextResponse.json({ ok: true, post: toSummary(post) }, { status: 201 });
+  try {
+    const post = await getBlogRepository().createPost(parsed.data);
+    revalidateBlogPages(post);
+    return NextResponse.json({ ok: true, post }, { status: 201 });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "Failed to create post" },
+      { status: 500 }
+    );
+  }
 }

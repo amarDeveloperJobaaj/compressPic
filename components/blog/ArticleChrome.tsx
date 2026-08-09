@@ -5,16 +5,29 @@ import {
   ArrowUp,
   Bookmark,
   Check,
+  Eye,
   Heart,
   Link2,
+  Loader2,
   MessageSquare,
+  Reply,
   Share2,
   Twitter,
   Facebook,
   Linkedin,
   Send,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  createCommentAction,
+  getPostEngagementAction,
+  recordViewAction,
+  toggleBookmarkAction,
+  toggleLikeAction,
+} from "@/lib/blog/actions";
+import { getVisitorId } from "@/lib/blog/visitor";
+import type { BlogComment } from "@/lib/blog/types";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -187,53 +200,90 @@ export function ShareButtons({ title, url }: { title: string; url: string }) {
 /* Like + bookmark (localStorage)                                      */
 /* ------------------------------------------------------------------ */
 
-export function ArticleActions({ slug }: { slug: string }) {
+export function ArticleActions({
+  slug,
+  postId,
+  preview = false,
+}: {
+  slug: string;
+  postId: string;
+  /** Render in admin preview mode — skip recording views/engagement. */
+  preview?: boolean;
+}) {
   const likeKey = `vizotool-blog-like:${slug}`;
   const bookmarkKey = `vizotool-blog-bookmark:${slug}`;
 
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [likes, setLikes] = useState(0);
+  const [views, setViews] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const recorded = useRef(false);
 
+  // Restore local state + record one view + fetch real engagement (deferred).
+  // Preview renders never record views — a draft must not pollute the stats.
   useEffect(() => {
-    // Deferred so the state updates don't run synchronously inside the effect.
     const id = setTimeout(() => {
-      const base = Math.abs(
-        slug.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 400
-      );
-      setLikes(base);
       try {
         setLiked(localStorage.getItem(likeKey) === "1");
         setBookmarked(localStorage.getItem(bookmarkKey) === "1");
       } catch {
         /* private mode */
       }
+      if (!preview && !recorded.current) {
+        recorded.current = true;
+        recordViewAction({ blogId: postId, visitorId: getVisitorId() }).catch(() => {});
+      }
+      getPostEngagementAction(postId).then((res) => {
+        if (res.ok) {
+          setLikes(res.data.likes);
+          setViews(res.data.views);
+        }
+      }).catch(() => {});
     }, 0);
     return () => clearTimeout(id);
-  }, [likeKey, bookmarkKey, slug]);
+  }, [likeKey, bookmarkKey, slug, postId, preview]);
 
-  const toggle = (key: string, current: boolean) => {
-    const next = !current;
+  const toggleLike = async () => {
+    if (busy) return;
+    setBusy(true);
+    const next = !liked;
+    setLiked(next);
+    setLikes((l) => l + (next ? 1 : -1));
     try {
-      localStorage.setItem(key, next ? "1" : "0");
+      localStorage.setItem(likeKey, next ? "1" : "0");
     } catch {
       /* private mode */
     }
-    return next;
+    const res = await toggleLikeAction({ blogId: postId, visitorId: getVisitorId() });
+    if (res.ok) setLikes(res.data.count);
+    setBusy(false);
+  };
+
+  const toggleBookmark = async () => {
+    if (busy) return;
+    setBusy(true);
+    const next = !bookmarked;
+    setBookmarked(next);
+    try {
+      localStorage.setItem(bookmarkKey, next ? "1" : "0");
+    } catch {
+      /* private mode */
+    }
+    const res = await toggleBookmarkAction({ blogId: postId, visitorId: getVisitorId() });
+    if (res.ok) setBookmarked(res.data.bookmarked);
+    setBusy(false);
   };
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <button
         type="button"
-        onClick={() => {
-          const next = toggle(likeKey, liked);
-          setLiked(next);
-          setLikes((l) => l + (next ? 1 : -1));
-        }}
+        onClick={toggleLike}
+        disabled={busy}
         aria-pressed={liked}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-all",
+          "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-all disabled:opacity-60",
           liked
             ? "border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-300"
             : "border-border bg-surface text-text-secondary hover:border-rose-500/40 hover:text-rose-500"
@@ -244,13 +294,11 @@ export function ArticleActions({ slug }: { slug: string }) {
       </button>
       <button
         type="button"
-        onClick={() => {
-          const next = toggle(bookmarkKey, bookmarked);
-          setBookmarked(next);
-        }}
+        onClick={toggleBookmark}
+        disabled={busy}
         aria-pressed={bookmarked}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-all",
+          "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-all disabled:opacity-60",
           bookmarked
             ? "border-primary/40 bg-primary-light/60 text-primary"
             : "border-border bg-surface text-text-secondary hover:border-primary/40 hover:text-primary"
@@ -259,63 +307,180 @@ export function ArticleActions({ slug }: { slug: string }) {
         <Bookmark className={cn("h-4 w-4", bookmarked && "fill-primary text-primary")} />
         {bookmarked ? "Bookmarked" : "Bookmark"}
       </button>
+      {views > 0 && (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-text-muted" title="Estimated views">
+          <Eye className="h-4 w-4" /> {views.toLocaleString()}
+        </span>
+      )}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Comments (localStorage demo)                                        */
+/* Comments (repository-backed — approved only, nested replies)        */
 /* ------------------------------------------------------------------ */
 
-interface Comment {
-  id: string;
-  name: string;
-  text: string;
-  createdAt: string;
-}
-
-export function CommentSection({ slug }: { slug: string }) {
-  const storageKey = `vizotool-blog-comments:${slug}`;
-  const [comments, setComments] = useState<Comment[]>([]);
+export function CommentSection({
+  postId,
+  initialComments,
+}: {
+  postId: string;
+  initialComments: BlogComment[];
+}) {
+  const router = useRouter();
+  const [comments, setComments] = useState<BlogComment[]>(initialComments);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [text, setText] = useState("");
-  const [loaded, setLoaded] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [helpful, setHelpful] = useState<Record<string, boolean>>({});
 
+  // Re-sync when the server refreshes after a new comment is approved.
+  // Deferred so the state update never runs synchronously inside the effect.
   useEffect(() => {
-    // Deferred so the state updates don't run synchronously inside the effect.
     const id = setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(storageKey);
-        if (raw) setComments(JSON.parse(raw));
-      } catch {
-        /* ignore */
+      setComments(initialComments);
+      const stored: Record<string, boolean> = {};
+      for (const c of initialComments) {
+        try {
+          stored[c.id] = localStorage.getItem(`vizotool-comment-helpful:${c.id}`) === "1";
+        } catch {
+          /* private mode */
+        }
       }
-      setLoaded(true);
+      setHelpful(stored);
     }, 0);
     return () => clearTimeout(id);
-  }, [storageKey]);
+  }, [initialComments]);
 
-  const persist = (next: Comment[]) => {
-    setComments(next);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(next));
-    } catch {
-      /* ignore */
+  const submit = async (parentId?: string) => {
+    const body = parentId ? replyText : text;
+    if (!name.trim() || !body.trim() || !email.trim().includes("@")) return;
+    setBusy(true);
+    setNotice(null);
+    const res = await createCommentAction({
+      blogId: postId,
+      parentId,
+      authorName: name.trim(),
+      authorEmail: email.trim(),
+      content: body.trim(),
+    });
+    setBusy(false);
+    if (res.ok) {
+      setText("");
+      setReplyText("");
+      setReplyingTo(null);
+      setNotice("Thanks! Your comment is awaiting moderation.");
+      // Comments are only public once approved — refresh the server list.
+      router.refresh();
+    } else {
+      setNotice(res.error);
     }
   };
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !text.trim()) return;
-    const comment: Comment = {
-      id: `${Date.now()}`,
-      name: name.trim(),
-      text: text.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    persist([comment, ...comments]);
-    setName("");
-    setText("");
+  const childrenOf = (parentId: string | undefined) =>
+    comments.filter((c) => (c.parentId ?? undefined) === parentId);
+
+  const renderThread = (parentId: string | undefined, depth: number) => {
+    const items = childrenOf(parentId);
+    if (items.length === 0) return null;
+    return (
+      <ul className={depth === 0 ? "mt-4 space-y-3" : "mt-3 space-y-3 border-l border-border pl-4"}>
+        {items.map((c) => (
+          <li key={c.id} className="rounded-2xl border border-border bg-surface p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary to-sky-500 text-xs font-bold text-white">
+                  {c.authorName.charAt(0)}
+                </span>
+                {c.authorName}
+                {c.parentId && (
+                  <span className="rounded-full bg-primary-light px-2 py-0.5 text-[10px] font-medium text-primary">
+                    Reply
+                  </span>
+                )}
+              </p>
+              <span className="text-xs text-text-muted">
+                {new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">{c.content}</p>
+            <button
+              type="button"
+              onClick={() =>
+                setHelpful((h) => {
+                  const next = { ...h, [c.id]: !h[c.id] };
+                  try {
+                    localStorage.setItem(`vizotool-comment-helpful:${c.id}`, next[c.id] ? "1" : "0");
+                  } catch {
+                    /* private mode */
+                  }
+                  return next;
+                })
+              }
+              aria-pressed={Boolean(helpful[c.id])}
+              className={cn(
+                "mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all",
+                helpful[c.id]
+                  ? "border-primary/40 bg-primary-light/60 text-primary"
+                  : "border-border text-text-muted hover:border-primary/40 hover:text-primary"
+              )}
+            >
+              <Heart className={cn("h-3 w-3", helpful[c.id] && "fill-primary text-primary")} />
+              Helpful
+            </button>
+
+            {replyingTo === c.id ? (
+              <div className="mt-3 flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary-light/20 p-3">
+                <textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Write a reply…"
+                  aria-label="Reply to comment"
+                  rows={2}
+                  className="w-full resize-y rounded-lg border border-border bg-background/60 px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => submit(c.id)}
+                    disabled={busy}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark disabled:opacity-60"
+                  >
+                    <Send className="h-3 w-3" /> Reply
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setReplyText("");
+                    }}
+                    className="h-8 rounded-lg border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:text-primary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              depth < 2 && (
+                <button
+                  type="button"
+                  onClick={() => setReplyingTo(c.id)}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-text-muted transition-colors hover:text-primary"
+                >
+                  <Reply className="h-3 w-3" /> Reply
+                </button>
+              )
+            )}
+
+            {renderThread(c.id, depth + 1)}
+          </li>
+        ))}
+      </ul>
+    );
   };
 
   return (
@@ -327,7 +492,14 @@ export function CommentSection({ slug }: { slug: string }) {
         </span>
       </h2>
 
-      <form onSubmit={submit} className="mt-4 space-y-2.5 rounded-2xl border border-border bg-surface p-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        aria-busy={busy}
+        className="mt-4 space-y-2.5 rounded-2xl border border-border bg-surface p-4"
+      >
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <input
             value={name}
@@ -336,43 +508,40 @@ export function CommentSection({ slug }: { slug: string }) {
             aria-label="Your name"
             className="h-10 flex-1 rounded-xl border border-border bg-background/60 px-3.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            placeholder="Email (never shown publicly)"
+            aria-label="Your email"
+            className="h-10 flex-1 rounded-xl border border-border bg-background/60 px-3.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
           <button
             type="submit"
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark"
+            disabled={busy}
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark disabled:opacity-60"
           >
-            <Send className="h-3.5 w-3.5" /> Post comment
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            Post comment
           </button>
         </div>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Share your thoughts… (stored locally in your browser for this demo)"
+          placeholder="Share your thoughts…"
           aria-label="Your comment"
           rows={3}
           className="w-full resize-y rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
       </form>
 
-      {loaded && comments.length > 0 && (
-        <ul className="mt-4 space-y-3">
-          {comments.map((c) => (
-            <li key={c.id} className="rounded-2xl border border-border bg-surface p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary to-sky-500 text-xs font-bold text-white">
-                    {c.name.charAt(0)}
-                  </span>
-                  {c.name}
-                </p>
-                <span className="text-xs text-text-muted">
-                  {new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-text-secondary">{c.text}</p>
-            </li>
-          ))}
-        </ul>
+      {notice && (
+        <p className="mt-3 rounded-xl border border-primary/30 bg-primary-light/30 px-4 py-2.5 text-sm font-medium text-primary" role="status">
+          {notice}
+        </p>
       )}
+
+      {comments.length > 0 && renderThread(undefined, 0)}
     </section>
   );
 }

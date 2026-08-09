@@ -170,14 +170,67 @@ export function buildRobotsTxt(options: RobotsOptions): string {
 /* URL fetching via a public CORS proxy                                */
 /* ------------------------------------------------------------------ */
 
-/** Fetch the raw HTML of a URL through a public CORS proxy. */
+/**
+ * Fetch the raw HTML of a URL.
+ *
+ * Prefers the server-side fetcher (no CORS, follows redirects, browser UA);
+ * if that's unavailable it falls back through a chain of public CORS proxies,
+ * each with its own timeout, so a single flaky proxy can never surface as a
+ * raw "Failed to fetch" error.
+ */
 export async function fetchUrlHtml(url: string): Promise<string> {
-  const target = encodeURIComponent(url.trim());
-  const res = await fetch(`https://api.allorigins.win/raw?url=${target}`);
-  if (!res.ok) throw new Error(`Failed to fetch the page (HTTP ${res.status}).`);
-  const text = await res.text();
-  if (!text || text.length < 50) throw new Error("The page returned no readable content.");
-  return text;
+  const input = url.trim();
+
+  // 1) Server-side fetch via our API route (most reliable).
+  let validationError: Error | null = null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+      const res = await fetch(`/api/fetch-url?url=${encodeURIComponent(input)}`, {
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { html?: string };
+        if (data.html && data.html.length >= 50) return data.html;
+      } else if (res.status === 400) {
+        // Validation errors are deterministic — surface them, skip the proxies.
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        validationError = new Error(data?.error ?? "That URL is not valid.");
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    // Network failure or non-400 API error — try the proxy chain below.
+  }
+  if (validationError) throw validationError;
+
+  // 2) Public CORS proxy chain (keeps the tool working on static hosting).
+  const proxies = [
+    (target: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+    (target: string) => `https://corsproxy.io/?url=${encodeURIComponent(target)}`,
+  ];
+  let lastError: unknown = null;
+  for (const build of proxies) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(build(input), { signal: controller.signal });
+      if (!res.ok) throw new Error(`Failed to fetch the page (HTTP ${res.status}).`);
+      const text = await res.text();
+      if (text && text.length >= 50) return text;
+    } catch (err) {
+      lastError = err; // try the next proxy
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw new Error(
+    lastError instanceof Error
+      ? lastError.message
+      : "Failed to fetch the page. Try pasting the HTML source instead."
+  );
 }
 
 /** Parse an HTML string into a detached DOM (client-only). */

@@ -1,6 +1,8 @@
 import {
   AlertTriangle,
   CheckCircle2,
+  ExternalLink,
+  Github,
   Info,
   Lightbulb,
   Quote,
@@ -14,8 +16,11 @@ import {
   Accordion,
   BeforeAfterSlider,
   CodeBlock,
+  MermaidBlock,
   NewsletterForm,
+  TabsBlock,
 } from "./ClientBlocks";
+import { MathBlock } from "./MathBlock";
 import {
   DownloadCta,
   RelatedToolCard,
@@ -472,6 +477,108 @@ export function BlogBlocks({
                 dangerouslySetInnerHTML={{ __html: block.html }}
               />
             );
+
+          case "tabs":
+            return <TabsBlock key={index} tabs={block.tabs} />;
+
+          case "button": {
+            const variant = block.variant ?? "primary";
+            const styles = {
+              primary:
+                "bg-primary text-white shadow-lg shadow-primary/25 hover:bg-primary-dark hover:shadow-primary/40",
+              secondary:
+                "border border-border bg-surface text-text-primary hover:border-primary/40 hover:text-primary",
+              outline: "border border-primary/50 text-primary hover:bg-primary/10",
+            }[variant];
+            return (
+              <div key={index} className="my-6 flex justify-center">
+                <a
+                  href={block.href}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 active:translate-y-0",
+                    styles
+                  )}
+                >
+                  {block.label}
+                </a>
+              </div>
+            );
+          }
+
+          case "tweetEmbed": {
+            const id = block.url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/)?.[1];
+            if (!id) {
+              return (
+                <a
+                  key={index}
+                  href={block.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="my-6 block rounded-xl border border-border bg-surface p-5 text-sm text-primary hover:underline"
+                >
+                  View tweet →
+                </a>
+              );
+            }
+            return (
+              <div key={index} className="my-6 overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+                <iframe
+                  src={`https://platform.twitter.com/embed/Tweet.html?id=${id}`}
+                  title="Embedded tweet"
+                  loading="lazy"
+                  className="h-[480px] w-full border-0"
+                />
+              </div>
+            );
+          }
+
+          case "githubEmbed": {
+            const m = block.url.match(/github\.com\/([\w.-]+)\/([\w.-]+)/);
+            if (!m) {
+              return (
+                <a
+                  key={index}
+                  href={block.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="my-6 block rounded-xl border border-border bg-surface p-5 text-sm text-primary hover:underline"
+                >
+                  Open repository →
+                </a>
+              );
+            }
+            const [, owner, repo] = m;
+            return (
+              <div
+                key={index}
+                className="my-6 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-surface p-5 shadow-sm"
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-md">
+                  <Github className="h-6 w-6" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-text-primary">
+                    {owner}/{repo}
+                  </p>
+                  <p className="text-xs text-text-muted">View the source on GitHub</p>
+                </div>
+                <a
+                  href={block.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> View on GitHub
+                </a>
+              </div>
+            );
+          }
+
+          case "mermaid":
+            return <MermaidBlock key={index} code={block.code} />;
+
+          case "math":
+            return <MathBlock key={index} formula={block.formula} />;
 
           default:
             return null;

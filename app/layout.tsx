@@ -145,8 +145,13 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {/* Apply the saved theme before first paint — dark is the default, so
-            there is never a light flash for first-time visitors. */}
-        <script
+            there is never a light flash for first-time visitors. Rendered via
+            next/script (beforeInteractive) instead of a raw <script> tag —
+            raw inline scripts inside React components are never executed on
+            the client and trigger a hydration console error. */}
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("vizotool-theme")||localStorage.getItem("compresspix-theme");var d=t?t==="dark":true;if(d){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})();`,
           }}

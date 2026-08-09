@@ -11,13 +11,7 @@ import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogExplorer } from "@/components/blog/BlogExplorer";
 import { NewsletterForm } from "@/components/blog/ClientBlocks";
 import { buildMetadata, organizationSchema, webPageSchema } from "@/lib/seo";
-import {
-  getCategories,
-  getFeaturedPosts,
-  getPublishedPosts,
-  getTags,
-  toSummary,
-} from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +23,14 @@ export const metadata: Metadata = buildMetadata({
   keywords: ["vizo tool blog", "image editing guides", "developer tutorials", "seo guides", "how to compress images", "online tools blog"],
 });
 
-export default function BlogsPage() {
-  const posts = getPublishedPosts();
-  const featured = getFeaturedPosts();
-  const categories = getCategories();
-  const tags = getTags();
-  const summaries = posts.map(toSummary);
+export default async function BlogsPage() {
+  const repo = getBlogRepository();
+  const [{ items: posts }, featured, categories, tags] = await Promise.all([
+    repo.listPublished({ pageSize: 100 }),
+    repo.getFeaturedPosts(3),
+    repo.getCategories(),
+    repo.getTags(),
+  ]);
 
   return (
     <PageTransition>
@@ -105,7 +101,7 @@ export default function BlogsPage() {
 
       {/* Explorer */}
       <section className="container-page pb-16">
-        <BlogExplorer posts={summaries} categories={categories} tags={tags} />
+        <BlogExplorer posts={posts} categories={categories} tags={tags} />
 
         {/* Browse categories CTA */}
         <div className="mt-12 flex flex-wrap items-center justify-center gap-2.5">

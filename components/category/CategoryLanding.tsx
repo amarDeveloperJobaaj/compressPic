@@ -13,7 +13,7 @@ import {
   organizationSchema,
   webPageSchema,
 } from "@/lib/seo";
-import { getPublishedPosts } from "@/lib/blog/service";
+import { getBlogRepository } from "@/lib/blog/repository";
 import { CategoryHero } from "./CategoryHero";
 import { CategoryExplorer } from "./CategoryExplorer";
 import { CategoryFaq } from "./CategoryFaq";
@@ -21,13 +21,13 @@ import { CategorySeoContent } from "./CategorySeoContent";
 import { CATEGORY_ICONS } from "./CategoryIcon";
 
 /** Assemble a full category landing page from its config entry. */
-export function CategoryLanding({ category }: { category: CategoryPageConfig }) {
+export async function CategoryLanding({ category }: { category: CategoryPageConfig }) {
   const tools = getCategoryTools(category);
   const Icon = CATEGORY_ICONS[category.slug] ?? ImageIcon;
 
   // Related guides from the blog, matched by blog category name when present.
   const relatedPosts = category.relatedBlogCategory
-    ? getPublishedPosts()
+    ? (await getBlogRepository().listPublished({ pageSize: 100 })).items
         .filter((p) => p.category === category.relatedBlogCategory)
         .slice(0, 3)
     : [];

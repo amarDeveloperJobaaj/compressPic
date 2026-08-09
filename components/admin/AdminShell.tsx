@@ -4,12 +4,18 @@ import { motion } from "framer-motion";
 import {
   ExternalLink,
   FileText,
+  FolderOpen,
+  Hash,
+  Image as ImageIcon,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
+  MessageSquare,
   Plus,
   Settings,
   FilePlus2,
+  UserRound,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -18,37 +24,66 @@ import { useState } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "/admin/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/admin/blogs", label: "All Blogs", Icon: FileText },
-  { href: "/admin/blogs/drafts", label: "Drafts", Icon: FilePlus2 },
-  { href: "/admin/blogs/add", label: "New Post", Icon: Plus },
-  { href: "/admin/settings", label: "Settings", Icon: Settings },
+const NAV_SECTIONS: { title: string; items: { href: string; label: string; Icon: React.ComponentType<{ className?: string }> }[] }[] = [
+  {
+    title: "Content",
+    items: [
+      { href: "/admin/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+      { href: "/admin/blogs", label: "All Blogs", Icon: FileText },
+      { href: "/admin/blogs/drafts", label: "Drafts", Icon: FilePlus2 },
+      { href: "/admin/blogs/add", label: "New Post", Icon: Plus },
+      { href: "/admin/categories", label: "Categories", Icon: FolderOpen },
+      { href: "/admin/tags", label: "Tags", Icon: Hash },
+      { href: "/admin/authors", label: "Authors", Icon: UserRound },
+      { href: "/admin/media", label: "Media", Icon: ImageIcon },
+    ],
+  },
+  {
+    title: "Engagement",
+    items: [
+      { href: "/admin/comments", label: "Comments", Icon: MessageSquare },
+      { href: "/admin/newsletter", label: "Newsletter", Icon: Mail },
+    ],
+  },
+  {
+    title: "System",
+    items: [{ href: "/admin/settings", label: "Settings", Icon: Settings }],
+  },
 ];
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <nav className="space-y-1" aria-label="Admin navigation">
-      {NAV.map(({ href, label, Icon }) => {
-        const active = pathname === href || (href !== "/admin/dashboard" && pathname.startsWith(href));
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all",
-              active
-                ? "bg-primary text-white shadow-md shadow-primary/25"
-                : "text-text-secondary hover:bg-primary-light/60 hover:text-primary"
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </Link>
-        );
-      })}
+    <nav className="space-y-4" aria-label="Admin navigation">
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.title}>
+          <p className="mb-1 px-3.5 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            {section.title}
+          </p>
+          <div className="space-y-0.5">
+            {section.items.map(({ href, label, Icon }) => {
+              const active =
+                pathname === href || (href !== "/admin/dashboard" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all",
+                    active
+                      ? "bg-primary text-white shadow-md shadow-primary/25"
+                      : "text-text-secondary hover:bg-primary-light/60 hover:text-primary"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }

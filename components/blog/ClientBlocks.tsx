@@ -9,7 +9,8 @@ import {
   Mail,
   Sparkles,
 } from "lucide-react";
-import { useId, useState } from "react";
+import { useId, useEffect, useState } from "react";
+import { subscribeNewsletterAction } from "@/lib/blog/actions";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -223,10 +224,135 @@ export function BeforeAfterSlider({
 /* Newsletter card                                                     */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* Tabs block                                                          */
+/* ------------------------------------------------------------------ */
+
+export function TabsBlock({ tabs }: { tabs: { title: string; text: string }[] }) {
+  const [active, setActive] = useState(0);
+
+  return (
+    <div className="my-6 overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+      <div role="tablist" aria-label="Tabbed content" className="flex flex-wrap border-b border-border bg-background/60">
+        {tabs.map((tab, i) => {
+          const isActive = active === i;
+          return (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`tabpanel-${i}`}
+              onClick={() => setActive(i)}
+              className={cn(
+                "relative px-4 py-2.5 text-sm font-semibold transition-colors",
+                isActive
+                  ? "text-primary"
+                  : "text-text-secondary hover:text-text-primary"
+              )}
+            >
+              {tab.title}
+              {isActive && (
+                <motion.span
+                  layoutId={`tab-underline-${tabs.length}`}
+                  className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div
+        key={active}
+        role="tabpanel"
+        id={`tabpanel-${active}`}
+        className="p-5 text-sm leading-relaxed text-text-secondary"
+      >
+        {tabs[active]?.text}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Mermaid diagram block (lazy-loaded, code-split)                     */
+/* ------------------------------------------------------------------ */
+
+function hashCode(input: string): string {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (Math.imul(31, h) + input.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
+}
+
+export function MermaidBlock({ code }: { code: string }) {
+  // Per-instance nonce keeps ids unique even when the same diagram appears twice.
+  const [nonce] = useState(() => Math.random().toString(36).slice(2, 8));
+  const id = `mermaid-${nonce}-${hashCode(code)}`;
+  const [svg, setSvg] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Lazy import keeps mermaid (~1 MB) out of the initial bundle.
+        const mermaid = (await import("mermaid")).default;
+        mermaid.initialize({ startOnLoad: false });
+        const { svg: rendered } = await mermaid.render(id, code);
+        if (!cancelled) {
+          setSvg(rendered);
+          setError("");
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Could not render diagram");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [code, id]);
+
+  if (error) {
+    return (
+      <div className="my-6 rounded-xl border border-error/40 bg-error-light/50 p-4">
+        <p className="text-sm font-semibold text-error">Diagram could not be rendered</p>
+        <pre className="mt-2 overflow-x-auto rounded-lg bg-background/70 p-3 font-mono text-xs text-text-secondary">
+          {code}
+        </pre>
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-6 overflow-x-auto rounded-xl border border-border bg-surface p-5">
+      {svg ? (
+        <div
+          className="flex justify-center"
+          aria-label="Mermaid diagram"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      ) : (
+        <div className="flex items-center justify-center gap-2 py-8 text-sm text-text-muted">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          Rendering diagram…
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Newsletter card                                                     */
+/* ------------------------------------------------------------------ */
+
 export function NewsletterForm() {
   const inputId = useId();
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "success">("idle");
+  const [state, setState] = useState<"idle" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <div className="relative my-8 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-surface to-sky-500/10 p-6 sm:p-8">
@@ -244,15 +370,25 @@ export function NewsletterForm() {
 
         {state === "success" ? (
           <div className="mt-5 flex items-center gap-2 rounded-xl border border-success/40 bg-success-light/60 px-4 py-3 text-sm font-medium text-success">
-            <Check className="h-4 w-4" /> You&apos;re on the list — see you in your inbox!
+            <Check className="h-4 w-4" /> {message || "You're on the list — see you in your inbox!"}
           </div>
         ) : (
           <form
             className="mt-5 flex max-w-md flex-col gap-2.5 sm:flex-row"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              if (!email.trim() || !email.includes("@")) return;
-              setState("success");
+              if (!email.trim() || !email.includes("@") || submitting) return;
+              setSubmitting(true);
+              setState("idle");
+              const res = await subscribeNewsletterAction({ email: email.trim(), source: "blog" });
+              setSubmitting(false);
+              if (res.ok) {
+                setState("success");
+                setMessage(res.data.message);
+              } else {
+                setState("error");
+                setMessage(res.error);
+              }
             }}
           >
             <label htmlFor={inputId} className="sr-only">
@@ -272,11 +408,17 @@ export function NewsletterForm() {
             </div>
             <button
               type="submit"
-              className="h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-primary/40 active:translate-y-px"
+              disabled={submitting}
+              className="h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark hover:shadow-primary/40 active:translate-y-px disabled:opacity-60"
             >
-              Subscribe
+              {submitting ? "Subscribing…" : "Subscribe"}
             </button>
           </form>
+        )}
+        {state === "error" && (
+          <p className="mt-3 text-sm font-medium text-rose-600 dark:text-rose-300" role="alert">
+            {message}
+          </p>
         )}
       </div>
     </div>

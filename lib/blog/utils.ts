@@ -56,6 +56,20 @@ export function estimateReadTime(blocks: BlogBlock[]): string {
       case "stats":
         words += block.items.map((i) => i.label).join(" ").split(/\s+/).length;
         break;
+      case "tabs":
+        words += block.tabs.map((t) => `${t.title} ${t.text}`).join(" ").split(/\s+/).length;
+        break;
+      case "button":
+        words += block.label.split(/\s+/).length;
+        break;
+      case "mermaid":
+        words += (block.code ?? "").split(/\s+/).length / 2;
+        break;
+      case "math":
+        words += (block.formula ?? "").split(/\s+/).length;
+        break;
+      case "tweetEmbed":
+      case "githubEmbed":
       case "gallery":
       case "video":
       case "image":
@@ -73,6 +87,93 @@ export function estimateReadTime(blocks: BlogBlock[]): string {
   }
   const minutes = Math.max(1, Math.round(words / 200));
   return `${minutes} min read`;
+}
+
+/**
+ * Flatten every block into a single plain-text string (used for search,
+ * excerpt generation and read-time fallbacks).
+ */
+export function blocksToText(blocks: BlogBlock[]): string {
+  const parts: string[] = [];
+  for (const block of blocks) {
+    switch (block.type) {
+      case "heading":
+      case "paragraph":
+      case "quote":
+      case "alert":
+      case "callout":
+        parts.push(block.text);
+        break;
+      case "customHtml":
+        parts.push(block.html);
+        break;
+      case "code":
+        parts.push(block.code);
+        break;
+      case "terminal":
+        parts.push(block.lines);
+        break;
+      case "checklist":
+      case "list":
+        parts.push(block.items.join(" "));
+        break;
+      case "table":
+        parts.push(block.rows.flat().join(" "));
+        break;
+      case "prosCons":
+        parts.push([...block.pros, ...block.cons].join(" "));
+        break;
+      case "timeline":
+      case "steps":
+      case "accordion":
+      case "faq":
+        parts.push(
+          block.items
+            .map((i) => {
+              const title = "title" in i ? i.title : "";
+              const question = "question" in i ? i.question : "";
+              const answer = "answer" in i ? i.answer : "";
+              const text = "text" in i ? i.text : "";
+              return `${title} ${question} ${answer} ${text}`;
+            })
+            .join(" ")
+        );
+        break;
+      case "stats":
+        parts.push(block.items.map((i) => `${i.value} ${i.label}`).join(" "));
+        break;
+      case "tabs":
+        parts.push(block.tabs.map((t) => `${t.title} ${t.text}`).join(" "));
+        break;
+      case "button":
+        parts.push(block.label);
+        break;
+      case "tweetEmbed":
+      case "githubEmbed":
+        parts.push(block.url);
+        break;
+      case "mermaid":
+        parts.push(block.code);
+        break;
+      case "math":
+        parts.push(block.formula);
+        break;
+      case "video":
+      case "image":
+      case "gallery":
+      case "beforeAfter":
+      case "chartPlaceholder":
+      case "toolEmbed":
+      case "downloadCta":
+      case "toolCta":
+      case "relatedToolCard":
+      case "authorCard":
+      case "newsletterCard":
+      case "divider":
+        break;
+    }
+  }
+  return parts.filter(Boolean).join(" ");
 }
 
 export interface HeadingRef {

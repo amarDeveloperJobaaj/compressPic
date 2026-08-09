@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BookOpen,
   CalendarDays,
+  PenLine,
   RefreshCw,
   UserRound,
 } from "lucide-react";
@@ -37,21 +38,34 @@ import {
   webPageSchema,
 } from "@/lib/seo";
 import { buildHeadingRefs } from "@/lib/blog/utils";
+import { getBlogRepository } from "@/lib/blog/repository";
+import { isAdmin } from "@/lib/admin/session";
+import type { BlogPost } from "@/lib/blog/types";
 import {
-  getCategories,
   getEmbeddedToolSlugs,
-  getPostBySlug,
-  getPrevNext,
-  getPublishedPosts,
-  getRelatedPosts,
   getRelatedTools,
   getToolRef,
 } from "@/lib/blog/service";
 
-export const revalidate = 30;
+// The article page reads the request cookies to decide whether a logged-in
+// admin may preview drafts (isAdmin). That forces a fully dynamic render —
+// which also guarantees production `next start` never attempts a static
+// generation for unknown slugs (the root cause of the earlier 500s).
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return getPublishedPosts().map((post) => ({ slug: post.slug }));
+/**
+ * Resolve the post to render: published posts for everyone, plus any-status
+ * drafts/scheduled for logged-in admins (draft preview).
+ */
+async function resolvePost(slug: string): Promise<{ post: BlogPost | null; preview: boolean }> {
+  const repo = getBlogRepository();
+  const published = await repo.getPostBySlug(slug);
+  if (published) return { post: published, preview: false };
+  if (await isAdmin()) {
+    const draft = await repo.getPostBySlugForPreview(slug);
+    if (draft) return { post: draft, preview: true };
+  }
+  return { post: null, preview: false };
 }
 
 export async function generateMetadata({
@@ -60,17 +74,23 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const { post, preview } = await resolvePost(slug);
   if (!post) return {};
 
   const seo = post.seo;
   const meta = buildMetadata({
-    title: seo?.metaTitle ?? post.title,
+    title: `${preview ? "Draft preview: " : ""}${seo?.metaTitle ?? post.title}`,
     description: seo?.metaDescription ?? post.excerpt,
     path: `/blog/${post.slug}`,
     keywords: [...post.tags, post.category, "vizo tool"],
     type: "article",
   });
+
+  // Drafts/scheduled posts are never indexed — they must not leak to search
+  // engines even when the admin is previewing them.
+  if (preview) {
+    meta.robots = { index: false, follow: false, nocache: true };
+  }
 
   // Blog covers are real images (OG-style) — surface them in OG/Twitter tags.
   const ogImage = seo?.ogImage ?? post.cover;
@@ -94,18 +114,25 @@ function formatDate(iso: string): string {
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
-  // Drafts are never served publicly — even with a known slug.
-  if (!post || post.status !== "published") notFound();
+  const repo = getBlogRepository();
+  const { post, preview } = await resolvePost(slug);
+  // Drafts are never served to anonymous visitors — only a logged-in admin
+  // gets the preview (see resolvePost above).
+  if (!post) notFound();
 
   const url = `/blog/${post.slug}`;
   const absoluteUrl = `${SITE_URL}${url}`;
   const tocItems = buildHeadingRefs(post.content);
-  const relatedPosts = getRelatedPosts(post);
+  const [relatedPosts, prevNext, categories, initialComments] = await Promise.all([
+    repo.getRelatedPosts(post),
+    repo.getPrevNext(post),
+    repo.getCategories(),
+    repo.listComments(post.id),
+  ]);
+  const { prev, next } = prevNext;
   const relatedTools = getRelatedTools(post);
   const embeddedSlugs = getEmbeddedToolSlugs(post);
-  const { prev, next } = getPrevNext(post);
-  const categorySlug = getCategories().find((c) => c.name === post.category)?.slug;
+  const categorySlug = categories.find((c) => c.name === post.category)?.slug;
 
   // Schema content from the post's own blocks
   const faqItems = post.content
@@ -195,6 +222,23 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       })}
 
       <article className="container-page pb-16">
+        {/* Admin draft preview banner — never indexed (see generateMetadata) */}
+        {preview && (
+          <div className="mx-auto mb-6 flex max-w-3xl items-center gap-3 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3" role="status">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-amber-500">
+              <PenLine className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-amber-600 dark:text-amber-300">
+                Draft preview — not visible to visitors
+              </p>
+              <p className="text-xs text-text-muted">
+                This page is only shown to logged-in admins and is excluded from search engines.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <header className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
@@ -216,6 +260,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </Capsule>
               </Link>
             ))}
+            {post.authorSlug && (
+              <Link href={`/blog/author/${post.authorSlug}`}>
+                <Capsule variant="success" sm glow={false}>
+                  By {post.author}
+                </Capsule>
+              </Link>
+            )}
           </div>
 
           <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-text-primary sm:text-4xl">
@@ -249,7 +300,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <ShareButtons title={post.title} url={absoluteUrl} />
-            <ArticleActions slug={post.slug} />
+            <ArticleActions slug={post.slug} postId={post.id} preview={preview} />
           </div>
         </header>
 
@@ -285,7 +336,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <p className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-text-muted">
                   <UserRound className="h-3.5 w-3.5" /> Author
                 </p>
-                <p className="mt-2 text-sm font-semibold text-text-primary">{post.author}</p>
+                {post.authorSlug ? (
+                  <Link
+                    href={`/blog/author/${post.authorSlug}`}
+                    className="mt-2 block text-sm font-semibold text-text-primary transition-colors hover:text-primary"
+                  >
+                    {post.author}
+                  </Link>
+                ) : (
+                  <p className="mt-2 text-sm font-semibold text-text-primary">{post.author}</p>
+                )}
                 <p className="mt-0.5 text-xs text-text-muted">{post.authorRole}</p>
               </div>
             </div>
@@ -341,7 +401,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Newsletter + comments */}
         <div className="mx-auto mt-14 max-w-3xl space-y-12">
           <NewsletterForm />
-          <CommentSection slug={post.slug} />
+          <CommentSection postId={post.id} initialComments={initialComments} />
         </div>
       </article>
     </PageTransition>
