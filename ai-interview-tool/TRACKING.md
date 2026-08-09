@@ -22,8 +22,8 @@
 
 | # | Phase | Branch (`feature/ai-interview/…`) | Status | Last updated |
 |---|---|---|---|---|
-| 0 | Architecture & Research | `phase-0-research` | `COMPLETED ✓ (merged)` | 2026-08-09 |
-| 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED ✓ (merged)` | 2026-08-09 |
+| 0 | Architecture & Research | `phase-0-research` | `COMPLETED · merged ✓` | 2026-08-09 |
+| 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 2 | Resume Intelligence | `phase-2-resume` | `NOT STARTED` | — |
 | 3 | Interview Session Engine | `phase-3-session` | `NOT STARTED` | — |
 | 4 | Interview Room UI | `phase-4-room` | `NOT STARTED` | — |
@@ -315,6 +315,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-09 | Landing polish (outside phase flow): 3D hero scene (React Three Fiber), spatial tilt cards, glass live-interview preview, skills marquee — SEO copy untouched | — | `feature/ai-interview/landing-polish` |
 | 2026-08-09 | Phase 1 merged to `main` (`cbf75a3`) — marked COMPLETED | 1 | `main` |
 | 2026-08-09 | Phase 0 merged to `main` (`63db455`) — marked COMPLETED | 0 | `main` |
 | 2026-08-09 | Phase 1 built: feature skeleton + data, SEO landing, 3-step setup wizard + resume capture, registry (AI Tools) + sitemap; lint+build green; awaiting approval | 1 | `feature/ai-interview/phase-1-foundation` |
