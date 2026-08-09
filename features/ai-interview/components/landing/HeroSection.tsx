@@ -3,6 +3,8 @@ import { ArrowRight, BarChart3, Bot, CheckCircle2, FileText, Mic } from "lucide-
 
 import { Capsule } from "@/components/ui/capsule";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { HeroSceneLoader } from "../three/HeroSceneLoader";
+import { LivePreviewCard } from "./LivePreviewCard";
 
 const highlights = [
   { icon: Mic, label: "Voice & video interview" },
@@ -10,16 +12,33 @@ const highlights = [
   { icon: BarChart3, label: "Detailed AI score report" },
 ];
 
-/** Landing hero — "Practice Interviews. Get Real Feedback." (master spec §83). */
+/**
+ * Landing hero — "Practice AI Interviews. Get Real Feedback." (spec §83).
+ * A 3D AI-core scene drifts behind the copy on desktop; a floating glass
+ * live-interview preview anchors the right side on xl screens.
+ */
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden">
+      {/* Backdrop: gradient + aurora glow */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-light/40 via-background to-background" />
         <div className="absolute -top-40 left-1/2 h-96 w-[42rem] -translate-x-1/2 animate-glow-pulse rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-72 w-96 translate-x-1/4 rounded-full bg-sky-500/10 blur-3xl" />
       </div>
 
-      <div className="container-page flex min-h-[60vh] flex-col items-center justify-center py-16 text-center sm:py-24">
+      {/* 3D AI core — large screens only, behind the copy (orb sits right-of-center).
+          Fades in as the WebGL chunk loads so it never snaps into view. */}
+      <div className="pointer-events-none absolute inset-0 -z-10 hidden animate-fade-in lg:block">
+        <HeroSceneLoader />
+      </div>
+
+      {/* Floating live-interview preview — xl screens */}
+      <div className="pointer-events-none absolute right-[4%] top-1/2 z-10 hidden -translate-y-1/2 xl:block">
+        <LivePreviewCard />
+      </div>
+
+      <div className="container-page relative flex min-h-[60vh] flex-col items-center justify-center py-16 text-center sm:py-24">
         <div className="max-w-3xl animate-fade-in">
           <Capsule variant="primary" dot className="mb-6">
             Free AI Mock Interview Practice

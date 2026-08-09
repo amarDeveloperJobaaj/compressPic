@@ -7,15 +7,16 @@ Key doc: the master blueprint (`00-master-spec.md`) is the single source of trut
 ## Read Order
 
 1. `00-master-spec.md` — full product blueprint (vision, flows, AI architecture, DB, security, phases §0→13, plus §118 dynamic admin AI config)
-2. `01-rules.md` — golden rules (binding)
+2. `01-rules.md` — golden rules (binding; rule 9 = update `TRACKING.md` every phase)
 3. `02-vision.md` — product vision
 4. `03-tool-info.md` — specs, one-flow, routes, report requirements, dynamic provider config
 5. `06-seo.md` — SEO & keywords playbook (trending + long-tail keywords, sitemap rule)
-6. `07-github-workflow.md` — GitHub rules (branch per phase, commits, no merge without approval)
+6. `07-github-workflow.md` — GitHub rules (branch per phase, commits, no merge without approval); step 4 mandates `TRACKING.md` before push
 7. `04-instructions.md` — build instructions, folder plan, contracts
 8. `05-phase-commands.md` — copy-paste phase commands for the AI (PHASE 0 → 13)
+9. `TRACKING.md` — **live status file**: what is completed, current flow, how things work, flowcharts, recent updates timeline. AI updates it after every single change (same branch/commit).
 
-> SEO + sitemap and git rules are mandatory in every phase: keywords per `06-seo.md`, sitemap via `lib/tools.ts`, branch per phase per `07-github-workflow.md`. The AI never merges without your approval.
+> SEO + sitemap and git rules are mandatory in every phase: keywords per `06-seo.md`, sitemap via `lib/tools.ts`, branch per phase per `07-github-workflow.md`, tracking per `TRACKING.md`. The AI never merges without your approval. No phase is "done" until its `TRACKING.md` row says so.
 
 ## Quick Start
 

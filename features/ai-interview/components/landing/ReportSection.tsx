@@ -2,6 +2,7 @@ import { BarChart3, LineChart, TrendingUp } from "lucide-react";
 
 import { Capsule } from "@/components/ui/capsule";
 import { Progress } from "@/components/ui/progress";
+import { TiltCard } from "../motion/TiltCard";
 
 /** Category scores preview — matches the report design (spec §58). */
 const categoryScores = [
@@ -64,6 +65,7 @@ export function ReportSection() {
             </div>
 
             {/* Mock score card */}
+            <TiltCard maxTilt={6}>
             <div className="rounded-2xl border border-border bg-surface p-6 shadow-lg shadow-primary/5 sm:p-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -84,6 +86,7 @@ export function ReportSection() {
                 ))}
               </div>
             </div>
+            </TiltCard>
           </div>
         </div>
       </section>
@@ -122,7 +125,9 @@ export function ReportSection() {
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 rounded-2xl border border-border bg-background p-6 shadow-lg shadow-primary/5 sm:p-8">
+            <div className="order-1 lg:order-2">
+            <TiltCard maxTilt={6}>
+            <div className="rounded-2xl border border-border bg-background p-6 shadow-lg shadow-primary/5 sm:p-8">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <p className="text-sm font-semibold text-text-primary">Skill progress</p>
@@ -139,6 +144,8 @@ export function ReportSection() {
                   </div>
                 ))}
               </div>
+            </div>
+            </TiltCard>
             </div>
           </div>
         </div>

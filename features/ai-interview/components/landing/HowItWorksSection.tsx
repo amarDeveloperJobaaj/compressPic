@@ -2,6 +2,8 @@ import { ArrowRight, BarChart3, Bot, FileText, Mic, type LucideIcon } from "luci
 
 import { Capsule } from "@/components/ui/capsule";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { Reveal } from "../motion/Reveal";
+import { TiltCard } from "../motion/TiltCard";
 
 interface Step {
   number: string;
@@ -62,10 +64,9 @@ export function HowItWorksSection() {
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <div
-                key={step.number}
-                className="group relative flex h-full flex-col rounded-2xl border border-border bg-background p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10"
-              >
+              <Reveal key={step.number} delay={index * 0.08} className="h-full">
+              <TiltCard maxTilt={7} className="h-full">
+              <div className="group relative flex h-full flex-col rounded-2xl border border-border bg-background p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10">
                 {index < steps.length - 1 && (
                   <span
                     aria-hidden="true"
@@ -87,6 +88,8 @@ export function HowItWorksSection() {
                   {step.description}
                 </p>
               </div>
+              </TiltCard>
+              </Reveal>
             );
           })}
         </div>
