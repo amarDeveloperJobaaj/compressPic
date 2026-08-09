@@ -71,6 +71,8 @@ interface NavDropdownProps {
   align?: "left" | "right";
   /** Optional "View all" link rendered in the footer strip (internal linking). */
   footerLink?: { label: string; href: string };
+  /** Small gradient badge shown next to the label (e.g. "AI" highlight). */
+  badge?: string;
 }
 
 /** Static column classes so Tailwind can see them at build time. */
@@ -102,7 +104,7 @@ function panelWidth(count: number): string {
  * Items render in a horizontal multi-column grid (like Vercel/Linear menus)
  * instead of a long vertical list.
  */
-export function NavDropdown({ label, sections, align = "left", footerLink }: NavDropdownProps) {
+export function NavDropdown({ label, sections, align = "left", footerLink, badge }: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -203,6 +205,11 @@ export function NavDropdown({ label, sections, align = "left", footerLink }: Nav
         aria-expanded={isOpen}
       >
         {label}
+        {badge && (
+          <span className="rounded-full bg-gradient-to-r from-primary to-sky-500 px-1.5 py-px text-[10px] font-bold text-white shadow-sm shadow-primary/30">
+            {badge}
+          </span>
+        )}
         <ChevronDown
           className={cn(
             "h-4 w-4 transition-transform duration-200",
