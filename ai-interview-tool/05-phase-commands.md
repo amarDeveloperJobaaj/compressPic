@@ -4,10 +4,11 @@ Copy ONE phase below the `===` line and paste to the AI (fresh chat) after it ha
 
 ## How to Use
 
-1. Start AI chat with: `Read ai-interview-tool/00-master-spec.md, 01-rules.md, 03-tool-info.md, 06-seo.md, 07-github-workflow.md, 04-instructions.md and then execute the phase I paste.`
+1. Start AI chat with: `Read ai-interview-tool/00-master-spec.md, 01-rules.md, 03-tool-info.md, 06-seo.md, 07-github-workflow.md, 04-instructions.md, TRACKING.md and then execute the phase I paste.`
 2. Paste ONE phase per message.
 3. Every phase = new branch `feature/ai-interview/phase-<N>-<slug>` + Conventional Commits + push. The AI must NOT merge — report the branch, wait for your approval.
-4. After the phase, run `npm run lint` + `npm run build` yourself, walk the flow in browser, then paste the next phase.
+4. **MANDATORY before the final commit of every phase:** update `TRACKING.md` (master status row, task checklist ticks, "Recent Updates" row) and commit it with the phase (`docs: update TRACKING for phase N`).
+5. After the phase, run `npm run lint` + `npm run build` yourself, walk the flow in browser, then paste the next phase.
 
 ---
 
