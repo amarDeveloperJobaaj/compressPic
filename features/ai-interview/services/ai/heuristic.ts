@@ -43,12 +43,17 @@ function firstLineName(text: string): string {
 }
 
 function extractSkills(text: string): string[] {
-  const found = new Set<string>();
+  const found: string[] = [];
   for (const skill of SKILL_KEYWORDS) {
     const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    if (new RegExp(`\\b${escaped}`, "i").test(text)) found.add(skill);
+    if (!new RegExp(`\\b${escaped}`, "i").test(text)) continue;
+    // Dedupe by containment: "postgresql" already covers "postgres",
+    // "next.js" covers "nextjs"-style variants, etc. Keep the longer,
+    // more specific keyword and skip any found skill it contains.
+    if (found.some((f) => f.length > skill.length && f.includes(skill))) continue;
+    found.push(skill);
   }
-  return [...found].slice(0, 20);
+  return found.slice(0, 20);
 }
 
 function sectionLines(text: string, heading: RegExp): string[] {

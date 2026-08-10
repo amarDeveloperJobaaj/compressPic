@@ -25,6 +25,9 @@ export function groupTextItemsToLines(items: TextItemLike[]): string[] {
       lines.push(line);
       line = "";
     }
+    // Most pdf.js items carry trailing spaces; when they don't, join with a
+    // space so words don't jam together ("HelloWorld").
+    if (line && !/\s$/.test(line) && !/^\s/.test(item.str)) line += " ";
     line += item.str;
     lastY = y;
   }

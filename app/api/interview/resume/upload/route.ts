@@ -43,6 +43,20 @@ export async function POST(request: Request) {
     );
   }
 
+  const { isStorageConfigured } = await import("@/lib/supabase/storage");
+  if (!isStorageConfigured()) {
+    // Env-based check (not error-message sniffing): storage is off → the UI
+    // falls back to client-side extraction + analysis (§74).
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Resume storage is not configured — you can still proceed without storing the file.",
+        fallbackToClient: true,
+      },
+      { status: 200 }
+    );
+  }
+
   try {
     const { uploadResume } = await import("@/lib/supabase/storage");
     const result = await uploadResume(file, "resumes");
@@ -52,20 +66,9 @@ export async function POST(request: Request) {
     );
   } catch (e) {
     const message = e instanceof Error ? e.message : "Upload failed.";
-    // Only a missing/env-misconfigured Supabase client is a graceful fallback
-    // condition. Real storage failures (bucket errors, network) stay 500 so
-    // the UI surfaces them instead of silently degrading.
-    const storageMisconfigured =
-      /requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/i.test(message);
     return NextResponse.json(
-      {
-        ok: false,
-        error: storageMisconfigured
-          ? "Resume storage is not configured — you can still proceed without storing the file."
-          : message,
-        fallbackToClient: storageMisconfigured,
-      },
-      { status: storageMisconfigured ? 200 : 500 }
+      { ok: false, error: message, fallbackToClient: false },
+      { status: 500 }
     );
   }
 }

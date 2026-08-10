@@ -31,6 +31,11 @@ const RESUME_MIME_TYPES = ["application/pdf"];
 /** Client-side resume cap — mirrored on the server (see uploadResume). */
 export const MAX_RESUME_SIZE = 10 * 1024 * 1024;
 
+/** True when the Supabase service-role env vars are present (storage available). */
+export function isStorageConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export interface StorageUploadResult {
   path: string;
   url: string;

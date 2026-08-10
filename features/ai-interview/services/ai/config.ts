@@ -9,7 +9,8 @@ import "server-only";
  */
 
 export interface AiBootstrapConfig {
-  provider: "openai" | "deepseek" | "gemini" | "anthropic" | "custom" | null;
+  /** OpenAI-compatible providers only — Anthropic needs a separate adapter (§34). */
+  provider: "openai" | "deepseek" | "gemini" | "custom" | null;
   apiKey: string;
   model: string;
   /** Custom base URL for OpenAI-compatible chat completions. */
@@ -20,7 +21,7 @@ export interface AiBootstrapConfig {
 
 function normalizeProvider(raw: string | undefined): AiBootstrapConfig["provider"] {
   const v = raw?.trim().toLowerCase();
-  if (v === "openai" || v === "deepseek" || v === "gemini" || v === "anthropic" || v === "custom") {
+  if (v === "openai" || v === "deepseek" || v === "gemini" || v === "custom") {
     return v;
   }
   return null;
@@ -30,7 +31,6 @@ const DEFAULT_MODELS: Record<NonNullable<AiBootstrapConfig["provider"]>, string>
   openai: "gpt-4o-mini",
   deepseek: "deepseek-chat",
   gemini: "gemini-2.0-flash",
-  anthropic: "claude-3-5-haiku-latest",
   custom: "default",
 };
 
@@ -59,8 +59,6 @@ export function chatCompletionsUrl(config: AiBootstrapConfig): string {
     case "gemini":
       // Gemini's OpenAI-compatible endpoint.
       return "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-    case "anthropic":
-      return "https://api.anthropic.com/v1/chat/completions";
     case "openai":
     default:
       return "https://api.openai.com/v1/chat/completions";

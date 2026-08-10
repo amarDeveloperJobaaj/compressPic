@@ -53,9 +53,12 @@ export function ResumeUploader() {
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  /** Monotonic op id — a new upload/analyze (or a clear) invalidates in-flight ones. */
+  const opIdRef = useRef(0);
+
   /** Analyze a PDF whose text we already have (extracted on the client). */
   const analyzeFromText = useCallback(
-    async (text: string) => {
+    async (text: string, opId: number) => {
       setResumeStatus("analyzing");
       setResumeError(null);
       try {
@@ -69,11 +72,13 @@ export function ResumeUploader() {
             experienceLevelId,
           }),
         });
+        if (opId !== opIdRef.current) return; // superseded by a newer op / clear
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error ?? "Analysis failed.");
         setCandidateProfile(data.profile, data.source ?? "ai");
         setResumeStatus("analyzed");
       } catch (e) {
+        if (opId !== opIdRef.current) return;
         setResumeError(e instanceof Error ? e.message : "Resume analysis failed.");
         setResumeStatus("error");
       }
@@ -83,6 +88,7 @@ export function ResumeUploader() {
 
   const uploadThenAnalyze = useCallback(
     async (file: File) => {
+      const opId = ++opIdRef.current;
       setResumeStatus("uploading");
       setUploadProgress(10);
       setResumeError(null);
@@ -94,6 +100,7 @@ export function ResumeUploader() {
           method: "POST",
           body: form,
         });
+        if (opId !== opIdRef.current) return; // superseded by a newer op / clear
         const data = await res.json();
         setUploadProgress(60);
 
@@ -105,6 +112,7 @@ export function ResumeUploader() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ filePath: data.path, roleId, domainId, experienceLevelId }),
           });
+          if (opId !== opIdRef.current) return;
           const analyzeData = await analyzeRes.json();
           if (!analyzeRes.ok || !analyzeData.ok) {
             throw new Error(analyzeData.error ?? "Analysis failed.");
@@ -120,13 +128,14 @@ export function ResumeUploader() {
         if (data.fallbackToClient) {
           const { extractPdfTextClient } = await import("@/features/ai-interview/utils/pdf-client");
           const text = await extractPdfTextClient(file);
-          await analyzeFromText(text);
-          setUploadProgress(100);
+          await analyzeFromText(text, opId);
+          if (opId === opIdRef.current) setUploadProgress(100);
           return;
         }
 
         throw new Error(data.error ?? "Upload failed.");
       } catch (e) {
+        if (opId !== opIdRef.current) return;
         setResumeError(e instanceof Error ? e.message : "Upload failed.");
         setResumeStatus("error");
       }
@@ -154,6 +163,12 @@ export function ResumeUploader() {
     [setResumeFile, setResumeSkipped, uploadThenAnalyze]
   );
 
+  /** Clear that also invalidates any in-flight upload/analyze op. */
+  const clearResumeSafe = useCallback(() => {
+    opIdRef.current++;
+    clearResume();
+  }, [clearResume]);
+
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -162,6 +177,12 @@ export function ResumeUploader() {
     },
     [acceptFile]
   );
+
+  /** Skip that also invalidates any in-flight upload/analyze op. */
+  const skipResumeSafe = useCallback(() => {
+    opIdRef.current++;
+    setResumeSkipped(true);
+  }, [setResumeSkipped]);
 
   if (resumeSkipped) {
     return (
@@ -204,7 +225,7 @@ export function ResumeUploader() {
           </div>
           <button
             type="button"
-            onClick={clearResume}
+            onClick={clearResumeSafe}
             aria-label="Cancel resume upload"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-primary-light hover:text-primary"
           >
@@ -245,7 +266,7 @@ export function ResumeUploader() {
           </div>
           <button
             type="button"
-            onClick={clearResume}
+            onClick={clearResumeSafe}
             aria-label="Remove resume"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-primary-light hover:text-primary"
           >
@@ -326,11 +347,11 @@ export function ResumeUploader() {
             <RotateCcw className="h-4 w-4" />
             Retry
           </Button>
-          <Button variant="outline" size="sm" onClick={clearResume}>
+          <Button variant="outline" size="sm" onClick={clearResumeSafe}>
             <Upload className="h-4 w-4" />
             Choose another file
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setResumeSkipped(true)}>
+          <Button variant="ghost" size="sm" onClick={() => skipResumeSafe()}>
             Skip resume
           </Button>
         </div>
@@ -380,7 +401,7 @@ export function ResumeUploader() {
         <p className="text-xs text-text-muted">
           The AI interviewer reads your projects and skills to personalize questions.
         </p>
-        <Button variant="ghost" size="sm" onClick={() => setResumeSkipped(true)}>
+        <Button variant="ghost" size="sm" onClick={() => skipResumeSafe()}>
           Skip resume
         </Button>
       </div>
