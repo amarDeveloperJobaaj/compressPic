@@ -10,6 +10,9 @@ import {
   FileImage,
   Globe,
   Image as ImageIcon,
+  Info,
+  Mail,
+  Newspaper,
   Shapes,
   Smartphone,
   Sparkles,
@@ -47,6 +50,31 @@ const FORMAT_ICONS: Record<string, LucideIcon> = {
  * "Image Tools → Convert" section and the mobile drawer so the links never
  * drift apart.
  */
+/**
+ * Secondary page links grouped under the "More" dropdown — shared by the
+ * desktop header and the mobile drawer so they never drift apart.
+ */
+export const MORE_NAV_ITEMS: NavLinkItem[] = [
+  {
+    label: "Blog",
+    href: "/blogs",
+    description: "Tips, guides & product updates",
+    icon: Newspaper,
+  },
+  {
+    label: "About",
+    href: "/about",
+    description: "The story behind Vizo Tool",
+    icon: Info,
+  },
+  {
+    label: "Contact",
+    href: "/contact",
+    description: "Get in touch with the team",
+    icon: Mail,
+  },
+];
+
 export const CONVERT_NAV_ITEMS: NavLinkItem[] = [
   {
     label: "Convert Any Format",
@@ -71,8 +99,10 @@ interface NavDropdownProps {
   align?: "left" | "right";
   /** Optional "View all" link rendered in the footer strip (internal linking). */
   footerLink?: { label: string; href: string };
-  /** Small gradient badge shown next to the label (e.g. "AI" highlight). */
+  /** Small pill badge shown next to the trigger label (e.g. "Popular"). */
   badge?: string;
+  /** Colorful animated glow on the trigger (used to spotlight AI Tools). */
+  glow?: boolean;
 }
 
 /** Static column classes so Tailwind can see them at build time. */
@@ -104,7 +134,14 @@ function panelWidth(count: number): string {
  * Items render in a horizontal multi-column grid (like Vercel/Linear menus)
  * instead of a long vertical list.
  */
-export function NavDropdown({ label, sections, align = "left", footerLink, badge }: NavDropdownProps) {
+export function NavDropdown({
+  label,
+  sections,
+  align = "left",
+  footerLink,
+  badge,
+  glow = false,
+}: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -197,16 +234,19 @@ export function NavDropdown({ label, sections, align = "left", footerLink, badge
         onClick={handleClick}
         className={cn(
           "group flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
-          isOpen
-            ? "bg-primary text-white shadow-lg shadow-primary/25"
-            : "text-text-secondary hover:bg-primary-light/70 hover:text-primary"
+          glow
+            ? "animate-[nav-ai-glow_3s_ease-in-out_infinite,nav-ai-bg_4s_linear_infinite] bg-gradient-to-r from-blue-600 via-cyan-500 to-violet-600 bg-[length:200%_auto] text-white motion-reduce:animate-none"
+            : isOpen
+              ? "bg-primary text-white shadow-lg shadow-primary/25"
+              : "text-text-secondary hover:bg-primary-light/70 hover:text-primary",
+          glow && isOpen ? "ring-2 ring-white/40" : null
         )}
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
         {label}
         {badge && (
-          <span className="rounded-full bg-gradient-to-r from-primary to-sky-500 px-1.5 py-px text-[10px] font-bold text-white shadow-sm shadow-primary/30">
+          <span className="rounded-full bg-white px-1.5 py-px text-[10px] font-bold text-violet-700">
             {badge}
           </span>
         )}

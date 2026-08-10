@@ -3,22 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Info, Mail, Menu, Newspaper } from "lucide-react";
+import { Menu } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
 import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { getToolIcon } from "@/lib/tool-icons";
 import { Logo } from "@/components/ui/Logo";
-import { NavDropdown, CONVERT_NAV_ITEMS, type NavDropdownSection, type NavLinkItem } from "./NavDropdown";
+import {
+  NavDropdown,
+  CONVERT_NAV_ITEMS,
+  MORE_NAV_ITEMS,
+  type NavDropdownSection,
+} from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileDrawer } from "./MobileDrawer";
 import { cn } from "@/lib/utils";
-
-/** Secondary links grouped under the "More" dropdown. */
-const MORE_NAV_ITEMS: NavLinkItem[] = [
-  { label: "Blog", href: "/blogs", description: "Guides, tips & product updates", icon: Newspaper },
-  { label: "About", href: "/about", description: "Learn more about Vizo Tool", icon: Info },
-  { label: "Contact", href: "/contact", description: "Get in touch with the team", icon: Mail },
-];
 
 /** Build the dropdown sections for a category; Image Tools also embeds Convert. */
 function buildSections(categoryId: string): NavDropdownSection[] {
@@ -104,12 +102,13 @@ export function Header() {
                 label={NAV_LABELS[category.id] ?? category.label}
                 sections={buildSections(category.id)}
                 align={RIGHT_ALIGNED.has(category.id) ? "right" : "left"}
-                badge={category.id === "ai" ? "AI" : undefined}
                 footerLink={
                   categoryPage
                     ? { label: `View all ${category.label}`, href: `/${categoryPage}` }
                     : undefined
                 }
+                badge={category.id === "ai" ? "Popular" : undefined}
+                glow={category.id === "ai"}
               />
             );
           })}
@@ -119,7 +118,6 @@ export function Header() {
             sections={[{ items: MORE_NAV_ITEMS }]}
             align="right"
           />
-
           <div className="ml-1">
             <ThemeToggle />
           </div>

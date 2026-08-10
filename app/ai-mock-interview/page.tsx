@@ -4,19 +4,29 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { FaqSection } from "@/components/seo/FaqSection";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { AI_INTERVIEW_FAQS } from "@/features/ai-interview/data/faqs";
-import { HeroSection } from "@/features/ai-interview/components/landing/HeroSection";
-import { SkillsMarquee } from "@/features/ai-interview/components/landing/SkillsMarquee";
-import { HowItWorksSection } from "@/features/ai-interview/components/landing/HowItWorksSection";
-import { RolesSection } from "@/features/ai-interview/components/landing/RolesSection";
-import { FeaturesSection } from "@/features/ai-interview/components/landing/FeaturesSection";
-import { ReportSection } from "@/features/ai-interview/components/landing/ReportSection";
-import { FinalCtaSection } from "@/features/ai-interview/components/landing/FinalCtaSection";
-import { buildMetadata, softwareApplicationSchema } from "@/lib/seo";
+import { ScrollProgress } from "@/features/ai-interview/components/motion/ScrollProgress";
+import { InterviewHero } from "@/features/ai-interview/components/interview/InterviewHero";
+import { TrustBar } from "@/features/ai-interview/components/interview/TrustBar";
+import { HowItWorks } from "@/features/ai-interview/components/interview/HowItWorks";
+import { InterviewPreview } from "@/features/ai-interview/components/interview/InterviewPreview";
+import { FeatureGrid } from "@/features/ai-interview/components/interview/FeatureGrid";
+import { AdaptiveFlow } from "@/features/ai-interview/components/interview/AdaptiveFlow";
+import { CompanyShowcase } from "@/features/ai-interview/components/interview/CompanyShowcase";
+import { RoleShowcase } from "@/features/ai-interview/components/interview/RoleShowcase";
+import { ReportPreview } from "@/features/ai-interview/components/interview/ReportPreview";
+import { WhyCandidates } from "@/features/ai-interview/components/interview/WhyCandidates";
+import { PricingPreview } from "@/features/ai-interview/components/interview/PricingPreview";
+import { InterviewCta } from "@/features/ai-interview/components/interview/InterviewCta";
+import {
+  breadcrumbListSchema,
+  buildMetadata,
+  softwareApplicationSchema,
+} from "@/lib/seo";
 
-/** Title ≤60 chars, brandless, primary keyword first (06-seo.md map). */
-const LANDING_TITLE = "AI Interview — Mock Interview Practice with AI (Free)";
+/** Optimized title per premium landing spec §33 (keyword-first, ≤60 chars). */
+const LANDING_TITLE = "AI Mock Interview – Practice Technical & HR Interviews";
 const LANDING_DESCRIPTION =
-  "Practice AI mock interviews with a real-time AI interviewer. Get scored feedback, a weaknesses report, and personalized questions for your role. Free.";
+  "Practice realistic AI mock interviews tailored to your resume, role, and target company. Technical, HR, behavioral, and coding interviews with instant AI feedback and a detailed score report. Free.";
 
 export const metadata: Metadata = {
   ...buildMetadata({
@@ -30,13 +40,15 @@ export const metadata: Metadata = {
       "mock interview online",
       "interview practice ai",
       "ai interview coach",
-      "interview questions and answers",
+      "technical interview practice",
+      "hr interview practice",
       "behavioral interview questions",
-      "tell me about yourself answer",
       "coding interview",
+      "company interview practice",
+      "resume based interview questions",
     ],
   }),
-  // Brandless title: keep exactly LANDING_TITLE, bypass the "%s | Vizo Tool" template.
+  // Keyword-first title, brandless per 06-seo.md — bypass the "%s | Vizo Tool" template.
   title: { absolute: LANDING_TITLE },
   robots: {
     index: true,
@@ -54,6 +66,7 @@ export const metadata: Metadata = {
 export default function AiMockInterviewLandingPage() {
   return (
     <PageTransition>
+      <ScrollProgress />
       <JsonLd
         data={softwareApplicationSchema({
           name: "Vizo Tool AI Mock Interview",
@@ -61,14 +74,25 @@ export default function AiMockInterviewLandingPage() {
           url: "/ai-mock-interview",
         })}
       />
-      <HeroSection />
-      <SkillsMarquee />
-      <HowItWorksSection />
-      <RolesSection />
-      <FeaturesSection />
-      <ReportSection />
+      <JsonLd
+        data={breadcrumbListSchema([
+          { name: "Home", url: "/" },
+          { name: "AI Mock Interview", url: "/ai-mock-interview" },
+        ])}
+      />
+      <InterviewHero />
+      <TrustBar />
+      <HowItWorks />
+      <InterviewPreview />
+      <FeatureGrid />
+      <AdaptiveFlow />
+      <CompanyShowcase />
+      <RoleShowcase />
+      <ReportPreview />
+      <WhyCandidates />
+      <PricingPreview />
       <FaqSection faqs={AI_INTERVIEW_FAQS} />
-      <FinalCtaSection />
+      <InterviewCta />
     </PageTransition>
   );
 }
