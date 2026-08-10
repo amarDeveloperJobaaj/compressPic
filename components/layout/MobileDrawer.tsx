@@ -226,7 +226,7 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 Home
               </Link>
 
-              {TOOL_CATEGORIES.map((category) => {
+              {TOOL_CATEGORIES.filter((c) => c.id !== "ai").map((category) => {
                 const categoryPage = CATEGORY_PAGE_BY_CATEGORY_ID[category.id];
                 return (
                 <NavGroup
