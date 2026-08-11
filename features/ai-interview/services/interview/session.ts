@@ -188,6 +188,9 @@ export async function createInterviewSession(
     interviewTypeId: data.interviewTypeId,
     durationMinutes: data.durationMinutes,
     difficulty: data.difficulty,
+    // Recording consent is stored with the session (§31) — captured before
+    // any audio/video is recorded, never after the fact.
+    recordingConsent: data.recordingConsent ?? false,
     labels,
   };
 

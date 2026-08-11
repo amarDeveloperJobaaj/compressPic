@@ -30,6 +30,8 @@ export const CreateInterviewSessionSchema = z.object({
   resumeFileName: z.string().max(255).optional(),
   /** Analyzed candidate profile (§19) — snapshotted with the session. */
   candidateProfile: CandidateProfileSchema.optional(),
+  /** Explicit recording consent — required before any capture (§31). */
+  recordingConsent: z.boolean().optional(),
 });
 
 export type CreateInterviewSessionInput = z.infer<typeof CreateInterviewSessionSchema>;
