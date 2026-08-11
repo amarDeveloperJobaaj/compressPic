@@ -81,8 +81,8 @@ export function TypeDurationStep() {
       <div>
         <h3 className="text-base font-semibold text-text-primary">Resume (optional)</h3>
         <p className="mt-1 text-sm text-text-secondary">
-          Upload a PDF so the AI interviewer can ask about your projects and skills.
-          Analysis arrives in Phase 2 — you can skip it for now.
+          Upload a PDF so the AI interviewer can build your candidate profile and ask about
+          your projects and skills. No resume? Skip it — the interview still runs.
         </p>
         <div className="mt-4">
           <ResumeUploader />

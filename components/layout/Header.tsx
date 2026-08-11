@@ -8,16 +8,15 @@ import { TOOL_CATEGORIES } from "@/lib/tools";
 import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { getToolIcon } from "@/lib/tool-icons";
 import { Logo } from "@/components/ui/Logo";
-import { NavDropdown, CONVERT_NAV_ITEMS, type NavDropdownSection } from "./NavDropdown";
+import {
+  NavDropdown,
+  CONVERT_NAV_ITEMS,
+  MORE_NAV_ITEMS,
+  type NavDropdownSection,
+} from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileDrawer } from "./MobileDrawer";
 import { cn } from "@/lib/utils";
-
-const pageLinks = [
-  { label: "Blog", href: "/blogs" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
 
 /** Build the dropdown sections for a category; Image Tools also embeds Convert. */
 function buildSections(categoryId: string): NavDropdownSection[] {
@@ -108,24 +107,17 @@ export function Header() {
                     ? { label: `View all ${category.label}`, href: `/${categoryPage}` }
                     : undefined
                 }
+                badge={category.id === "ai" ? "Popular" : undefined}
+                glow={category.id === "ai"}
               />
             );
           })}
 
-          {pageLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
-                pathname === link.href
-                  ? "bg-primary-light text-primary"
-                  : "text-text-secondary hover:bg-primary-light/70 hover:text-primary"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <NavDropdown
+            label="More"
+            sections={[{ items: MORE_NAV_ITEMS }]}
+            align="right"
+          />
           <div className="ml-1">
             <ThemeToggle />
           </div>

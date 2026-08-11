@@ -1,6 +1,6 @@
 import type { Role } from "../types";
 
-/** Target roles — values exactly from 03-tool-info.md (extensible). */
+/** Target roles — values from 03-tool-info.md + premium landing §20 (extensible). */
 export const ROLES: Role[] = [
   {
     id: "software-engineer",
@@ -27,6 +27,42 @@ export const ROLES: Role[] = [
     description: "Frontend, backend, databases, and deployment.",
   },
   {
+    id: "react-developer",
+    name: "React Developer",
+    slug: "react-developer",
+    description: "React, hooks, state management, and component architecture.",
+  },
+  {
+    id: "node-js-developer",
+    name: "Node.js Developer",
+    slug: "node-js-developer",
+    description: "Node.js, Express, APIs, and server-side architecture.",
+  },
+  {
+    id: "python-developer",
+    name: "Python Developer",
+    slug: "python-developer",
+    description: "Python, Django/Flask, scripting, and automation.",
+  },
+  {
+    id: "java-developer",
+    name: "Java Developer",
+    slug: "java-developer",
+    description: "Java, Spring, OOP, and enterprise applications.",
+  },
+  {
+    id: "php-developer",
+    name: "PHP Developer",
+    slug: "php-developer",
+    description: "PHP, Laravel, MySQL, and web application development.",
+  },
+  {
+    id: "devops-engineer",
+    name: "DevOps Engineer",
+    slug: "devops-engineer",
+    description: "CI/CD, Docker, Kubernetes, cloud, and infrastructure.",
+  },
+  {
     id: "data-analyst",
     name: "Data Analyst",
     slug: "data-analyst",
@@ -43,5 +79,29 @@ export const ROLES: Role[] = [
     name: "Product Manager",
     slug: "product-manager",
     description: "Product strategy, prioritization, and stakeholder communication.",
+  },
+  {
+    id: "ui-ux-designer",
+    name: "UI/UX Designer",
+    slug: "ui-ux-designer",
+    description: "Design thinking, usability, and portfolio storytelling.",
+  },
+  {
+    id: "hr-professional",
+    name: "HR Professional",
+    slug: "hr-professional",
+    description: "Talent acquisition, employee relations, and HR processes.",
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    slug: "marketing",
+    description: "Growth, campaigns, analytics, and brand strategy.",
+  },
+  {
+    id: "sales",
+    name: "Sales",
+    slug: "sales",
+    description: "Discovery, objection handling, and closing conversations.",
   },
 ];

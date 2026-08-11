@@ -44,8 +44,11 @@
   --animate-glow-pulse: glow-pulse 3.5s ease-in-out infinite;
   --animate-marquee: marquee 30s linear infinite;
   --animate-wave: wave 2.4s ease-in-out 3;
+  --animate-waveform: waveform 1.1s ease-in-out infinite;
   --animate-logo-shine: logo-shine 4.5s ease-in-out infinite;
   --animate-logo-spark: logo-spark 2.8s ease-in-out infinite;
+  --animate-aurora-drift: aurora-drift 16s ease-in-out infinite;
+  --animate-hue-pulse: hue-pulse 9s ease-in-out infinite;
 }
 
 /* Native form controls & scrollbars follow the theme */
@@ -174,6 +177,17 @@
   }
 }
 
+/* Audio waveform bars — vertical scale pulse, GPU cheap, infinite */
+@keyframes waveform {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 /* Premium sheen sweep across the Vizo Tool logo tile — transform only, GPU cheap */
 @keyframes logo-shine {
   0%,
@@ -194,6 +208,48 @@
 }
 
 /* Subtle twinkle for the logo spark accent */
+@keyframes aurora-drift {
+  0%, 100% {
+    transform: translate3d(-5%, -3%, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(6%, 4%, 0) scale(1.15) rotate(10deg);
+  }
+  66% {
+    transform: translate3d(-4%, 5%, 0) scale(0.92) rotate(-8deg);
+  }
+}
+
+@keyframes hue-pulse {
+  0%, 100% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(32deg);
+  }
+}
+
+@keyframes nav-ai-glow {
+  0%, 100% {
+    box-shadow: 0 0 14px -2px rgba(59, 130, 246, 0.6), 0 0 2px 1px rgba(56, 189, 248, 0.45);
+  }
+  33% {
+    box-shadow: 0 0 18px -2px rgba(139, 92, 246, 0.6), 0 0 2px 1px rgba(129, 140, 248, 0.45);
+  }
+  66% {
+    box-shadow: 0 0 14px -2px rgba(34, 211, 238, 0.6), 0 0 2px 1px rgba(34, 211, 238, 0.45);
+  }
+}
+
+@keyframes nav-ai-bg {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 @keyframes logo-spark {
   0%,
   100% {

@@ -18,12 +18,23 @@ import { createAdminClient } from "./admin";
 
 export const BLOG_IMAGES_BUCKET = "blog-images";
 export const AUTHOR_IMAGES_BUCKET = "author-images";
+/** AI interview resume PDFs — private bucket, server-only access (§32). */
+export const RESUMES_BUCKET = "resumes";
 
 export const STORAGE_BUCKETS = [BLOG_IMAGES_BUCKET, AUTHOR_IMAGES_BUCKET] as const;
 
 /** Allowed mime types — mirrors supabase/storage.sql. */
 const BLOG_MIME_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif"];
 const AUTHOR_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const RESUME_MIME_TYPES = ["application/pdf"];
+
+/** Client-side resume cap — mirrored on the server (see uploadResume). */
+export const MAX_RESUME_SIZE = 10 * 1024 * 1024;
+
+/** True when the Supabase service-role env vars are present (storage available). */
+export function isStorageConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 export interface StorageUploadResult {
   path: string;
@@ -113,6 +124,46 @@ export function uploadBlogImage(file: UploadableFile, prefix = "blog"): Promise<
 /** Convenience wrapper for author avatars. */
 export function uploadAuthorImage(file: UploadableFile, prefix = "authors"): Promise<StorageUploadResult> {
   return uploadImage(AUTHOR_IMAGES_BUCKET, file, prefix);
+}
+
+/**
+ * Upload a resume PDF into the private `resumes` bucket (max 10 MB, PDF only).
+ * The file is stored server-side; the browser never gets a public URL for it
+ * (private bucket — reads go through the server for analysis).
+ */
+export async function uploadResume(
+  file: UploadableFile,
+  prefix = "resumes"
+): Promise<StorageUploadResult> {
+  const { data, contentType, fileName, size } = await normalizeUpload(file);
+
+  if (!RESUME_MIME_TYPES.includes(contentType)) {
+    throw new Error(`Unsupported resume type "${contentType}" — PDF only.`);
+  }
+  if (size > MAX_RESUME_SIZE) {
+    throw new Error("Resume exceeds the 10 MB limit.");
+  }
+
+  const admin = createAdminClient();
+  const storagePath = buildStoragePath(prefix, fileName);
+
+  const { error } = await admin.storage.from(RESUMES_BUCKET).upload(storagePath, data, {
+    contentType,
+    upsert: false,
+  });
+
+  if (error) throw new Error(`Resume upload failed: ${error.message}`);
+
+  return { path: storagePath, url: storagePath, size };
+}
+
+/** Read a stored resume back as a Buffer (server-only — private bucket). */
+export async function downloadResume(storagePath: string): Promise<Buffer> {
+  const { data, error } = await createAdminClient()
+    .storage.from(RESUMES_BUCKET)
+    .download(storagePath);
+  if (error) throw new Error(`Resume download failed: ${error.message}`);
+  return Buffer.from(await data.arrayBuffer());
 }
 
 /** Public HTTPS URL for a stored object (public buckets — works client-side). */
