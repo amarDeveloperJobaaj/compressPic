@@ -25,7 +25,7 @@
 | 0 | Architecture & Research | `phase-0-research` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 2 | Resume Intelligence | `phase-2-resume` | `COMPLETED · merged ✓` | 2026-08-11 |
-| 3 | Interview Session Engine | `phase-3-session` | `NOT STARTED` | — |
+| 3 | Interview Session Engine | `phase-3-session` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
 | 4 | Interview Room UI | `phase-4-room` | `NOT STARTED` | — |
 | 5 | AI Question Engine | `phase-5-question-engine` | `NOT STARTED` | — |
 | 6 | Speech & Voice Loop | `phase-6-voice` | `NOT STARTED` | — |
@@ -72,11 +72,12 @@
 > Status: `COMPLETED ✓` — merged to `main` on 2026-08-11 (merge commit `a23b036`).
 
 #### Phase 3 — Interview Session Engine
-| Task | Done? |
-|---|---|
-| DB schema (resumes, sessions, questions, answers, evaluations, reports) | [ ] |
-| Session create/get/start/end APIs (ownership) | [ ] |
-| Session recovery on reconnect | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| DB schema (resumes, sessions, questions, answers, evaluations, reports) | [x] | `005_interview_sessions.sql` — 6 tables, auth.uid() RLS, §79 status check, updated_at triggers, indexes; types hand-synced in `lib/supabase/database.types.ts` |
+| Session create/get/start/end APIs (ownership) | [x] | create (201/400/401/503) + GET `:id` (recovery, 403 for non-owner) + start (409 on invalid transition) + end (idempotent) — all auth-only, server-derived user id |
+| Session recovery on reconnect | [x] | `GET /api/interview/session/:id` returns session + ordered questions with answers (§76); service `getSessionRecovery` |
+| User auth wired (per user decision) | [x] | Supabase Auth via browser client (no clash with admin `/api/auth/*`), `/ai-mock-interview/auth` page (sign in/up + email-confirm + not-configured states), `useAuth` hook, Start button gates to sign-in |
 
 #### Phase 4 — Interview Room UI
 | Task | Done? |
@@ -163,6 +164,8 @@
    ▼
 SETUP   resume(PDF) + role + domain + company + level + type + duration
    │   resume → analyze (server, Gemini) → candidate profile
+   ▼
+SIGN IN (Supabase Auth) → session create (auth-scoped) → room (Phase 4)
    ▼
 INTERVIEW  Camera+Mic → consent → AI interviewer room
    │   AI asks (TTS + text) → user answers (STT or text)
@@ -319,6 +322,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
 | 2026-08-11 | Phase 2 merged to `main` (`a23b036`) — marked COMPLETED | 2 | `main` |
 | 2026-08-10 | Phase 2 merged premium landing branch into it (3D hero, nav polish) and fully verified: lint+build green, runtime API tests (heuristic profile extraction, upload validation, storage-off fallback, PDF text extraction) + browser wizard walkthrough, zero console errors | 2 | `feature/ai-interview/phase-2-resume` |
 | 2026-08-09 | Phase 2 built: resume upload API (private `resumes` bucket), analyze API → Zod CandidateProfile, services/ai provider abstraction + heuristic fallback, versioned prompts, uploader UI with progress/analyzing/retry/skip — lint+build green; awaiting approval | 2 | `feature/ai-interview/phase-2-resume` |
