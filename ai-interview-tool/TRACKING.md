@@ -24,7 +24,7 @@
 |---|---|---|---|---|
 | 0 | Architecture & Research | `phase-0-research` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED · merged ✓` | 2026-08-09 |
-| 2 | Resume Intelligence | `phase-2-resume` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-10 |
+| 2 | Resume Intelligence | `phase-2-resume` | `COMPLETED · merged ✓` | 2026-08-11 |
 | 3 | Interview Session Engine | `phase-3-session` | `NOT STARTED` | — |
 | 4 | Interview Room UI | `phase-4-room` | `NOT STARTED` | — |
 | 5 | AI Question Engine | `phase-5-question-engine` | `NOT STARTED` | — |
@@ -68,6 +68,8 @@
 | services/ai (provider abstraction + heuristic fallback) + prompts/resume (versioned) | [x] | OpenAI-compatible REST adapter (no SDK) + heuristic analyzer — runtime-verified (name/level/skills/projects/education/certs) |
 | Resume uploader UI (progress, analyzing state, retry, fallback) + "Skip resume" | [x] | Candidate profile preview (name, level, skills, projects) in setup step 3 — browser-verified |
 | Supabase migration `004_interview_resumes.sql` + `storage.sql` resumes bucket | [x] | private bucket, admin-only policies |
+
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-11 (merge commit `a23b036`).
 
 #### Phase 3 — Interview Session Engine
 | Task | Done? |
@@ -317,6 +319,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-11 | Phase 2 merged to `main` (`a23b036`) — marked COMPLETED | 2 | `main` |
 | 2026-08-10 | Phase 2 merged premium landing branch into it (3D hero, nav polish) and fully verified: lint+build green, runtime API tests (heuristic profile extraction, upload validation, storage-off fallback, PDF text extraction) + browser wizard walkthrough, zero console errors | 2 | `feature/ai-interview/phase-2-resume` |
 | 2026-08-09 | Phase 2 built: resume upload API (private `resumes` bucket), analyze API → Zod CandidateProfile, services/ai provider abstraction + heuristic fallback, versioned prompts, uploader UI with progress/analyzing/retry/skip — lint+build green; awaiting approval | 2 | `feature/ai-interview/phase-2-resume` |
 | 2026-08-09 | Landing polish merged to `main` (`c6cc41d`) — 3D hero scene (React Three Fiber), GLTF robot avatar, spatial tilt cards, glass live-interview preview, skills marquee — SEO copy untouched | — | `main` |
