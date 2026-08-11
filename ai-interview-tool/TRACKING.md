@@ -26,7 +26,7 @@
 | 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 2 | Resume Intelligence | `phase-2-resume` | `COMPLETED · merged ✓` | 2026-08-11 |
 | 3 | Interview Session Engine | `phase-3-session` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
-| 4 | Interview Room UI | `phase-4-room` | `NOT STARTED` | — |
+| 4 | Interview Room UI | `phase-4-room` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
 | 5 | AI Question Engine | `phase-5-question-engine` | `NOT STARTED` | — |
 | 6 | Speech & Voice Loop | `phase-6-voice` | `NOT STARTED` | — |
 | 7 | Adaptive Interview Engine | `phase-7-adaptive` | `NOT STARTED` | — |
@@ -80,12 +80,13 @@
 | User auth wired (per user decision) | [x] | Supabase Auth via browser client (no clash with admin `/api/auth/*`), `/ai-mock-interview/auth` page (sign in/up + email-confirm + not-configured states), `useAuth` hook, Start button gates to sign-in |
 
 #### Phase 4 — Interview Room UI
-| Task | Done? |
-|---|---|
-| Room page (camera, AI interviewer, controls, timer) | [ ] |
-| PermissionModal + getUserMedia fallbacks | [ ] |
-| RecordingConsent flow | [ ] |
-| State-machine visuals (IDs per §79 of master spec) | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Room page (camera, AI interviewer, controls, timer) | [x] | `/ai-mock-interview/room` + `InterviewRoom` orchestrator — LIVE badge, countdown timer (§11), VideoPanel, AIInterviewerPanel (pure-CSS avatar reused from landing), QuestionPanel, TranscriptPanel (local text fallback), controls bar; desktop grid + mobile stacked (§12/§16) |
+| PermissionModal + getUserMedia fallbacks | [x] | explainer dialog (§30) → camera+mic → audio-only → video-only → text-only chain (§75), friendly per-error guidance, mic/cam toggles with live track state, stream cleanup on leave |
+| RecordingConsent flow | [x] | checkbox before Start (§31), gates Begin; consent stored with the session (config.recordingConsent) |
+| State-machine visuals (IDs per §79 of master spec) | [x] | room drives idle→preparing→ready→active→ending→completed; interviewer visual states (waiting/listening/thinking/speaking/processing/success) + §78 loading labels; LISTENING/PROCESSING/ASKING wired for Phase 5/6 |
+| Session wiring (Phase 3 APIs) | [x] | create/start/end via session-client; recovery-shaped GET ready for reconnect (§76); auto-end when the time budget hits zero |
 
 #### Phase 5 — AI Question Engine
 | Task | Done? |
@@ -165,9 +166,12 @@
 SETUP   resume(PDF) + role + domain + company + level + type + duration
    │   resume → analyze (server, Gemini) → candidate profile
    ▼
-SIGN IN (Supabase Auth) → session create (auth-scoped) → room (Phase 4)
+SIGN IN (Supabase Auth) → session create (auth-scoped) → INTERVIEW ROOM
    ▼
-INTERVIEW  Camera+Mic → consent → AI interviewer room
+Camera+Mic (permission modal + fallbacks) → recording consent (§31)
+   ▼
+AI interviewer room — question/transcript panels, timer, controls
+   │   (question/voice loop lands in Phase 5/6)
    │   AI asks (TTS + text) → user answers (STT or text)
    │   engine evaluates → follow-up / new topic / harder / easier / end
    ▼
@@ -322,6 +326,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
 | 2026-08-11 | Phase 2 merged to `main` (`a23b036`) — marked COMPLETED | 2 | `main` |
 | 2026-08-10 | Phase 2 merged premium landing branch into it (3D hero, nav polish) and fully verified: lint+build green, runtime API tests (heuristic profile extraction, upload validation, storage-off fallback, PDF text extraction) + browser wizard walkthrough, zero console errors | 2 | `feature/ai-interview/phase-2-resume` |
