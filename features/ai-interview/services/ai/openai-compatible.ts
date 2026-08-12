@@ -1,14 +1,26 @@
 import "server-only";
 
 import { CandidateProfileSchema } from "../../schemas/resume";
+import { GeneratedQuestionSchema } from "../../schemas/question";
+import type { GeneratedQuestion } from "../../schemas/question";
 import {
   RESUME_ANALYSIS_SYSTEM_PROMPT,
   buildResumeAnalysisUserPrompt,
 } from "../../prompts/resume/resume-analysis-v1";
+import {
+  QUESTION_SYSTEM_PROMPT,
+  buildQuestionUserPrompt,
+} from "../../prompts/question/question-v1";
+import {
+  FOLLOWUP_SYSTEM_PROMPT,
+  buildFollowUpUserPrompt,
+} from "../../prompts/followup/followup-v1";
 import type { AiBootstrapConfig } from "./config";
 import { chatCompletionsUrl } from "./config";
-import type { AIProvider, ResumeAnalysisContext } from "./types";
+import type { AIProvider, QuestionContext, ResumeAnalysisContext } from "./types";
 import { heuristicAnalyzeResume } from "./heuristic";
+import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
+import type { z } from "zod";
 
 /**
  * OpenAI-compatible chat-completions provider (works for OpenAI, DeepSeek,
@@ -16,7 +28,7 @@ import { heuristicAnalyzeResume } from "./heuristic";
  * SDK dependency, matching the repo's provider-adapter convention (§34).
  *
  * Validation (§74): parse JSON → Zod-validate → on invalid output retry once
- * → graceful fallback to the heuristic analyzer.
+ * → graceful fallback to the heuristic analyzer/generator.
  */
 
 const TIMEOUT_MS = 45_000;
@@ -44,7 +56,7 @@ async function fetchJson(url: string, init: RequestInit, timeoutMs = TIMEOUT_MS)
   }
 }
 
-function extractProfileJson(content: string): unknown {
+function extractJsonObject(content: string): unknown {
   // Strip markdown fences if the model wrapped the JSON anyway.
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidate = fenced ? fenced[1] : content;
@@ -58,18 +70,24 @@ export class OpenAICompatibleProvider implements AIProvider {
     this.id = config.provider ?? "custom";
   }
 
-  async analyzeResume(context: ResumeAnalysisContext) {
-    const userPrompt = buildResumeAnalysisUserPrompt(context.resumeText);
-
-    const messages: ChatCompletionMessage[] = [
-      { role: "system", content: RESUME_ANALYSIS_SYSTEM_PROMPT },
-      { role: "user", content: userPrompt },
-    ];
-
+  /**
+   * One validated chat-completions round: send messages → parse JSON →
+   * Zod-validate → retry once on ANY failure → graceful fallback. Provider
+   * errors must never hard-fail a user-facing flow (§74).
+   *
+   * Returns `fromFallback` so callers that add metadata (e.g. the resume
+   * analyzer's source/warning) can reflect which path produced the value.
+   */
+  private async chatJson<T>(
+    messages: ChatCompletionMessage[],
+    schema: z.ZodType<T>,
+    fallback: () => T,
+    temperature = 0.4
+  ): Promise<{ value: T; fromFallback: boolean }> {
     const body = {
       model: this.config.model,
       messages,
-      temperature: 0.2,
+      temperature,
       response_format: { type: "json_object" },
     };
 
@@ -83,9 +101,6 @@ export class OpenAICompatibleProvider implements AIProvider {
         body: JSON.stringify(body),
       });
 
-    // Attempt 1 + one retry on ANY failure (network, auth, invalid output)
-    // (§74: validate → retry once → graceful fallback). Provider errors must
-    // never hard-fail the request — fall back to the heuristic profile.
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const raw = await callProvider();
@@ -94,31 +109,56 @@ export class OpenAICompatibleProvider implements AIProvider {
           if (attempt === 1) break;
           continue;
         }
-
-        const parsed = extractProfileJson(content);
-        const profile = CandidateProfileSchema.parse(parsed);
-        return {
-          profile,
-          source: "ai" as const,
-          warning: undefined,
-        };
+        const parsed = extractJsonObject(content);
+        return { value: schema.parse(parsed), fromFallback: false };
       } catch {
         // Provider call failed OR output was invalid — retry once, then fall back.
         if (attempt === 1) break;
       }
     }
 
-    // Graceful fallback: local heuristic profile (§74).
-    return heuristicAnalyzeResume(context.resumeText);
+    return { value: fallback(), fromFallback: true };
+  }
+
+  async analyzeResume(context: ResumeAnalysisContext) {
+    const messages: ChatCompletionMessage[] = [
+      { role: "system", content: RESUME_ANALYSIS_SYSTEM_PROMPT },
+      { role: "user", content: buildResumeAnalysisUserPrompt(context.resumeText) },
+    ];
+    const heuristic = () => heuristicAnalyzeResume(context.resumeText);
+    const { value, fromFallback } = await this.chatJson(
+      messages,
+      CandidateProfileSchema,
+      () => heuristic().profile,
+      0.2
+    );
+    if (fromFallback) return heuristic();
+    return { profile: value, source: "ai" as const, warning: undefined };
+  }
+
+  async generateQuestion(context: QuestionContext): Promise<GeneratedQuestion> {
+    const messages: ChatCompletionMessage[] = [
+      { role: "system", content: QUESTION_SYSTEM_PROMPT },
+      { role: "user", content: buildQuestionUserPrompt(context) },
+    ];
+    const { value } = await this.chatJson(messages, GeneratedQuestionSchema, () =>
+      heuristicGenerateQuestion(context)
+    );
+    return value;
+  }
+
+  async generateFollowUp(context: QuestionContext): Promise<GeneratedQuestion> {
+    const messages: ChatCompletionMessage[] = [
+      { role: "system", content: FOLLOWUP_SYSTEM_PROMPT },
+      { role: "user", content: buildFollowUpUserPrompt(context) },
+    ];
+    const { value } = await this.chatJson(messages, GeneratedQuestionSchema, () =>
+      heuristicGenerateFollowUp(context)
+    );
+    return value;
   }
 
   // Later-phase methods — not implemented yet.
-  async generateQuestion() {
-    throw new Error("generateQuestion is not implemented until Phase 5.");
-  }
-  async generateFollowUp() {
-    throw new Error("generateFollowUp is not implemented until Phase 5.");
-  }
   async evaluateAnswer() {
     throw new Error("evaluateAnswer is not implemented until Phase 8.");
   }
