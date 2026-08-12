@@ -25,6 +25,8 @@ export function QuestionPanel({
     idle: "Your AI interviewer is getting ready.",
     preparing: "Preparing the interview room…",
     ready: "Start the interview when you're ready — I'll take it from there.",
+    asking: "Generating your next question…",
+    processing: "Reviewing your answer…",
     completed: "That's a wrap. Head over to the controls to finish up.",
   };
 

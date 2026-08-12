@@ -29,9 +29,11 @@ interface InterviewRoomState {
   transcript: TranscriptEntry[];
   /** The interviewer's current line (question / welcome). */
   currentQuestion: string | null;
+  /** Id of the persisted question being answered — sent with each answer. */
+  currentQuestionId: string | null;
   /** Explicit recording consent (§31) — gates the Start action. */
   recordingConsent: boolean;
-  /** Room seconds elapsed while ACTIVE (drives the timer). */
+  /** Room seconds elapsed while the interview is live (drives the timer). */
   elapsedSeconds: number;
 
   setSessionId: (sessionId: string | null) => void;
@@ -39,6 +41,7 @@ interface InterviewRoomState {
   setError: (message: string | null) => void;
   setRecordingConsent: (consent: boolean) => void;
   setCurrentQuestion: (question: string | null) => void;
+  setCurrentQuestionId: (questionId: string | null) => void;
   addTranscriptEntry: (entry: Omit<TranscriptEntry, "id" | "at">) => void;
   tick: () => void;
   reset: () => void;
@@ -52,6 +55,7 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
   error: null,
   transcript: [],
   currentQuestion: null,
+  currentQuestionId: null,
   recordingConsent: false,
   elapsedSeconds: 0,
 
@@ -60,6 +64,7 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
   setError: (error) => set({ error }),
   setRecordingConsent: (recordingConsent) => set({ recordingConsent }),
   setCurrentQuestion: (currentQuestion) => set({ currentQuestion }),
+  setCurrentQuestionId: (currentQuestionId) => set({ currentQuestionId }),
   addTranscriptEntry: (entry) =>
     set((s) => ({
       transcript: [
@@ -75,6 +80,7 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
       error: null,
       transcript: [],
       currentQuestion: null,
+      currentQuestionId: null,
       recordingConsent: false,
       elapsedSeconds: 0,
     }),
@@ -83,4 +89,17 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
 /** Seconds the timer should show — derived, so components don't drift. */
 export function remainingSeconds(durationMinutes: number, elapsedSeconds: number): number {
   return Math.max(0, durationMinutes * 60 - elapsedSeconds);
+}
+
+/** Statuses where the interview is live (timer runs, End enabled) — §79. */
+const LIVE_STATUSES: readonly RoomStatus[] = [
+  "active",
+  "listening",
+  "processing",
+  "asking",
+  "ending",
+];
+
+export function isInterviewLive(status: RoomStatus): boolean {
+  return LIVE_STATUSES.includes(status);
 }

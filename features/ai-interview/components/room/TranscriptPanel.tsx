@@ -8,15 +8,20 @@ import { cn } from "@/lib/utils";
 import { useInterviewRoomStore } from "@/features/ai-interview/store/interview-room-store";
 
 /**
- * Transcript panel (§17, §28) — every spoken/typed line lands here. Answers
- * are typed via the text fallback until the voice loop lands (Phase 6); the
- * entry is appended locally for Phase 4 and will be persisted + evaluated
- * by the engine in Phase 5/7.
+ * Transcript panel (§17, §28) — every spoken/typed line lands here. The
+ * candidate answers via the text fallback (voice lands in Phase 6); the line
+ * is appended locally for instant feedback and the room persists it through
+ * the question engine (Phase 5) before the next question arrives.
  */
-export function TranscriptPanel() {
+export function TranscriptPanel({
+  onSubmitAnswer,
+  submitting = false,
+}: {
+  onSubmitAnswer: (text: string) => void;
+  submitting?: boolean;
+}) {
   const transcript = useInterviewRoomStore((s) => s.transcript);
   const status = useInterviewRoomStore((s) => s.status);
-  const addTranscriptEntry = useInterviewRoomStore((s) => s.addTranscriptEntry);
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -25,13 +30,13 @@ export function TranscriptPanel() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [transcript]);
 
-  const canAnswer = status === "active" || status === "listening" || status === "processing";
+  const canAnswer = status === "active" || status === "listening";
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const text = draft.trim();
-    if (!text || !canAnswer) return;
-    addTranscriptEntry({ speaker: "candidate", text });
+    if (!text || !canAnswer || submitting) return;
+    onSubmitAnswer(text);
     setDraft("");
   };
 
@@ -83,7 +88,7 @@ export function TranscriptPanel() {
           <button
             type="submit"
             aria-label="Send answer"
-            disabled={!draft.trim()}
+            disabled={!draft.trim() || submitting}
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-colors",
               "hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"

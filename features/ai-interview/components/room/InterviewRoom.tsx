@@ -30,8 +30,10 @@ import { ROLES } from "@/features/ai-interview/data/roles";
 import { useAuth } from "@/features/ai-interview/hooks/useAuth";
 import { useInterviewSession } from "@/features/ai-interview/hooks/useInterviewSession";
 import { useMediaDevices } from "@/features/ai-interview/hooks/useMediaDevices";
+import { useQuestionEngine } from "@/features/ai-interview/hooks/useQuestionEngine";
 import type { CreateInterviewSessionInput } from "@/features/ai-interview/schemas/interview-session";
 import {
+  isInterviewLive,
   remainingSeconds,
   useInterviewRoomStore,
 } from "@/features/ai-interview/store/interview-room-store";
@@ -49,15 +51,13 @@ import { VideoPanel } from "./VideoPanel";
  * Interview room (master spec §12, §15, §30–31, §75, §79).
  *
  *   auth → permissions (getUserMedia + fallbacks) → consent (§31)
- *   → session create/start (Phase 3 APIs) → ACTIVE (timer, transcript)
+ *   → session create/start (Phase 3 APIs) → ASKING (first question, Phase 5)
+ *   → LISTENING (answer) → PROCESSING (persist + next question) → ASKING loop
  *   → End (confirm) → session end → COMPLETED.
  *
- * LISTENING/PROCESSING/ASKING are wired into the state machine + UI and will
- * be driven by the question + voice engines in Phase 5/6.
+ * The question engine (Phase 5) drives the §79 sub-states; the voice loop
+ * (Phase 6) will add STT/TTS around the same turn cycle.
  */
-
-const WELCOME_LINE =
-  "Welcome — I'm your AI interviewer. We'll keep this focused and natural. Take your time with each answer, and I'll ask a follow-up when it helps.";
 
 export function InterviewRoom() {
   const { user, loading: authLoading, configured } = useAuth();
@@ -65,6 +65,7 @@ export function InterviewRoom() {
   const stopMedia = media.stop; // stable callback — safe in effect/useCallback deps
   const { createSession, startSession, endSession, creating, starting, ending } =
     useInterviewSession();
+  const { busy: engineBusy, askFirstQuestion, answerAndAskNext } = useQuestionEngine();
 
   const status = useInterviewRoomStore((s) => s.status);
   const sessionId = useInterviewRoomStore((s) => s.sessionId);
@@ -77,6 +78,7 @@ export function InterviewRoom() {
   const setSessionId = useInterviewRoomStore((s) => s.setSessionId);
   const setRecordingConsent = useInterviewRoomStore((s) => s.setRecordingConsent);
   const setCurrentQuestion = useInterviewRoomStore((s) => s.setCurrentQuestion);
+  const setCurrentQuestionId = useInterviewRoomStore((s) => s.setCurrentQuestionId);
   const addTranscriptEntry = useInterviewRoomStore((s) => s.addTranscriptEntry);
   const resetRoom = useInterviewRoomStore((s) => s.reset);
 
@@ -125,7 +127,7 @@ export function InterviewRoom() {
 
   const endInterview = useCallback(async () => {
     // Guard against double-fire (End-click + timer expiry in the same tick).
-    if (useInterviewRoomStore.getState().status !== "active") return;
+    if (!isInterviewLive(useInterviewRoomStore.getState().status)) return;
     setConfirmEnd(false);
     setStatus("ending");
     if (!sessionId) {
@@ -141,18 +143,20 @@ export function InterviewRoom() {
     }
     setStatus("completed");
     setCurrentQuestion(null);
+    setCurrentQuestionId(null);
     stopMedia();
-  }, [sessionId, setStatus, setError, setCurrentQuestion, endSession, stopMedia]);
+  }, [sessionId, setStatus, setError, setCurrentQuestion, setCurrentQuestionId, endSession, stopMedia]);
 
-  // Room clock — ticks only while ACTIVE; auto-ends when the budget is up.
-  // State is read via getState() so the interval never captures stale values.
+  // Room clock — ticks while the interview is live; auto-ends when the budget
+  // is up. State is read via getState() so the interval never captures stale
+  // values.
   useEffect(() => {
-    if (status !== "active") return;
+    if (!isInterviewLive(status)) return;
     const id = setInterval(() => {
       const room = useInterviewRoomStore.getState();
       room.tick();
       if (
-        room.status === "active" &&
+        isInterviewLive(room.status) &&
         remainingSeconds(setup.durationMinutes ?? 20, room.elapsedSeconds) <= 0
       ) {
         void endInterview();
@@ -207,9 +211,20 @@ export function InterviewRoom() {
       return;
     }
 
-    setStatus("active");
-    setCurrentQuestion(WELCOME_LINE);
-    addTranscriptEntry({ speaker: "interviewer", text: WELCOME_LINE });
+    // ASKING → first question from the engine (stored server-side).
+    setStatus("asking");
+    const first = await askFirstQuestion(id);
+    if (!first.ok) {
+      setError(first.error);
+      setStatus("ready"); // start is idempotent — retry is safe
+      return;
+    }
+    // The interview may have moved on (End clicked) while the AI was thinking.
+    if (useInterviewRoomStore.getState().status !== "asking") return;
+    setCurrentQuestionId(first.data.question.id);
+    setCurrentQuestion(first.data.question.question);
+    addTranscriptEntry({ speaker: "interviewer", text: first.data.question.question });
+    setStatus("listening"); // interviewer awaits the answer
   }, [
     recordingConsent,
     setError,
@@ -218,10 +233,52 @@ export function InterviewRoom() {
     buildCreateInput,
     setSessionId,
     startSession,
+    askFirstQuestion,
     setCurrentQuestion,
+    setCurrentQuestionId,
     addTranscriptEntry,
     sessionId,
   ]);
+
+  /**
+   * One answer turn (Phase 5): append the candidate line locally, persist the
+   * answer + generate the next question, then show it and return to listening.
+   */
+  const submitAnswer = useCallback(
+    async (text: string) => {
+      const room = useInterviewRoomStore.getState();
+      const id = room.sessionId;
+      const questionId = room.currentQuestionId;
+      if (!id || !questionId || !isInterviewLive(room.status)) return;
+
+      addTranscriptEntry({ speaker: "candidate", text });
+      setError(null);
+      setStatus("processing");
+
+      const result = await answerAndAskNext(id, { questionId, transcript: text });
+      // The interview may have ended (or failed) while the engine worked.
+      const now = useInterviewRoomStore.getState();
+      if (now.status !== "processing") return;
+
+      if (!result.ok) {
+        setError(result.error);
+        setStatus("listening"); // same question still stands — try again
+        return;
+      }
+      setCurrentQuestionId(result.data.question.id);
+      setCurrentQuestion(result.data.question.question);
+      addTranscriptEntry({ speaker: "interviewer", text: result.data.question.question });
+      setStatus("listening");
+    },
+    [
+      addTranscriptEntry,
+      setError,
+      setStatus,
+      answerAndAskNext,
+      setCurrentQuestion,
+      setCurrentQuestionId,
+    ]
+  );
 
   const handleGranted = useCallback(
     (grant: { video: boolean; audio: boolean; note?: string }) => {
@@ -319,7 +376,7 @@ export function InterviewRoom() {
     );
   }
 
-  const live = status === "active" || status === "ending";
+  const live = isInterviewLive(status);
   const preStart = status === "idle" || status === "preparing" || status === "ready";
 
   // ---- Pre-start stage (permissions + consent) -----------------------------
@@ -463,7 +520,10 @@ export function InterviewRoom() {
         </div>
         <div className="space-y-4">
           <AIInterviewerPanel status={status} />
-          <TranscriptPanel />
+          <TranscriptPanel
+            onSubmitAnswer={submitAnswer}
+            submitting={engineBusy || status === "processing"}
+          />
         </div>
       </div>
 
