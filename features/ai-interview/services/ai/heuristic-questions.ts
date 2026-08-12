@@ -217,7 +217,11 @@ function buildQueue(ctx: QuestionContext): QueueItem[] {
 }
 
 /** A follow-up that builds on the last question/answer without repeating it. */
-/** Rotating follow-up phrasings so a long interview never repeats itself. */
+/**
+ * Rotating follow-up phrasings for topical follow-ups. Indexed by the turn
+ * number so a long interview never repeats itself; the pool is sized so ten
+ * turns stay distinct even when the topic never changes.
+ */
 const FOLLOWUP_TEMPLATES = [
   (topic: string) =>
     `You just covered ${topic} — can you go one level deeper and give a concrete example of how you'd apply it?`,
@@ -225,6 +229,10 @@ const FOLLOWUP_TEMPLATES = [
     `On ${topic}: what trade-offs did you weigh, and what would make you pick a different approach?`,
   (topic: string) =>
     `Let's stay on ${topic} — how would you explain the key idea to a junior developer, and what's a common mistake to avoid?`,
+  (topic: string) =>
+    `You mentioned ${topic}. How would you respond if a production incident traced back to that choice?`,
+  (topic: string) =>
+    `Staying with ${topic}: if you were doing it again, what would you change and why?`,
 ];
 
 function buildFollowUp(ctx: QuestionContext, last: QuestionContext["previousQuestions"][number]): GeneratedQuestion {

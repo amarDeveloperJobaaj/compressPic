@@ -11,6 +11,7 @@ import {
 } from "../../schemas/question";
 import type { StoreAnswerInput } from "../../schemas/question";
 import type { SessionAnswer, SessionQuestion } from "../../types";
+import { computeAnsweredCount } from "./turn-math";
 import {
   getSessionForUser,
   mapQuestionRow,
@@ -223,10 +224,12 @@ export async function answerAndAskNext(
     durationSeconds: parsed.data.durationSeconds,
   });
 
-  // Count from the pre-insert snapshot so retries (answer already stored by a
-  // failed attempt) never inflate the counter — `latest` is the answered row.
-  const alreadyAnswered = questions.filter((q) => q.interview_answers?.length).length;
-  const answeredCount = alreadyAnswered + (latest.interview_answers?.length ? 0 : 1);
+  // Retry-safe count from the pre-insert snapshot (§40) — a resubmitted
+  // answer (stored by a failed attempt) must not inflate questionsAnswered.
+  const answeredCount = computeAnsweredCount(
+    questions.filter((q) => q.interview_answers?.length).length,
+    Boolean(latest.interview_answers?.length)
+  );
   await updateSessionState(userId, sessionId, { questionsAnswered: answeredCount });
 
   // The provider sees the fresh answer as lastAnswer.

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate:blogs": "tsx --env-file-if-exists=.env scripts/migrate-blogs.ts"
+    "migrate:blogs": "tsx --env-file-if-exists=.env scripts/migrate-blogs.ts",
+    "test": "npm run test:interview",
+    "test:interview": "node --import tsx --test \"features/ai-interview/**/*.test.ts\""
   },
   "dependencies": {
     "@fontsource/inter": "^5.1.0",
