@@ -111,7 +111,7 @@ function mapSessionRow(row: SessionRow): InterviewSession {
   };
 }
 
-function mapQuestionRow(row: QuestionRow): SessionQuestion {
+export function mapQuestionRow(row: QuestionRow): SessionQuestion {
   return {
     id: row.id,
     sessionId: row.session_id,
@@ -137,8 +137,9 @@ function mapAnswerRow(row: AnswerRow): SessionAnswer {
   };
 }
 
-/** Fetch a session row and enforce ownership (§50). */
-async function getSessionForUser(
+/** Fetch a session row and enforce ownership (§50). Shared by the session
+ * routes AND the question engine (Phase 5) so ownership never drifts. */
+export async function getSessionForUser(
   userId: string,
   sessionId: string
 ): Promise<{ row: SessionRow } | { error: SessionAccessErrorKind; message: string }> {
@@ -264,6 +265,11 @@ export async function startInterviewSession(
   if ("error" in result) return { ok: false, error: result.error, message: result.message };
 
   const row = result.row;
+  // Idempotent: a session that is already active just returns as-is — this
+  // makes Begin retries (after a failed first-question generation) safe.
+  if (row.status === "active") {
+    return { ok: true, session: mapSessionRow(row) };
+  }
   if (!canTransitionStatus(row.status as SessionStatus, "active")) {
     return {
       ok: false,
@@ -319,9 +325,8 @@ export async function endInterviewSession(
 /**
  * Persist one asked question (sequence auto-increments per session).
  *
- * Note: read-then-insert of max(sequence)+1 is not atomic — concurrent asks
- * could repeat a sequence (no unique constraint yet). Phase 5 wiring should
- * add a unique (session_id, sequence) index + retry, or serialize asks.
+ * A unique (session_id, sequence) index (migration 006) guards against
+ * colliding sequences; on a race we re-read and retry (bounded).
  */
 export async function storeQuestion(
   userId: string,
@@ -332,32 +337,42 @@ export async function storeQuestion(
   if ("error" in access) throw new Error(access.message);
 
   const admin = createAdminClient();
-  const { data: latest } = await admin
-    .from("interview_questions")
-    .select("sequence")
-    .eq("session_id", sessionId)
-    .order("sequence", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data: latest } = await admin
+      .from("interview_questions")
+      .select("sequence")
+      .eq("session_id", sessionId)
+      .order("sequence", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  const { data, error } = await admin
-    .from("interview_questions")
-    .insert({
-      session_id: sessionId,
-      question: input.question,
-      question_type: input.questionType,
-      topic: input.topic,
-      difficulty: input.difficulty,
-      sequence: (latest?.sequence ?? 0) + 1,
-      parent_question_id: input.parentQuestionId ?? null,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-  return mapQuestionRow(data);
+    const { data, error } = await admin
+      .from("interview_questions")
+      .insert({
+        session_id: sessionId,
+        question: input.question,
+        question_type: input.questionType,
+        topic: input.topic,
+        difficulty: input.difficulty,
+        sequence: (latest?.sequence ?? 0) + 1,
+        parent_question_id: input.parentQuestionId ?? null,
+      })
+      .select("*")
+      .single();
+
+    // 23505 = unique_violation — another ask claimed this sequence; retry.
+    if (error?.code === "23505" && attempt < 2) continue;
+    if (error) throw error;
+    return mapQuestionRow(data);
+  }
+  throw new Error("Failed to store question.");
 }
 
-/** Persist one answer (transcript + optional media refs). */
+/**
+ * Persist one answer (transcript + optional media refs). Idempotent — a
+ * retried submit for the same question returns the existing answer instead of
+ * duplicating it.
+ */
 export async function storeAnswer(
   userId: string,
   questionId: string,
@@ -373,6 +388,13 @@ export async function storeAnswer(
   const access = await getSessionForUser(userId, question.session_id);
   if ("error" in access) throw new Error(access.message);
 
+  const { data: existing } = await admin
+    .from("interview_answers")
+    .select("*")
+    .eq("question_id", questionId)
+    .maybeSingle();
+  if (existing) return mapAnswerRow(existing);
+
   const { data, error } = await admin
     .from("interview_answers")
     .insert({
@@ -386,6 +408,31 @@ export async function storeAnswer(
     .single();
   if (error) throw error;
   return mapAnswerRow(data);
+}
+
+/** Merge a patch into the session's §40 live state (current_state jsonb). */
+export async function updateSessionState(
+  userId: string,
+  sessionId: string,
+  patch: Partial<ReturnType<typeof SessionStateSchema.parse>>
+): Promise<InterviewSession> {
+  const result = await getSessionForUser(userId, sessionId);
+  if ("error" in result) throw new Error(result.message);
+
+  const merged = SessionStateSchema.parse({
+    ...parseSessionState(result.row.current_state),
+    ...patch,
+  });
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("interview_sessions")
+    .update({ current_state: merged as SessionRow["current_state"] })
+    .eq("id", sessionId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapSessionRow(data);
 }
 
 /** GET /api/interview/session/:id — full recovery payload (§76): session +
