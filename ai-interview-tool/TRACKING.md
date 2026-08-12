@@ -27,7 +27,7 @@
 | 2 | Resume Intelligence | `phase-2-resume` | `COMPLETED · merged ✓` | 2026-08-11 |
 | 3 | Interview Session Engine | `phase-3-session` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
 | 4 | Interview Room UI | `phase-4-room` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
-| 5 | AI Question Engine | `phase-5-question-engine` | `NOT STARTED` | — |
+| 5 | AI Question Engine | `phase-5-question-engine` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-12 |
 | 6 | Speech & Voice Loop | `phase-6-voice` | `NOT STARTED` | — |
 | 7 | Adaptive Interview Engine | `phase-7-adaptive` | `NOT STARTED` | — |
 | 8 | Evaluation Engine | `phase-8-evaluation` | `NOT STARTED` | — |
@@ -89,12 +89,16 @@
 | Session wiring (Phase 3 APIs) | [x] | create/start/end via session-client; recovery-shaped GET ready for reconnect (§76); auto-end when the time budget hits zero |
 
 #### Phase 5 — AI Question Engine
-| Task | Done? |
-|---|---|
-| AIProvider interface + Gemini adapter | [ ] |
-| Question generate API (Zod-validated strict JSON) | [ ] |
-| Follow-up API | [ ] |
-| Questions stored with parent_question_id | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| AIProvider generateQuestion/generateFollowUp (typed §52 context) | [x] | OpenAI-compatible provider implements both with strict-JSON Zod validation → retry → heuristic fallback (§74); heuristic provider (no AI key) conducts the whole interview deterministically |
+| Question generate API (Zod-validated strict JSON) | [x] | `POST /api/interview/question/generate` — first question; idempotent (re-returns the stored question on retry) |
+| Follow-up API | [x] | `POST /api/interview/question/follow-up` — persists the answer (idempotent) + generates the next question in one round-trip |
+| Questions stored with parent_question_id | [x] | FOLLOW_UP/CLARIFICATION link to the question they build on; sequences unique per session (migration `006`, retry on 23505) |
+| Versioned question + follow-up prompts | [x] | `prompts/question/question-v1.ts` + `followup/followup-v1.ts` — professional interviewer, one question/turn, strict JSON (§53), DATA-only context (§73) |
+| Heuristic question bank + difficulty system | [x] | `services/ai/heuristic-questions.ts` — domain/skill/project/behavioral/HR banks keyed by domain id, topic dedupe, rotating follow-ups, no repeats; initial difficulty from experience level |
+| Engine drives §79 sub-states + persists answers | [x] | Room: Begin → ASKING → first question → LISTENING → answer → PROCESSING → next question; answers stored to `interview_answers`, §40 `current_state` kept in sync (questionsAsked/Answered, currentTopic, difficulty, currentQuestion) |
+| Ownership + idempotency hardening | [x] | 403 for another user's session; start idempotent (retry-safe Begin); answer idempotent (unique `question_id` index); live verified vs live Supabase |
 
 #### Phase 6 — Speech & Voice Loop
 | Task | Done? |
@@ -171,7 +175,8 @@ SIGN IN (Supabase Auth) → session create (auth-scoped) → INTERVIEW ROOM
 Camera+Mic (permission modal + fallbacks) → recording consent (§31)
    ▼
 AI interviewer room — question/transcript panels, timer, controls
-   │   (question/voice loop lands in Phase 5/6)
+   │   question loop live (Phase 5): AI asks → user answers (text) → follow-up
+   │   voice (TTS/STT) lands in Phase 6; evaluation lands in Phase 7/8
    │   AI asks (TTS + text) → user answers (STT or text)
    │   engine evaluates → follow-up / new topic / harder / easier / end
    ▼
@@ -326,6 +331,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
 | 2026-08-11 | Phase 2 merged to `main` (`a23b036`) — marked COMPLETED | 2 | `main` |
