@@ -28,7 +28,7 @@
 | 3 | Interview Session Engine | `phase-3-session` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
 | 4 | Interview Room UI | `phase-4-room` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
 | 5 | AI Question Engine | `phase-5-question-engine` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-12 |
-| 6 | Speech & Voice Loop | `phase-6-voice` | `NOT STARTED` | — |
+| 6 | Speech & Voice Loop | `phase-6-voice` | `IN PROGRESS` (built · verified · awaiting approval) | 2026-08-13 |
 | 7 | Adaptive Interview Engine | `phase-7-adaptive` | `NOT STARTED` | — |
 | 8 | Evaluation Engine | `phase-8-evaluation` | `NOT STARTED` | — |
 | 9 | Final Report | `phase-9-report` | `NOT STARTED` | — |
@@ -101,12 +101,12 @@
 | Ownership + idempotency hardening | [x] | 403 for another user's session; start idempotent (retry-safe Begin); answer idempotent (unique `question_id` index); live verified vs live Supabase |
 
 #### Phase 6 — Speech & Voice Loop
-| Task | Done? |
-|---|---|
-| Browser STT (SpeechRecognition) + text fallback | [ ] |
-| Browser TTS (SpeechSynthesis), question text always shown | [ ] |
-| Filler words + pace metrics util | [ ] |
-| Listening/speaking states wired to state machine | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Browser STT (SpeechRecognition) + text fallback | [x] | `services/speech/speech-to-text.ts` — `SpeechToTextProvider` abstraction (§35) + Chromium-only browser impl (minimal typing, not in lib.dom); `useSpeechRecognition` hook: continuous + interim results, silence auto-submit (3s), generation guard against stale recognizer events, friendly per-error messages; text input always reachable (§75) |
+| Browser TTS (SpeechSynthesis), question text always shown | [x] | `services/tts/text-to-speech.ts` — `TextToSpeechProvider` abstraction (§36) + browser impl (voice pick, cancel-on-speak, pause watchdog, resolve-on-end); `useTextToSpeech` hook; speaker toggle in controls; question text always visible (§29) |
+| Filler words + pace metrics util | [x] | `utils/transcript.ts` — §56 filler list (um/umm/uh/like/basically/actually/you know/so, clause-start rule for "so") + §57 words-per-minute + pace bands; `analyzeTranscript`; 9 unit tests |
+| Listening/speaking states wired to state machine | [x] | new `speaking` §79 sub-state (enum + transitions + migration `007` status check); room loop: ASKING → SPEAKING (TTS) → LISTENING (STT) → PROCESSING → next question; spoken `durationSeconds` stored with answers for Phase 8 pace; migration `007_speech_status.sql` |
 
 #### Phase 7 — Adaptive Interview Engine
 | Task | Done? |
@@ -176,8 +176,8 @@ Camera+Mic (permission modal + fallbacks) → recording consent (§31)
    ▼
 AI interviewer room — question/transcript panels, timer, controls
    │   question loop live (Phase 5): AI asks → user answers (text) → follow-up
-   │   voice (TTS/STT) lands in Phase 6; evaluation lands in Phase 7/8
-   │   AI asks (TTS + text) → user answers (STT or text)
+   │   voice loop live (Phase 6): AI asks (TTS + text) → user answers (STT or text)
+   │   evaluation lands in Phase 7/8
    │   engine evaluates → follow-up / new topic / harder / easier / end
    ▼
 REPORT   score 0–100 + 5 categories + per-question + strengths/weaknesses
@@ -331,6 +331,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-13 | Phase 6 built (stacked on phase-5-question-engine): Speech & Voice Loop — browser STT (SpeechRecognition, §35) + TTS (SpeechSynthesis, §36) provider abstractions with SSR-safe hooks, silence auto-submit voice answers with live captions and Stop & send, filler/pace metrics util (§56–57, 9 tests), new `speaking` §79 state (migration `007`), speaker toggle enabled, manual text fallback always reachable — lint(branch)+build green (193/193), 39/39 unit tests; awaiting approval | 6 | `feature/ai-interview/phase-6-voice` |
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |

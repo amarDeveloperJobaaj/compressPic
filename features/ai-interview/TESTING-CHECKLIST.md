@@ -132,7 +132,7 @@ errors** at every step.
 
 | Area | Status |
 |---|---|
-| Voice (STT/TTS) + question engine | Phase 5/6 — speaker button is disabled; transcript input is local-only |
+| Voice (STT/TTS) live in-room; server-side STT/TTS (Whisper/Deepgram/ElevenLabs) | Phase 6 — browser SpeechRecognition (Chromium-only, text fallback elsewhere) + SpeechSynthesis; server STT/TTS providers later (§35–36) |
 | Reports / scores | Phase 9 |
 | History / delete / restart persistence | Phase 10 |
 | Resizer lint errors | Pre-existing, unrelated to this module (fix separately) |
