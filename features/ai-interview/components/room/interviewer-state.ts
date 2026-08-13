@@ -23,6 +23,7 @@ const VISUAL: Record<RoomStatus, InterviewerVisual> = {
   listening: "listening",
   processing: "processing",
   asking: "thinking",
+  speaking: "speaking", // Phase 6: TTS reads the question aloud
   ending: "processing",
   generating_report: "processing",
   completed: "success",
@@ -37,6 +38,7 @@ const LABEL: Record<RoomStatus, string> = {
   listening: "Listening…",
   processing: "Processing answer…",
   asking: "Generating question…",
+  speaking: "Speaking…",
   ending: "Ending interview…",
   generating_report: "Generating report…",
   completed: "Interview complete",

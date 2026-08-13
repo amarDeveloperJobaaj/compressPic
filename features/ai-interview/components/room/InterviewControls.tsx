@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, CameraOff, Mic, MicOff, PhoneOff, Volume2 } from "lucide-react";
+import { Camera, CameraOff, Mic, MicOff, PhoneOff, Volume2, VolumeX } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { MediaStatus } from "@/features/ai-interview/hooks/useMediaDevices";
@@ -16,8 +16,11 @@ export function InterviewControls({
   audioEnabled,
   cameraStatus,
   micStatus,
+  speakerEnabled = true,
+  speakerSupported = false,
   onToggleVideo,
   onToggleAudio,
+  onToggleSpeaker,
   onEnd,
   live,
   ending = false,
@@ -26,8 +29,12 @@ export function InterviewControls({
   audioEnabled: boolean;
   cameraStatus: MediaStatus;
   micStatus: MediaStatus;
+  /** TTS on/off (Phase 6) — question text is always shown either way (§29). */
+  speakerEnabled?: boolean;
+  speakerSupported?: boolean;
   onToggleVideo: () => void;
   onToggleAudio: () => void;
+  onToggleSpeaker?: () => void;
   onEnd: () => void;
   /** Room is live — toggles act on real tracks; before that they're preview. */
   live: boolean;
@@ -57,19 +64,15 @@ export function InterviewControls({
         {videoEnabled ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
       </ControlButton>
 
-      {/* Speaker — voice arrives with Phase 6; disabled until then. */}
-      <button
-        type="button"
-        disabled
-        title="Voice questions arrive with the voice update"
-        aria-label="Speaker (coming soon)"
-        className={cn(
-          "flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface text-text-muted opacity-50",
-          "focus-visible:outline-none"
-        )}
+      {/* Speaker — Phase 6 TTS: reads questions aloud; text stays visible (§29). */}
+      <ControlButton
+        label={speakerEnabled ? "Turn voice off" : "Turn voice on"}
+        active={speakerEnabled}
+        disabled={!speakerSupported}
+        onClick={onToggleSpeaker}
       >
-        <Volume2 className="h-5 w-5" />
-      </button>
+        {speakerEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+      </ControlButton>
 
       <span className="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden="true" />
 
@@ -98,7 +101,7 @@ function ControlButton({
   label: string;
   active: boolean;
   disabled?: boolean;
-  onClick: () => void;
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -106,7 +109,7 @@ function ControlButton({
       type="button"
       aria-label={label}
       aria-pressed={active}
-      disabled={disabled}
+      disabled={disabled || !onClick}
       onClick={onClick}
       className={cn(
         "flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-200",

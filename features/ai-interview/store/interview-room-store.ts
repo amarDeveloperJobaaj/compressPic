@@ -35,6 +35,8 @@ interface InterviewRoomState {
   recordingConsent: boolean;
   /** Room seconds elapsed while the interview is live (drives the timer). */
   elapsedSeconds: number;
+  /** When the current voice answer window opened — measures spoken length (§57). */
+  answerStartedAt: number | null;
 
   setSessionId: (sessionId: string | null) => void;
   setStatus: (status: RoomStatus) => void;
@@ -42,6 +44,7 @@ interface InterviewRoomState {
   setRecordingConsent: (consent: boolean) => void;
   setCurrentQuestion: (question: string | null) => void;
   setCurrentQuestionId: (questionId: string | null) => void;
+  setAnswerStartedAt: (startedAt: number | null) => void;
   addTranscriptEntry: (entry: Omit<TranscriptEntry, "id" | "at">) => void;
   tick: () => void;
   reset: () => void;
@@ -58,6 +61,7 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
   currentQuestionId: null,
   recordingConsent: false,
   elapsedSeconds: 0,
+  answerStartedAt: null,
 
   setSessionId: (sessionId) => set({ sessionId }),
   setStatus: (status) => set({ status }),
@@ -65,6 +69,7 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
   setRecordingConsent: (recordingConsent) => set({ recordingConsent }),
   setCurrentQuestion: (currentQuestion) => set({ currentQuestion }),
   setCurrentQuestionId: (currentQuestionId) => set({ currentQuestionId }),
+  setAnswerStartedAt: (answerStartedAt) => set({ answerStartedAt }),
   addTranscriptEntry: (entry) =>
     set((s) => ({
       transcript: [
@@ -83,6 +88,7 @@ export const useInterviewRoomStore = create<InterviewRoomState>((set) => ({
       currentQuestionId: null,
       recordingConsent: false,
       elapsedSeconds: 0,
+      answerStartedAt: null,
     }),
 }));
 
@@ -97,6 +103,7 @@ const LIVE_STATUSES: readonly RoomStatus[] = [
   "listening",
   "processing",
   "asking",
+  "speaking",
   "ending",
 ];
 

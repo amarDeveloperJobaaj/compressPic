@@ -31,6 +31,8 @@ import { useAuth } from "@/features/ai-interview/hooks/useAuth";
 import { useInterviewSession } from "@/features/ai-interview/hooks/useInterviewSession";
 import { useMediaDevices } from "@/features/ai-interview/hooks/useMediaDevices";
 import { useQuestionEngine } from "@/features/ai-interview/hooks/useQuestionEngine";
+import { useSpeechRecognition } from "@/features/ai-interview/hooks/useSpeechRecognition";
+import { useTextToSpeech } from "@/features/ai-interview/hooks/useTextToSpeech";
 import type { CreateInterviewSessionInput } from "@/features/ai-interview/schemas/interview-session";
 import {
   isInterviewLive,
@@ -56,7 +58,10 @@ import { VideoPanel } from "./VideoPanel";
  *   → End (confirm) → session end → COMPLETED.
  *
  * The question engine (Phase 5) drives the §79 sub-states; the voice loop
- * (Phase 6) will add STT/TTS around the same turn cycle.
+ * (Phase 6) runs around it: question → SPEAKING (TTS reads it aloud) →
+ * LISTENING (STT captures the answer) → PROCESSING → next question. Voice is
+ * an overlay — the question is always shown as text and the text input is
+ * always available (§17, §29, §75).
  */
 
 export function InterviewRoom() {
@@ -66,6 +71,9 @@ export function InterviewRoom() {
   const { createSession, startSession, endSession, creating, starting, ending } =
     useInterviewSession();
   const { busy: engineBusy, askFirstQuestion, answerAndAskNext } = useQuestionEngine();
+  const tts = useTextToSpeech();
+  const ttsSpeak = tts.speak;
+  const ttsStop = tts.stop;
 
   const status = useInterviewRoomStore((s) => s.status);
   const sessionId = useInterviewRoomStore((s) => s.sessionId);
@@ -125,10 +133,27 @@ export function InterviewRoom() {
   // Stop camera/mic when leaving the room. `media.stop` is a stable callback.
   useEffect(() => () => stopMedia(), [stopMedia]);
 
+  /**
+   * Deliver a question (Phase 6 voice loop): SPEAKING while TTS reads it
+   * aloud, then LISTENING for the answer. If voice is off/unavailable, speak
+   * resolves immediately and the mic (when granted) starts listening instead.
+   */
+  const presentQuestion = useCallback(
+    async (question: string) => {
+      setStatus("speaking");
+      await ttsSpeak(question);
+      // The interview may have ended while the voice was playing.
+      if (useInterviewRoomStore.getState().status !== "speaking") return;
+      setStatus("listening");
+    },
+    [setStatus, ttsSpeak]
+  );
+
   const endInterview = useCallback(async () => {
     // Guard against double-fire (End-click + timer expiry in the same tick).
     if (!isInterviewLive(useInterviewRoomStore.getState().status)) return;
     setConfirmEnd(false);
+    ttsStop();
     setStatus("ending");
     if (!sessionId) {
       setStatus("completed");
@@ -145,7 +170,7 @@ export function InterviewRoom() {
     setCurrentQuestion(null);
     setCurrentQuestionId(null);
     stopMedia();
-  }, [sessionId, setStatus, setError, setCurrentQuestion, setCurrentQuestionId, endSession, stopMedia]);
+  }, [sessionId, setStatus, setError, setCurrentQuestion, setCurrentQuestionId, endSession, stopMedia, ttsStop]);
 
   // Room clock — ticks while the interview is live; auto-ends when the budget
   // is up. State is read via getState() so the interval never captures stale
@@ -224,7 +249,7 @@ export function InterviewRoom() {
     setCurrentQuestionId(first.data.question.id);
     setCurrentQuestion(first.data.question.question);
     addTranscriptEntry({ speaker: "interviewer", text: first.data.question.question });
-    setStatus("listening"); // interviewer awaits the answer
+    await presentQuestion(first.data.question.question); // SPEAKING → LISTENING
   }, [
     recordingConsent,
     setError,
@@ -238,24 +263,39 @@ export function InterviewRoom() {
     setCurrentQuestionId,
     addTranscriptEntry,
     sessionId,
+    presentQuestion,
   ]);
 
   /**
-   * One answer turn (Phase 5): append the candidate line locally, persist the
-   * answer + generate the next question, then show it and return to listening.
+   * One answer turn (Phase 5 + 6 voice): append the candidate line locally,
+   * persist the answer + generate the next question, then SPEAKING (TTS) →
+   * LISTENING (STT picks the mic back up). `durationSeconds` is the spoken
+   * answer length — stored with the answer for the Phase 8 pace metrics.
    */
   const submitAnswer = useCallback(
-    async (text: string) => {
+    async (text: string, durationSeconds?: number) => {
       const room = useInterviewRoomStore.getState();
       const id = room.sessionId;
       const questionId = room.currentQuestionId;
-      if (!id || !questionId || !isInterviewLive(room.status)) return;
+      // Only accept answers while the interviewer awaits one (prevents the
+      // voice silence-timer and a manual send from double-firing).
+      if (!id || !questionId || !(room.status === "listening" || room.status === "active")) {
+        return;
+      }
+
+      // Spoken-answer length (voice window) — stored for Phase 8 pace metrics.
+      const voiceStartedAt = useInterviewRoomStore.getState().answerStartedAt;
+      useInterviewRoomStore.getState().setAnswerStartedAt(null);
 
       addTranscriptEntry({ speaker: "candidate", text });
       setError(null);
       setStatus("processing");
 
-      const result = await answerAndAskNext(id, { questionId, transcript: text });
+      const result = await answerAndAskNext(id, {
+        questionId,
+        transcript: text,
+        durationSeconds: durationSeconds ?? (voiceStartedAt != null ? Math.round((Date.now() - voiceStartedAt) / 1000) : undefined),
+      });
       // The interview may have ended (or failed) while the engine worked.
       const now = useInterviewRoomStore.getState();
       if (now.status !== "processing") return;
@@ -268,7 +308,7 @@ export function InterviewRoom() {
       setCurrentQuestionId(result.data.question.id);
       setCurrentQuestion(result.data.question.question);
       addTranscriptEntry({ speaker: "interviewer", text: result.data.question.question });
-      setStatus("listening");
+      await presentQuestion(result.data.question.question); // SPEAKING → LISTENING
     },
     [
       addTranscriptEntry,
@@ -277,8 +317,49 @@ export function InterviewRoom() {
       answerAndAskNext,
       setCurrentQuestion,
       setCurrentQuestionId,
+      presentQuestion,
     ]
   );
+
+  // Voice loop (Phase 6): STT auto-submits the answer after a short silence;
+  // the recognizer lifecycle is driven by the listening-state effect below.
+  const stt = useSpeechRecognition({ onFinalAnswer: submitAnswer });
+  const sttStart = stt.start;
+  const sttStop = stt.stop;
+  const sttReset = stt.reset;
+  const setAnswerStartedAt = useInterviewRoomStore((s) => s.setAnswerStartedAt);
+
+  // Submit what the mic heard (Stop & send button in the transcript panel).
+  const voiceSend = useCallback(() => {
+    const text = stt.finalTranscript.trim();
+    sttStop();
+    if (text) void submitAnswer(text);
+  }, [stt.finalTranscript, sttStop, submitAnswer]);
+
+  // User switched to typing — stop the mic without submitting.
+  const voiceStop = useCallback(() => {
+    setAnswerStartedAt(null);
+    sttStop();
+  }, [setAnswerStartedAt, sttStop]);
+
+  // What the mic currently hears (settled + live partials).
+  const liveCaption = stt.interimTranscript
+    ? `${stt.finalTranscript} ${stt.interimTranscript}`.trim()
+    : stt.finalTranscript;
+
+  // Keep the recognizer in sync with the room: LISTENING + mic granted →
+  // listen for the answer; anything else → stop. Starting a fresh window
+  // wipes the previous answer's transcript.
+  useEffect(() => {
+    if (status === "listening" && media.micStatus === "granted" && media.audioEnabled) {
+      setAnswerStartedAt(Date.now());
+      sttReset();
+      sttStart();
+    } else {
+      setAnswerStartedAt(null);
+      sttStop();
+    }
+  }, [status, media.micStatus, media.audioEnabled, setAnswerStartedAt, sttReset, sttStart, sttStop]);
 
   const handleGranted = useCallback(
     (grant: { video: boolean; audio: boolean; note?: string }) => {
@@ -523,6 +604,12 @@ export function InterviewRoom() {
           <TranscriptPanel
             onSubmitAnswer={submitAnswer}
             submitting={engineBusy || status === "processing"}
+            voiceSupported={stt.supported}
+            voiceListening={stt.listening}
+            liveCaption={liveCaption}
+            voiceError={stt.error}
+            onVoiceSend={voiceSend}
+            onVoiceStop={voiceStop}
           />
         </div>
       </div>
@@ -539,8 +626,11 @@ export function InterviewRoom() {
           audioEnabled={media.audioEnabled}
           cameraStatus={media.cameraStatus}
           micStatus={media.micStatus}
+          speakerEnabled={tts.enabled}
+          speakerSupported={tts.supported}
           onToggleVideo={media.toggleVideo}
           onToggleAudio={media.toggleAudio}
+          onToggleSpeaker={() => tts.setEnabled(!tts.enabled)}
           onEnd={() => setConfirmEnd(true)}
           live={live}
           ending={status === "ending"}
