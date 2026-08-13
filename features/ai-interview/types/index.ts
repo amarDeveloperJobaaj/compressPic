@@ -63,6 +63,7 @@ export const SESSION_STATUSES = [
   "listening",
   "processing",
   "asking",
+  "speaking",
   "ending",
   "generating_report",
   "completed",

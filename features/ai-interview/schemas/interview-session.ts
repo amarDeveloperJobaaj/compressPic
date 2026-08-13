@@ -60,7 +60,9 @@ export const SESSION_TRANSITIONS: Record<SessionStatus, readonly SessionStatus[]
   active: ["listening", "processing", "asking", "ending"],
   listening: ["processing", "active", "asking"],
   processing: ["active", "asking", "ending"],
-  asking: ["active", "listening", "processing"],
+  asking: ["active", "listening", "processing", "speaking"],
+  // Phase 6: the question is read aloud (TTS) before listening starts (STT).
+  speaking: ["listening", "active", "processing", "asking", "ending"],
   ending: ["generating_report", "completed"],
   generating_report: ["completed"],
   completed: [],

@@ -9,12 +9,13 @@ import { SESSION_STATUSES } from "../types";
  * question engine and session routes share, so sub-states never drift.
  */
 
-test("the question loop is legal: active → listening → processing → asking → active", () => {
+test("the question loop is legal: active → listening → processing → asking → (speaking) → active", () => {
   const loop = [
     ["active", "listening"],
     ["listening", "processing"],
     ["processing", "asking"],
-    ["asking", "active"],
+    ["asking", "speaking"], // Phase 6: TTS reads the question aloud
+    ["speaking", "listening"], // then STT listens for the answer
   ] as const;
   for (const [from, to] of loop) {
     assert.equal(canTransitionStatus(from, to), true, `${from} → ${to}`);
@@ -33,6 +34,9 @@ test("sub-states recover to active (error/retry paths)", () => {
   assert.equal(canTransitionStatus("processing", "active"), true);
   assert.equal(canTransitionStatus("asking", "listening"), true);
   assert.equal(canTransitionStatus("asking", "processing"), true);
+  assert.equal(canTransitionStatus("speaking", "active"), true);
+  assert.equal(canTransitionStatus("speaking", "processing"), true);
+  assert.equal(canTransitionStatus("speaking", "ending"), true);
 });
 
 test("ending only moves toward completion", () => {
@@ -53,7 +57,18 @@ test("completed is terminal and idle cannot skip ahead", () => {
 });
 
 test("a session can be ended from any live state except completed", () => {
-  for (const status of ["idle", "preparing", "ready", "active", "listening", "processing", "asking", "ending", "generating_report"]) {
+  for (const status of [
+    "idle",
+    "preparing",
+    "ready",
+    "active",
+    "listening",
+    "processing",
+    "asking",
+    "speaking",
+    "ending",
+    "generating_report",
+  ] as const) {
     assert.equal(canEndSession(status), true, `${status} should be endable`);
   }
   assert.equal(canEndSession("completed"), false);
