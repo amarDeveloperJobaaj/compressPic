@@ -83,6 +83,9 @@ curl -s -w '\n%{http_code}\n' http://localhost:3000/api/interview/session/anythi
 | `GET /api/interview/session/:id` | 200 session + questions + answers | 404 unknown id; **403** another user's id |
 | `POST /api/interview/session/:id/start` | 200 status → `active`, `started_at` set | 409 on `completed`; 403 non-owner |
 | `POST /api/interview/session/:id/end` | 200 status → `completed`, `ended_at` set (idempotent) | 403 non-owner |
+| `POST /api/interview/question/generate` | 200 `{ ok, question, answer, ended, evaluation }` (first question; `ended: false`) | 401; 403 non-owner; 409 wrong state |
+| `POST /api/interview/question/follow-up` | 200 answer persisted + next question + §54 `evaluation`; `ended: true` + session `completed` when time/question budget reached | 400 bad answer; 409 out-of-order answer; 403 non-owner |
+| `POST /api/interview/answer/evaluate` | 200 `{ ok, evaluation }` (six §54 dimensions + overall + verdict) | 404 no stored answer; 403 non-owner |
 
 Ownership check (the Phase 3 acceptance test): sign in as user A (browser 1),
 create a session, copy its id. Sign in as user B (browser 2 / incognito) and
@@ -112,6 +115,8 @@ errors** at every step.
 
 ### 6.4 Room — live session
 - [ ] Begin → "Preparing interview…" → LIVE badge + countdown timer start; welcome line shows in the QuestionPanel and Transcript
+- [ ] After each answer the engine evaluates it (§54) and adapts: strong → harder follow-up, weak/wrong → simpler clarification, good → new topic (visible via question difficulty progression over several turns)
+- [ ] When the question budget runs out (~1 question per 2 min of the configured duration) the engine ends the interview server-side → room shows "Interview complete" without clicking End
 - [ ] Camera preview mirrors; mic/camera toggles mute/unmute instantly (placeholder updates)
 - [ ] Type an answer in the transcript input → bubble appears (candidate side)
 - [ ] Timer counts down; turns red under 1 minute; hitting 0 auto-ends the interview
@@ -133,6 +138,7 @@ errors** at every step.
 | Area | Status |
 |---|---|
 | Voice (STT/TTS) live in-room; server-side STT/TTS (Whisper/Deepgram/ElevenLabs) | Phase 6 — browser SpeechRecognition (Chromium-only, text fallback elsewhere) + SpeechSynthesis; server STT/TTS providers later (§35–36) |
+| Per-answer evaluations persisted (`interview_evaluations` rows) + communication metrics pipeline | Phase 8 |
 | Reports / scores | Phase 9 |
 | History / delete / restart persistence | Phase 10 |
 | Resizer lint errors | Pre-existing, unrelated to this module (fix separately) |

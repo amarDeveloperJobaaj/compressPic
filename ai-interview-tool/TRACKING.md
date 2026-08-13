@@ -29,7 +29,7 @@
 | 4 | Interview Room UI | `phase-4-room` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
 | 5 | AI Question Engine | `phase-5-question-engine` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-12 |
 | 6 | Speech & Voice Loop | `phase-6-voice` | `IN PROGRESS` (built · verified · awaiting approval) | 2026-08-13 |
-| 7 | Adaptive Interview Engine | `phase-7-adaptive` | `NOT STARTED` | — |
+| 7 | Adaptive Interview Engine | `phase-7-adaptive` | `IN PROGRESS` (built · verified · awaiting approval) | 2026-08-13 |
 | 8 | Evaluation Engine | `phase-8-evaluation` | `NOT STARTED` | — |
 | 9 | Final Report | `phase-9-report` | `NOT STARTED` | — |
 | 10 | History & Progress | `phase-10-history` | `NOT STARTED` | — |
@@ -109,12 +109,12 @@
 | Listening/speaking states wired to state machine | [x] | new `speaking` §79 sub-state (enum + transitions + migration `007` status check); room loop: ASKING → SPEAKING (TTS) → LISTENING (STT) → PROCESSING → next question; spoken `durationSeconds` stored with answers for Phase 8 pace; migration `007_speech_status.sql` |
 
 #### Phase 7 — Adaptive Interview Engine
-| Task | Done? |
-|---|---|
-| Answer evaluate API (dimensions §54) | [ ] |
-| Adaptive controller (follow-up vs new topic vs difficulty) | [ ] |
-| END_INTERVIEW rules (time/question budget) | [ ] |
-| Session-state store (topic, difficulty, performance) | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Answer evaluate API (dimensions §54) | [x] | `POST /api/interview/answer/evaluate` — evaluates the stored answer on the six §54 dimensions (Zod-strict via the shared provider path, heuristic fallback) and returns overall + verdict; ownership 403/404 |
+| Adaptive controller (follow-up vs new topic vs difficulty) | [x] | `services/interview/adaptive-controller.ts` — pure §24 mapping (excellent→NEW_TOPIC harder, strong→FOLLOW_UP harder, good→NEW_TOPIC, weak→CLARIFICATION simpler, wrong→concept check) + §25 difficulty ladder + follow-up depth cap; provider writes the question honoring `adaptiveIntent` (prompt v1 + heuristic) |
+| END_INTERVIEW rules (time/question budget) | [x] | controller `shouldEndInterview` — time ≤ 0 OR questions ≥ budget (~1 per 2 min, §40) → engine finalizes the session (completed + ended_at) and the room closes; client turn type now carries `ended` |
+| Session-state store (topic, difficulty, performance) | [x] | §40 `current_state` updated per turn: currentTopic, controller difficulty, questionsAsked/Answered, and a running `performanceSummary` (overall avg, per-topic avg, verdict counts) via `mergePerformance` |
 
 #### Phase 8 — Evaluation Engine
 | Task | Done? |
@@ -177,8 +177,8 @@ Camera+Mic (permission modal + fallbacks) → recording consent (§31)
 AI interviewer room — question/transcript panels, timer, controls
    │   question loop live (Phase 5): AI asks → user answers (text) → follow-up
    │   voice loop live (Phase 6): AI asks (TTS + text) → user answers (STT or text)
-   │   evaluation lands in Phase 7/8
-   │   engine evaluates → follow-up / new topic / harder / easier / end
+   │   adaptive loop live (Phase 7): evaluate (§54) → controller decides
+   │   follow-up / new topic / harder / easier / end (budgets) → question
    ▼
 REPORT   score 0–100 + 5 categories + per-question + strengths/weaknesses
          + mistakes + improvement plan + recommended topics
@@ -212,7 +212,7 @@ All answers → when time/question budget is up → generateReport() (one call)
 | Provider adapters | `AIProvider` abstraction → Gemini (future: OpenAI, Claude, DeepSeek) | `services/ai/` |
 | Speech | STT provider (browser first) | `services/speech/` |
 | TTS | TTS provider (browser first) | `services/tts/` |
-| Evaluation | Per-answer dimension scores + communication metrics | `services/ai` + `evaluation` |
+| Evaluation | Per-answer §54 dimension scores (Phase 7 evaluate + adaptive controller) | `services/ai` + `services/interview/adaptive-controller.ts` |
 | Report | One AI call → structured report + improvement plan and scoring weights | `app/api/interview/report/*` |
 | Admin | Manage providers, models, keys, prompts, usage, audit | existing Admin Panel (new section `AI Configuration`) |
 | DB | Supabase: all tables + RLS owner-scoping + admin ai_* tables | `supabase/migrations/` |
@@ -331,6 +331,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-13 | Phase 7 built (stacked on phase-6-voice): Adaptive Interview Engine — `evaluateAnswer` on both providers (Zod §54 dimensions + deterministic heuristic evaluator, evaluation-v1 prompt), pure adaptive controller (verdict thresholds, §24 action mapping, §25 difficulty ladder, END_INTERVIEW time/question budgets, follow-up depth cap), turn loop now evaluates → decides → generates honoring `adaptiveIntent` (or ENDs the session server-side), §40 `performanceSummary` (overall + per-topic + verdict counts) persisted in `current_state`, new `POST /api/interview/answer/evaluate` route, room handles the ended flow — lint(branch)+build green (194/194), 64/64 unit tests; awaiting approval | 7 | `feature/ai-interview/phase-7-adaptive` |
 | 2026-08-13 | Phase 6 built (stacked on phase-5-question-engine): Speech & Voice Loop — browser STT (SpeechRecognition, §35) + TTS (SpeechSynthesis, §36) provider abstractions with SSR-safe hooks, silence auto-submit voice answers with live captions and Stop & send, filler/pace metrics util (§56–57, 9 tests), new `speaking` §79 state (migration `007`), speaker toggle enabled, manual text fallback always reachable — lint(branch)+build green (193/193), 39/39 unit tests; awaiting approval | 6 | `feature/ai-interview/phase-6-voice` |
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
