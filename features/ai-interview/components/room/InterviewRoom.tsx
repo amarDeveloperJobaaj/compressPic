@@ -246,6 +246,11 @@ export function InterviewRoom() {
     }
     // The interview may have moved on (End clicked) while the AI was thinking.
     if (useInterviewRoomStore.getState().status !== "asking") return;
+    if (!first.data.question) {
+      setError("The interview could not start — no question was generated.");
+      setStatus("ready");
+      return;
+    }
     setCurrentQuestionId(first.data.question.id);
     setCurrentQuestion(first.data.question.question);
     addTranscriptEntry({ speaker: "interviewer", text: first.data.question.question });
@@ -305,6 +310,17 @@ export function InterviewRoom() {
         setStatus("listening"); // same question still stands — try again
         return;
       }
+
+      // The adaptive engine ended the interview (time/question budget —
+      // END_INTERVIEW rules). Server finalized the session; close the room.
+      if (result.data.ended || !result.data.question) {
+        ttsStop();
+        setCurrentQuestion(null);
+        setCurrentQuestionId(null);
+        stopMedia();
+        setStatus("completed");
+        return;
+      }
       setCurrentQuestionId(result.data.question.id);
       setCurrentQuestion(result.data.question.question);
       addTranscriptEntry({ speaker: "interviewer", text: result.data.question.question });
@@ -318,6 +334,8 @@ export function InterviewRoom() {
       setCurrentQuestion,
       setCurrentQuestionId,
       presentQuestion,
+      ttsStop,
+      stopMedia,
     ]
   );
 

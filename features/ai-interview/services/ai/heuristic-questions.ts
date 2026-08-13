@@ -216,7 +216,6 @@ function buildQueue(ctx: QuestionContext): QueueItem[] {
   return queue;
 }
 
-/** A follow-up that builds on the last question/answer without repeating it. */
 /**
  * Rotating follow-up phrasings for topical follow-ups. Indexed by the turn
  * number so a long interview never repeats itself; the pool is sized so ten
@@ -261,6 +260,33 @@ function buildFollowUp(ctx: QuestionContext, last: QuestionContext["previousQues
   };
 }
 
+/** A simpler, pin-the-concept-down clarification (controller said weak/wrong). */
+function buildClarification(ctx: QuestionContext, last: QuestionContext["previousQuestions"][number]): GeneratedQuestion {
+  const lastTopic = (last.topic ?? "").toLowerCase();
+  const isProject = lastTopic.startsWith("project:");
+  const projectName = isProject ? last.topic!.replace(/^project:\s*/i, "") : null;
+
+  const question = isProject
+    ? `Let's step back on ${projectName} — what was the core problem it solved, in one or two sentences?`
+    : `Let's make sure I follow — in simple terms, what is the main idea behind ${lastTopic || "what you just described"}?`;
+
+  return {
+    action: "CLARIFICATION",
+    question,
+    type: isProject ? "project" : (last.type as GeneratedQuestion["type"]) || "technical",
+    topic: last.topic,
+    difficulty: dropDifficulty(last.difficulty),
+    reason: "Heuristic clarification — simpler concept check after a weak/off-target answer.",
+  };
+}
+
+function dropDifficulty(difficulty: Difficulty): Difficulty {
+  const order: Difficulty[] = ["beginner", "intermediate", "advanced", "expert"];
+  const i = order.indexOf(difficulty);
+  if (i <= 0) return difficulty;
+  return order[i - 1];
+}
+
 /** True when the previous answer was followed-up already this cycle. */
 function isDueFollowUp(ctx: QuestionContext): boolean {
   const asked = ctx.previousQuestions.length;
@@ -302,6 +328,20 @@ export function heuristicGenerateQuestion(ctx: QuestionContext): GeneratedQuesti
 export function heuristicGenerateFollowUp(ctx: QuestionContext): GeneratedQuestion {
   const last = ctx.previousQuestions[ctx.previousQuestions.length - 1];
   if (!last) return heuristicGenerateQuestion(ctx);
+
+  // Phase 7: the adaptive controller decided the direction — honor it exactly.
+  if (ctx.adaptiveIntent) {
+    const intent = ctx.adaptiveIntent;
+    if (intent.action === "CLARIFICATION" || intent.action === "FOLLOW_UP") {
+      const q =
+        intent.action === "CLARIFICATION" ? buildClarification(ctx, last) : buildFollowUp(ctx, last);
+      return { ...q, difficulty: intent.difficulty, reason: `Controller: ${intent.reason}` };
+    }
+    const next = pickNewTopic(ctx);
+    return { ...next, difficulty: intent.difficulty, reason: `Controller: ${intent.reason}` };
+  }
+
+  // No controller decision (legacy/direct calls) — old deterministic cadence.
   if (isDueFollowUp(ctx) && ctx.lastAnswer) return buildFollowUp(ctx, last);
   return pickNewTopic(ctx);
 }

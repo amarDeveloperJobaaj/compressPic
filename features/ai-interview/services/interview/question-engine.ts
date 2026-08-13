@@ -4,15 +4,27 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 
 import { getAIProvider } from "../ai";
-import type { QuestionContext } from "../ai/types";
+import type { EvaluationContext, QuestionContext } from "../ai/types";
+import type { EvaluatedAnswer } from "../../schemas/evaluation";
 import {
   GeneratedQuestionSchema,
   StoreAnswerInputSchema,
 } from "../../schemas/question";
 import type { StoreAnswerInput } from "../../schemas/question";
+import { SessionStateSchema } from "../../schemas/interview-session";
+import type { SessionState } from "../../schemas/interview-session";
 import type { SessionAnswer, SessionQuestion } from "../../types";
+import {
+  computeOverall,
+  computeQuestionBudget,
+  decideNextTurn,
+  deriveVerdict,
+  mergePerformance,
+  parsePerformanceSummary,
+} from "./adaptive-controller";
 import { computeAnsweredCount } from "./turn-math";
 import {
+  endInterviewSession,
   getSessionForUser,
   mapQuestionRow,
   storeAnswer,
@@ -23,14 +35,16 @@ import {
 /**
  * Question engine (master spec §23–27, §48, §52–53, §79).
  *
- * The AI conducts a basic interview: generate a first question, then after
- * each stored answer generate the next one (follow-up or new topic — the
- * provider decides via the §53 structured action). Every question/answer is
- * persisted with ownership verified, sequences serialized (migration 006),
- * and the §40 session state kept in sync.
+ * The engine conducts the interview: generate a first question, then after
+ * each stored answer EVALUATE it on the §54 dimensions, let the ADAPTIVE
+ * CONTROLLER decide the next move (follow-up / clarification / new topic /
+ * end — Phase 7), and generate the next question honoring that decision.
+ * Every question/answer is persisted with ownership verified, sequences
+ * serialized (migration 006), and the §40 session state (topic, difficulty,
+ * progress, performance summary) kept in sync.
  *
  * Provider failures never hard-fail: the adapter falls back to the local
- * heuristic generator (§74), so the interview always continues.
+ * heuristic generator/evaluator (§74), so the interview always continues.
  */
 
 type QuestionEngineErrorKind = "not_found" | "forbidden" | "invalid_state" | "validation";
@@ -46,8 +60,13 @@ export class QuestionEngineError extends Error {
 }
 
 export interface QuestionTurnResult {
-  question: SessionQuestion;
+  /** Next question — null when the interview ended (END_INTERVIEW). */
+  question: SessionQuestion | null;
   answer: SessionAnswer | null;
+  /** True when the interview ended (budget reached) — no next question. */
+  ended: boolean;
+  /** §54 evaluation of the just-submitted answer. */
+  evaluation: EvaluatedAnswer | null;
 }
 
 type SessionRow = Database["public"]["Tables"]["interview_sessions"]["Row"];
@@ -58,6 +77,10 @@ interface LoadedContext {
   status: string;
   questions: QuestionWithAnswers[];
   context: QuestionContext;
+  /** Parsed §40 live state (difficulty, performance summary, progress). */
+  state: SessionState;
+  /** Duration minutes — drives the question budget (§40 END rules). */
+  durationMinutes: number;
 }
 
 /** Remaining time from started_at — honest pacing context for the prompt. */
@@ -119,6 +142,8 @@ async function loadContext(
 
   const config = (row.config ?? {}) as Record<string, unknown>;
 
+  const state = SessionStateSchema.parse(row.current_state ?? {});
+
   const context: QuestionContext = {
     mode,
     targetRole: row.target_role,
@@ -138,6 +163,8 @@ async function loadContext(
     status: row.status,
     questions,
     context,
+    state,
+    durationMinutes: row.duration_minutes,
   };
 }
 
@@ -166,7 +193,7 @@ export async function askFirstQuestion(
   // response was lost after the server committed), return it instead of
   // generating a duplicate.
   if (questions.length > 0) {
-    return { question: mapQuestionRow(questions[0]), answer: null };
+    return { question: mapQuestionRow(questions[0]), answer: null, ended: false, evaluation: null };
   }
 
   const provider = getAIProvider();
@@ -187,12 +214,63 @@ export async function askFirstQuestion(
     currentQuestion: question.sequence,
   });
 
-  return { question, answer: null };
+  return { question, answer: null, ended: false, evaluation: null };
+}
+
+/** Build the §54 evaluation context for one just-answered question. */
+function buildEvaluationContext(
+  context: QuestionContext,
+  latest: QuestionWithAnswers,
+  answerText: string
+): EvaluationContext {
+  return {
+    question: latest.question,
+    questionType: latest.question_type,
+    topic: latest.topic,
+    difficulty: (latest.difficulty as QuestionContext["difficulty"]) ?? "intermediate",
+    answer: answerText,
+    experienceLevel: context.experienceLevel,
+    candidateProfile: context.candidateProfile,
+    targetRole: context.targetRole,
+    domain: context.domain,
+  };
 }
 
 /**
- * Persist the candidate's answer + generate the next question
- * (POST /api/interview/question/follow-up). One round-trip per turn.
+ * Evaluate one stored answer on the §54 dimensions (POST /answer/evaluate).
+ * Reuses the exact same provider path as the turn loop, so the standalone
+ * route and the adaptive flow can never disagree.
+ */
+export async function evaluateStoredAnswer(
+  userId: string,
+  sessionId: string,
+  questionId: string
+): Promise<{ evaluation: EvaluatedAnswer }> {
+  const { questions, context } = await loadContext(userId, sessionId, "next");
+  const question = questions.find((q) => q.id === questionId);
+  const answer = question?.interview_answers?.[0];
+  if (!question || !answer?.transcript) {
+    throw new QuestionEngineError(
+      "not_found",
+      "Answer not found for this question."
+    );
+  }
+
+  const provider = getAIProvider();
+  const raw = await provider.evaluateAnswer(
+    buildEvaluationContext(context, question, answer.transcript)
+  );
+  const overall = computeOverall(raw);
+  const verdict = deriveVerdict(overall);
+  return { evaluation: { ...raw, overall, verdict } };
+}
+
+/**
+ * Persist the candidate's answer, evaluate it (§54), let the adaptive
+ * controller decide the next move, then generate the next question — or end
+ * the interview when a budget is reached (END_INTERVIEW rules).
+ *
+ * (POST /api/interview/question/follow-up — one round-trip per turn.)
  */
 export async function answerAndAskNext(
   userId: string,
@@ -207,7 +285,11 @@ export async function answerAndAskNext(
     );
   }
 
-  const { status, questions, context } = await loadContext(userId, sessionId, "next");
+  const { status, questions, context, state, durationMinutes } = await loadContext(
+    userId,
+    sessionId,
+    "next"
+  );
   requireLive(status);
 
   // The answer must target the latest question of this session (order matters).
@@ -230,14 +312,52 @@ export async function answerAndAskNext(
     questions.filter((q) => q.interview_answers?.length).length,
     Boolean(latest.interview_answers?.length)
   );
+
+  // ---- Phase 7: evaluate → adapt → decide --------------------------------
+  const provider = getAIProvider();
+  const raw = await provider.evaluateAnswer(
+    buildEvaluationContext(context, latest, parsed.data.transcript)
+  );
+  const overall = computeOverall(raw);
+  const verdict = deriveVerdict(overall);
+  const evaluation: EvaluatedAnswer = { ...raw, overall, verdict };
+
+  // Follow-up depth = consecutive trailing questions that are follow-ups
+  // (parent_question_id set) — the controller stops drilling at the cap.
+  let followUpDepth = 0;
+  for (let i = questions.length - 1; i >= 0; i--) {
+    if (!questions[i].parent_question_id) break;
+    followUpDepth++;
+  }
+
+  const decision = decideNextTurn({
+    evaluation,
+    difficulty: state.difficulty,
+    questionsAsked: questions.length,
+    remainingTimeSeconds: context.remainingTimeSeconds,
+    questionBudget: computeQuestionBudget(durationMinutes),
+    followUpDepth,
+  });
+
+  // END_INTERVIEW rules (time / question budget) — finalize the session here.
+  if (decision.action === "END_INTERVIEW") {
+    await updateSessionState(userId, sessionId, { questionsAnswered: answeredCount });
+    await endInterviewSession(userId, sessionId);
+    return { question: null, answer, ended: true, evaluation };
+  }
+
   await updateSessionState(userId, sessionId, { questionsAnswered: answeredCount });
 
-  // The provider sees the fresh answer as lastAnswer.
-  const provider = getAIProvider();
+  // The provider writes ONE question honoring the controller's decision.
   const generated = GeneratedQuestionSchema.parse(
     await provider.generateFollowUp({
       ...context,
       lastAnswer: { question: latest.question, answer: parsed.data.transcript },
+      adaptiveIntent: {
+        action: decision.action,
+        difficulty: decision.difficulty,
+        reason: decision.reason,
+      },
     })
   );
 
@@ -245,20 +365,27 @@ export async function answerAndAskNext(
     question: generated.question,
     questionType: generated.type,
     topic: generated.topic,
-    difficulty: generated.difficulty,
+    // The controller's difficulty is authoritative (§25) — the AI's is ignored.
+    difficulty: decision.difficulty,
     // Follow-ups/clarifications link to the question they build on (§44).
     parentQuestionId:
-      generated.action === "FOLLOW_UP" || generated.action === "CLARIFICATION"
+      decision.action === "FOLLOW_UP" || decision.action === "CLARIFICATION"
         ? latest.id
         : null,
   });
 
+  // §40 session-state store: topic, difficulty, progress + performance.
   await updateSessionState(userId, sessionId, {
-    currentTopic: generated.topic,
-    difficulty: generated.difficulty,
+    currentTopic: generated.topic ?? latest.topic,
+    difficulty: decision.difficulty,
     questionsAsked: questions.length + 1,
     currentQuestion: question.sequence,
+    performanceSummary: mergePerformance(
+      parsePerformanceSummary(state.performanceSummary),
+      evaluation,
+      generated.topic ?? latest.topic
+    ) as unknown as SessionState["performanceSummary"],
   });
 
-  return { question, answer };
+  return { question, answer, ended: false, evaluation };
 }

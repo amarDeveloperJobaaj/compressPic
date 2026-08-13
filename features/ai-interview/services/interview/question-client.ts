@@ -1,10 +1,11 @@
+import type { EvaluatedAnswer } from "../../schemas/evaluation";
 import type { SessionAnswer, SessionQuestion } from "../../types";
 import { postJson, type SessionApiResult } from "./http-client";
 
 /**
- * Client-side question engine wrappers (master spec §48 — question/generate
- * and question/follow-up). The room calls one per turn; answers are persisted
- * server-side with the follow-up round-trip.
+ * Client-side question engine wrappers (master spec §48 — question/generate,
+ * question/follow-up and answer/evaluate). The room calls one per turn;
+ * answers are persisted server-side with the follow-up round-trip.
  */
 
 export interface AnswerTurnInput {
@@ -14,8 +15,13 @@ export interface AnswerTurnInput {
 }
 
 export interface QuestionTurnData {
-  question: SessionQuestion;
+  /** Next question — null when the engine ended the interview (budget). */
+  question: SessionQuestion | null;
   answer: SessionAnswer | null;
+  /** True when the adaptive engine decided to end (END_INTERVIEW). */
+  ended: boolean;
+  /** §54 evaluation of the just-submitted answer. */
+  evaluation: EvaluatedAnswer | null;
 }
 
 export function generateFirstQuestionClient(
