@@ -1,5 +1,7 @@
 import "server-only";
 
+import { AnswerEvaluationSchema } from "../../schemas/evaluation";
+import type { AnswerEvaluation } from "../../schemas/evaluation";
 import { CandidateProfileSchema } from "../../schemas/resume";
 import { GeneratedQuestionSchema } from "../../schemas/question";
 import type { GeneratedQuestion } from "../../schemas/question";
@@ -15,10 +17,15 @@ import {
   FOLLOWUP_SYSTEM_PROMPT,
   buildFollowUpUserPrompt,
 } from "../../prompts/followup/followup-v1";
+import {
+  EVALUATION_SYSTEM_PROMPT,
+  buildEvaluationUserPrompt,
+} from "../../prompts/evaluation/evaluation-v1";
 import type { AiBootstrapConfig } from "./config";
 import { chatCompletionsUrl } from "./config";
-import type { AIProvider, QuestionContext, ResumeAnalysisContext } from "./types";
+import type { AIProvider, EvaluationContext, QuestionContext, ResumeAnalysisContext } from "./types";
 import { heuristicAnalyzeResume } from "./heuristic";
+import { heuristicEvaluateAnswer } from "./heuristic-evaluation";
 import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
 import type { z } from "zod";
 
@@ -158,10 +165,19 @@ export class OpenAICompatibleProvider implements AIProvider {
     return value;
   }
 
-  // Later-phase methods — not implemented yet.
-  async evaluateAnswer() {
-    throw new Error("evaluateAnswer is not implemented until Phase 8.");
+  async evaluateAnswer(context: EvaluationContext): Promise<AnswerEvaluation> {
+    const messages: ChatCompletionMessage[] = [
+      { role: "system", content: EVALUATION_SYSTEM_PROMPT },
+      { role: "user", content: buildEvaluationUserPrompt(context) },
+    ];
+    const { value } = await this.chatJson(messages, AnswerEvaluationSchema, () =>
+      heuristicEvaluateAnswer(context),
+      0.2
+    );
+    return value;
   }
+
+  // Later-phase method — not implemented yet.
   async generateReport() {
     throw new Error("generateReport is not implemented until Phase 9.");
   }

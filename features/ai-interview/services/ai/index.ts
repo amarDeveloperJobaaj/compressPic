@@ -4,6 +4,7 @@ import { getAiBootstrapConfig } from "./config";
 import { OpenAICompatibleProvider } from "./openai-compatible";
 import type { AIProvider } from "./types";
 import { heuristicAnalyzeResume } from "./heuristic";
+import { heuristicEvaluateAnswer } from "./heuristic-evaluation";
 import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
 
 /**
@@ -29,7 +30,7 @@ export function getAIProvider(): AIProvider {
     analyzeResume: async ({ resumeText }) => heuristicAnalyzeResume(resumeText),
     generateQuestion: async (context) => heuristicGenerateQuestion(context),
     generateFollowUp: async (context) => heuristicGenerateFollowUp(context),
-    evaluateAnswer: () => Promise.reject(new Error("No AI provider configured (Phase 8+).")),
+    evaluateAnswer: async (context) => heuristicEvaluateAnswer(context),
     generateReport: () => Promise.reject(new Error("No AI provider configured (Phase 9+).")),
   };
 }

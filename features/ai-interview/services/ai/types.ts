@@ -1,5 +1,6 @@
-import type { CandidateProfile, ResumeAnalysisResult } from "../../schemas/resume";
+import type { AnswerEvaluation } from "../../schemas/evaluation";
 import type { GeneratedQuestion } from "../../schemas/question";
+import type { CandidateProfile, ResumeAnalysisResult } from "../../schemas/resume";
 import type { Difficulty } from "../../types";
 
 /**
@@ -58,6 +59,29 @@ export interface QuestionContext {
   previousQuestions: PreviousQuestionContext[];
   /** The just-answered question + transcript (null before the first answer). */
   lastAnswer: { question: string; answer: string } | null;
+  /**
+   * The adaptive controller's decision (Phase 7) — the provider must write a
+   * question that HONORS this action + difficulty (§53: the AI measures, the
+   * controller steers). Omitted/null before the first question.
+   */
+  adaptiveIntent?: {
+    action: "FOLLOW_UP" | "CLARIFICATION" | "NEW_TOPIC";
+    difficulty: Difficulty;
+    reason: string;
+  } | null;
+}
+
+/** One answered question — the input to §54 evaluation. */
+export interface EvaluationContext {
+  question: string;
+  questionType: string;
+  topic: string | null;
+  difficulty: Difficulty;
+  answer: string;
+  experienceLevel: string | null;
+  candidateProfile: CandidateProfile | null;
+  targetRole: string;
+  domain: string | null;
 }
 
 export interface AIProvider {
@@ -68,9 +92,10 @@ export interface AIProvider {
   generateQuestion(context: QuestionContext): Promise<GeneratedQuestion>;
   /** Next question after an answer — follow-up or new topic (§48 question/follow-up). */
   generateFollowUp(context: QuestionContext): Promise<GeneratedQuestion>;
+  /** Per-answer evaluation on the §54 dimensions (Phase 7). */
+  evaluateAnswer(context: EvaluationContext): Promise<AnswerEvaluation>;
 
-  // Declared for interface stability (implemented in later phases):
-  evaluateAnswer(..._args: unknown[]): Promise<unknown>;
+  // Declared for interface stability (implemented in a later phase):
   generateReport(..._args: unknown[]): Promise<unknown>;
 }
 
