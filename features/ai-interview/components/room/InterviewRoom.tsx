@@ -102,6 +102,8 @@ export function InterviewRoom() {
       interviewTypeId: s.interviewTypeId,
       durationMinutes: s.durationMinutes,
       difficulty: s.difficulty,
+      personalityId: s.personalityId,
+      multiRound: s.multiRound,
       resumePath: s.resumePath,
       resumeFile: s.resumeFile,
       candidateProfile: s.candidateProfile,
@@ -109,6 +111,9 @@ export function InterviewRoom() {
   );
 
   const [confirmEnd, setConfirmEnd] = useState(false);
+  // Phase 13 — multi-round counter. When enabled, each "Practice again"
+  // starts the next round (fresh session, same setup, round+1).
+  const [round, setRound] = useState(1);
 
   const setupComplete = Boolean(
     setup.roleId &&
@@ -202,6 +207,8 @@ export function InterviewRoom() {
       interviewTypeId: setup.interviewTypeId!,
       durationMinutes: setup.durationMinutes!,
       difficulty: setup.difficulty,
+      personalityId: setup.personalityId,
+      round: setup.multiRound ? round : undefined,
       resumePath: setup.resumePath ?? undefined,
       resumeFileName: setup.resumeFile?.name ?? undefined,
       candidateProfile: setup.candidateProfile ?? undefined,
@@ -394,7 +401,9 @@ export function InterviewRoom() {
   const restart = useCallback(() => {
     resetRoom();
     setStatus("idle");
-  }, [resetRoom, setStatus]);
+    // Multi-round (Phase 13): the next session is round+1 of the same setup.
+    setRound((r) => (setup.multiRound ? r + 1 : 1));
+  }, [resetRoom, setStatus, setup.multiRound]);
 
   // ---- Auth / setup gates --------------------------------------------------
   if (authLoading) {

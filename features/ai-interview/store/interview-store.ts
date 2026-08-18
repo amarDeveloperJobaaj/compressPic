@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { DEFAULT_DURATION_MINUTES } from "../data/durations";
 import { DEFAULT_INTERVIEW_TYPE_ID } from "../data/interview-types";
+import { DEFAULT_PERSONALITY_ID } from "../data/interviewer-personalities";
 import type { CandidateProfile, ResumeAnalysisSource } from "../schemas/resume";
 import type { Difficulty } from "../types";
 
@@ -52,6 +53,11 @@ interface InterviewSetupState {
   /** Interview depth — preselected from the experience level (§25). */
   difficulty: Difficulty;
 
+  /** Interviewer persona id (Phase 13 premium) — defaults to professional. */
+  personalityId: string;
+  /** Multi-round interview flag (Phase 13 premium). */
+  multiRound: boolean;
+
   // Resume (Phase 2: capture → upload → analyze → candidate profile)
   resumeFile: File | null;
   resumeStatus: ResumeStatus;
@@ -76,6 +82,8 @@ interface InterviewSetupState {
   setExperienceLevelId: (experienceLevelId: string) => void;
   setInterviewTypeId: (interviewTypeId: string) => void;
   setDurationMinutes: (minutes: number) => void;
+  setPersonalityId: (personalityId: string) => void;
+  setMultiRound: (multiRound: boolean) => void;
   setResumeFile: (file: File | null) => void;
   setResumeStatus: (status: ResumeStatus) => void;
   setResumeError: (message: string | null) => void;
@@ -100,6 +108,9 @@ export const useInterviewStore = create<InterviewSetupState>((set) => ({
 
   difficulty: "intermediate",
 
+  personalityId: DEFAULT_PERSONALITY_ID,
+  multiRound: false,
+
   resumeFile: null,
   resumeStatus: "idle",
   resumeError: null,
@@ -120,6 +131,8 @@ export const useInterviewStore = create<InterviewSetupState>((set) => ({
     set({ experienceLevelId, difficulty: defaultDifficultyForLevel(experienceLevelId) }),
   setInterviewTypeId: (interviewTypeId) => set({ interviewTypeId }),
   setDurationMinutes: (durationMinutes) => set({ durationMinutes }),
+  setPersonalityId: (personalityId) => set({ personalityId }),
+  setMultiRound: (multiRound) => set({ multiRound }),
   setResumeFile: (resumeFile) =>
     set({
       resumeFile,
@@ -173,6 +186,8 @@ export const useInterviewStore = create<InterviewSetupState>((set) => ({
       interviewTypeId: DEFAULT_INTERVIEW_TYPE_ID,
       durationMinutes: DEFAULT_DURATION_MINUTES,
       difficulty: "intermediate",
+      personalityId: DEFAULT_PERSONALITY_ID,
+      multiRound: false,
       resumeFile: null,
       resumeStatus: "idle",
       resumeError: null,

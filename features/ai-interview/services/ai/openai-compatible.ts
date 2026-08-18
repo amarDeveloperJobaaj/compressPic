@@ -10,11 +10,11 @@ import {
   buildResumeAnalysisUserPrompt,
 } from "../../prompts/resume/resume-analysis-v1";
 import {
-  QUESTION_SYSTEM_PROMPT,
+  buildQuestionSystemPrompt,
   buildQuestionUserPrompt,
 } from "../../prompts/question/question-v1";
 import {
-  FOLLOWUP_SYSTEM_PROMPT,
+  buildFollowUpSystemPrompt,
   buildFollowUpUserPrompt,
 } from "../../prompts/followup/followup-v1";
 import {
@@ -157,7 +157,7 @@ export class OpenAICompatibleProvider implements AIProvider {
 
   async generateQuestion(context: QuestionContext): Promise<GeneratedQuestion> {
     const messages: ChatCompletionMessage[] = [
-      { role: "system", content: QUESTION_SYSTEM_PROMPT },
+      { role: "system", content: buildQuestionSystemPrompt(context.personalityId) },
       { role: "user", content: buildQuestionUserPrompt(context) },
     ];
     const { value } = await this.chatJson(messages, GeneratedQuestionSchema, () =>
@@ -168,7 +168,7 @@ export class OpenAICompatibleProvider implements AIProvider {
 
   async generateFollowUp(context: QuestionContext): Promise<GeneratedQuestion> {
     const messages: ChatCompletionMessage[] = [
-      { role: "system", content: FOLLOWUP_SYSTEM_PROMPT },
+      { role: "system", content: buildFollowUpSystemPrompt(context.personalityId) },
       { role: "user", content: buildFollowUpUserPrompt(context) },
     ];
     const { value } = await this.chatJson(messages, GeneratedQuestionSchema, () =>

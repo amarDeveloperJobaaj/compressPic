@@ -32,6 +32,10 @@ export const CreateInterviewSessionSchema = z.object({
   candidateProfile: CandidateProfileSchema.optional(),
   /** Explicit recording consent — required before any capture (§31). */
   recordingConsent: z.boolean().optional(),
+  /** Interviewer persona id (Phase 13 premium) — defaults server-side. */
+  personalityId: z.string().min(1).max(64).optional(),
+  /** Round number of a multi-round interview (Phase 13 premium). */
+  round: z.number().int().min(1).max(10).optional(),
 });
 
 export type CreateInterviewSessionInput = z.infer<typeof CreateInterviewSessionSchema>;

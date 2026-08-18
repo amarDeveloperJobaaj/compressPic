@@ -52,6 +52,10 @@ export interface InterviewConfig {
   interviewType: InterviewType | null;
   durationMinutes: number | null;
   difficulty: Difficulty;
+  /** Interviewer persona id (Phase 13) — defaults to "professional". */
+  personalityId?: string;
+  /** Current round of a multi-round interview (Phase 13 flag). */
+  round?: number;
 }
 
 /** Interview session status — state machine states from master spec §79. */
@@ -86,6 +90,10 @@ export interface CreateInterviewSessionInput {
   resumeFileName?: string;
   /** Analyzed candidate profile (§19) — snapshotted with the session. */
   candidateProfile?: Record<string, unknown>;
+  /** Interviewer persona id (Phase 13 premium) — defaults server-side. */
+  personalityId?: string;
+  /** Round number of a multi-round interview (Phase 13 premium). */
+  round?: number;
 }
 
 /** One interview_sessions row as the API exposes it (camelCase). */

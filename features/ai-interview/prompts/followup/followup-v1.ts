@@ -1,4 +1,5 @@
 import type { QuestionContext } from "../../services/ai/types";
+import { getPersonality } from "../../data/interviewer-personalities";
 
 /**
  * Follow-up question prompt — v1 (Phase 5, adapted Phase 7).
@@ -40,4 +41,13 @@ export function buildFollowUpUserPrompt(context: QuestionContext): string {
     JSON.stringify(context, null, 2),
     "Respond with exactly one JSON object.",
   ].join("\n\n");
+}
+
+/**
+ * System prompt for the configured interviewer persona (Phase 13) — the
+ * controller decision contract above never changes, only the tone (§96).
+ */
+export function buildFollowUpSystemPrompt(personalityId?: string | null): string {
+  const directive = getPersonality(personalityId).promptDirective;
+  return directive ? `${FOLLOWUP_SYSTEM_PROMPT}\n\n${directive}` : FOLLOWUP_SYSTEM_PROMPT;
 }

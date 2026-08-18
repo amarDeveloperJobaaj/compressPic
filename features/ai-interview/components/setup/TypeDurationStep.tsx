@@ -5,6 +5,7 @@ import { DURATIONS } from "@/features/ai-interview/data/durations";
 import { INTERVIEW_TYPES } from "@/features/ai-interview/data/interview-types";
 import { useInterviewStore } from "@/features/ai-interview/store/interview-store";
 import { ResumeUploader } from "../ResumeUploader";
+import { InterviewerOptions } from "./InterviewerOptions";
 import { SelectableChip } from "./SelectableChip";
 
 /** Step 3 — interview type (cards) + duration (chips) + resume uploader. */
@@ -76,6 +77,10 @@ export function TypeDurationStep() {
             </SelectableChip>
           ))}
         </div>
+      </div>
+
+      <div className="border-t border-border pt-8">
+        <InterviewerOptions />
       </div>
 
       <div>

@@ -155,6 +155,8 @@ async function loadContext(
 
   const context: QuestionContext = {
     mode,
+    // Phase 13 — interviewer persona tone directive (premium, flag-gated).
+    personalityId: (config.personalityId as string | null | undefined) ?? null,
     targetRole: row.target_role,
     domainId: (config.domainId as string | undefined) ?? null,
     domain: row.domain,

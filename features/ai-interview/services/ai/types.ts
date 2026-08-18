@@ -48,6 +48,8 @@ export interface PreviousQuestionContext {
 export interface QuestionContext {
   /** "first" = the opening question; "next" = continuing after an answer. */
   mode: "first" | "next";
+  /** Interviewer persona id (Phase 13) — tone directive appended to prompts. */
+  personalityId?: string | null;
   targetRole: string;
   /** Setup id (e.g. "node-js") — the label is display-only; banks key on this. */
   domainId: string | null;

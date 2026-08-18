@@ -35,7 +35,7 @@
 | 10 | History & Progress | `phase-10-history` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 11 | Optimization | `phase-11-optimization` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 12 | Production Hardening | `phase-12-hardening` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 13 | Advanced Features | `phase-13-advanced` | `NOT STARTED` | — |
+| 13 | Advanced Features | `phase-13-advanced` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 
 ### Phase detail (checklists)
 
@@ -165,9 +165,9 @@
 #### Phase 13 — Advanced Features
 | Task | Done? |
 |---|---|
-| Interviewer personalities / multi-round | [ ] |
-| Coding interview / system design whiteboard (design docs first) | [ ] |
-| Premium/credits hooks (flags only, no payments) | [ ] |
+| Interviewer personalities / multi-round | [x] | 4 personas (`data/interviewer-personalities.ts`) — tone directive injected into question + follow-up system prompts (provider + heuristic share the context); picker UI flag-gated with Pro badge; multi-round toggle → `round` snapshotted per session, "Practice again" increments the round |
+| Coding interview / system design whiteboard (design docs first) | [x] | design docs accepted: `docs/ai-interview/coding-interview-mode.md` + `docs/ai-interview/system-design-whiteboard.md` (screens, data-model diff, API diff, gating, out-of-scope) — implementation gated on these docs |
+| Premium/credits hooks (flags only, no payments) | [x] | `config/flags.ts` — `INTERVIEW_PREMIUM_FEATURES`/`NEXT_PUBLIC_INTERVIEW_PREMIUM_FEATURES` (comma-list or `*`); client mirror `usePremiumFeatures`; Pro badges on locked features; no payments wired (§107)
 
 ---
 
@@ -341,6 +341,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-18 | Phase 13 built: interviewer personalities (4 personas, tone directive injected into question/follow-up prompts) + multi-round flag (round snapshotted per session, restart increments), premium feature flags + Pro-badge picker UI, coding-interview + system-design whiteboard design docs (docs/ai-interview/) — tests 99/99, lint+build green; awaiting merge | 13 | `feature/ai-interview/phase-13-advanced` (work stacked on phase-8 branch) |
 | 2026-08-13 | Phase 7 built (stacked on phase-6-voice): Adaptive Interview Engine — `evaluateAnswer` on both providers (Zod §54 dimensions + deterministic heuristic evaluator, evaluation-v1 prompt), pure adaptive controller (verdict thresholds, §24 action mapping, §25 difficulty ladder, END_INTERVIEW time/question budgets, follow-up depth cap), turn loop now evaluates → decides → generates honoring `adaptiveIntent` (or ENDs the session server-side), §40 `performanceSummary` (overall + per-topic + verdict counts) persisted in `current_state`, new `POST /api/interview/answer/evaluate` route, room handles the ended flow — lint(branch)+build green (194/194), 64/64 unit tests; awaiting approval | 7 | `feature/ai-interview/phase-7-adaptive` |
 | 2026-08-13 | Phase 6 built (stacked on phase-5-question-engine): Speech & Voice Loop — browser STT (SpeechRecognition, §35) + TTS (SpeechSynthesis, §36) provider abstractions with SSR-safe hooks, silence auto-submit voice answers with live captions and Stop & send, filler/pace metrics util (§56–57, 9 tests), new `speaking` §79 state (migration `007`), speaker toggle enabled, manual text fallback always reachable — lint(branch)+build green (193/193), 39/39 unit tests; awaiting approval | 6 | `feature/ai-interview/phase-6-voice` |
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |

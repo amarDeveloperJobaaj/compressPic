@@ -193,6 +193,9 @@ export async function createInterviewSession(
     // Recording consent is stored with the session (§31) — captured before
     // any audio/video is recorded, never after the fact.
     recordingConsent: data.recordingConsent ?? false,
+    // Phase 13 premium fields — persona tone + multi-round step (flag-gated).
+    personalityId: data.personalityId ?? null,
+    round: data.round ?? 1,
     labels,
   };
 
