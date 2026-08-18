@@ -649,6 +649,9 @@ export type Database = {
           communication_score: number | null;
           problem_solving_score: number | null;
           answer_quality_score: number | null;
+          overall_score: number | null;
+          verdict: string | null;
+          metrics: Json;
           strengths: Json;
           weaknesses: Json;
           missing_points: Json;
@@ -664,6 +667,9 @@ export type Database = {
           communication_score?: number | null;
           problem_solving_score?: number | null;
           answer_quality_score?: number | null;
+          overall_score?: number | null;
+          verdict?: string | null;
+          metrics?: Json;
           strengths?: Json;
           weaknesses?: Json;
           missing_points?: Json;
@@ -679,6 +685,9 @@ export type Database = {
           communication_score?: number | null;
           problem_solving_score?: number | null;
           answer_quality_score?: number | null;
+          overall_score?: number | null;
+          verdict?: string | null;
+          metrics?: Json;
           strengths?: Json;
           weaknesses?: Json;
           missing_points?: Json;

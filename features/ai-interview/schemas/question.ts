@@ -24,13 +24,16 @@ export const QuestionTypeSchema = z.enum([
   "behavioral",
   "hr",
   "problem_solving",
+  // Phase 13 — coding interview mode: the question text carries a problem
+  // statement (JSON: {statement, examples, constraints}) and answers hold code.
+  "coding",
 ]);
 
 export const GeneratedQuestionSchema = z.object({
   /** §53 action — how the engine should continue after this question. */
   action: QuestionActionSchema.default("NEW_TOPIC"),
-  /** One clear, focused question (§95). */
-  question: z.string().min(5, "Question is too short.").max(500),
+  /** One clear, focused question (§95) — for coding mode, a problem JSON. */
+  question: z.string().min(5, "Question is too short.").max(3000),
   /** Category stored in interview_questions.question_type (§44). */
   type: QuestionTypeSchema.default("technical"),
   /** Short topic label (e.g. "react", "project: E-commerce") — drives dedupe. */

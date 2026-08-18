@@ -5,6 +5,11 @@ import { OpenAICompatibleProvider } from "./openai-compatible";
 import type { AIProvider } from "./types";
 import { heuristicAnalyzeResume } from "./heuristic";
 import { heuristicEvaluateAnswer } from "./heuristic-evaluation";
+import { heuristicEvaluateCodingAnswer } from "./heuristic-coding-evaluation";
+import {
+  heuristicGenerateCodingFollowUp,
+  heuristicGenerateCodingQuestion,
+} from "./heuristic-coding-questions";
 import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
 
 /**
@@ -25,12 +30,23 @@ export function getAIProvider(): AIProvider {
   }
   // Not configured — heuristic fallback provider (§74): every operation still
   // works deterministically so the flow never hard-fails without an AI key.
+  const isCoding = (interviewType: string) => interviewType.toLowerCase() === "coding";
+
   return {
     id: "heuristic",
     analyzeResume: async ({ resumeText }) => heuristicAnalyzeResume(resumeText),
-    generateQuestion: async (context) => heuristicGenerateQuestion(context),
-    generateFollowUp: async (context) => heuristicGenerateFollowUp(context),
-    evaluateAnswer: async (context) => heuristicEvaluateAnswer(context),
+    generateQuestion: async (context) =>
+      isCoding(context.interviewType)
+        ? heuristicGenerateCodingQuestion(context)
+        : heuristicGenerateQuestion(context),
+    generateFollowUp: async (context) =>
+      isCoding(context.interviewType)
+        ? heuristicGenerateCodingFollowUp(context)
+        : heuristicGenerateFollowUp(context),
+    evaluateAnswer: async (context) =>
+      context.questionType.toLowerCase() === "coding"
+        ? heuristicEvaluateCodingAnswer(context)
+        : heuristicEvaluateAnswer(context),
     generateReport: () => Promise.reject(new Error("No AI provider configured (Phase 9+).")),
   };
 }

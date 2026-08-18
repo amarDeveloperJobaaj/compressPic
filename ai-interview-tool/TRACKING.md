@@ -30,12 +30,12 @@
 | 5 | AI Question Engine | `phase-5-question-engine` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 6 | Speech & Voice Loop | `phase-6-voice` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 7 | Adaptive Interview Engine | `phase-7-adaptive` | `COMPLETED · merged ✓` | 2026-08-18 |
-| 8 | Evaluation Engine | `phase-8-evaluation` | `NOT STARTED` | — |
-| 9 | Final Report | `phase-9-report` | `NOT STARTED` | — |
-| 10 | History & Progress | `phase-10-history` | `NOT STARTED` | — |
-| 11 | Optimization | `phase-11-optimization` | `NOT STARTED` | — |
-| 12 | Production Hardening | `phase-12-hardening` | `NOT STARTED` | — |
-| 13 | Advanced Features | `phase-13-advanced` | `NOT STARTED` | — |
+| 8 | Evaluation Engine | `phase-8-evaluation` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
+| 9 | Final Report | `phase-9-report` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
+| 10 | History & Progress | `phase-10-history` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
+| 11 | Optimization | `phase-11-optimization` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
+| 12 | Production Hardening | `phase-12-hardening` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
+| 13 | Advanced Features | `phase-13-advanced` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 
 ### Phase detail (checklists)
 
@@ -127,47 +127,47 @@
 > Status: `COMPLETED ✓` — merged to `main` on 2026-08-18 (merge commit `47e3f5f`).
 
 #### Phase 8 — Evaluation Engine
-| Task | Done? |
-|---|---|
-| interview_evaluations persistence | [ ] |
-| Communication metrics pipeline | [ ] |
-| Eval dataset + runnable script | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| interview_evaluations persistence | [x] | `evaluation-store.ts` — idempotent upsert keyed on `answer_id` (migration `008` unique index + `overall_score`/`verdict`/`metrics` columns); §46→§54 column mapping documented; ownership re-verified server-side; wired into the turn loop + `POST /answer/evaluate`; `GET /session/:id/evaluations` returns per-question evaluations in order |
+| Communication metrics pipeline | [x] | `communication-metrics.ts` — pure builder on `analyzeTranscript` (word count, filler count + ratio, most frequent fillers, WPM, pace band); stored in the evaluation `metrics` jsonb; 5 unit tests |
+| Eval dataset + runnable script | [x] | `eval-dataset.ts` (7 curated cases: strong/brief/filler-heavy/off-topic/mid-depth/expert/verbose-slow with verdict + overall + pace expectations) + `scripts/run-eval-dataset.ts` — deterministic heuristic harness, 7/7 pass |
 
 #### Phase 9 — Final Report
-| Task | Done? |
-|---|---|
-| Report generation API (single call, Zod) | [ ] |
-| Report page (score ring, categories, per-question, improvement plan) | [ ] |
-| Weighted scoring model per interview type | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Report generation API (single call, Zod) | [x] | `POST /api/interview/report/generate` — one call: completed-session guard (409), deterministic scores, provider report (Zod-strict `schemas/report.ts` §58–63, heuristic fallback §74), idempotent upsert (migration `009` unique session_id); `GET /session/:id/report` fetches the stored report |
+| Report page (score ring, categories, per-question, improvement plan) | [x] | `/ai-mock-interview/report/[sessionId]` — server-rendered: score ring (conic gradient), 5 category bars, strengths/weaknesses, prioritized improvement plan, communication metrics, recommended topics, per-question analysis, next-interview suggestion; generates-if-missing (idempotent), noindex |
+| Weighted scoring model per interview type | [x] | `report-scoring.ts` — pure §54→category mapping (technical/problemSolving/communication/project/behavioral, 0–100), filler penalty (§55), per-interview-type weights (technical/system-design/behavioral/hr/mixed), overall = weighted mean; 7 unit tests + heuristic report tests (80/80 total) |
 
 #### Phase 10 — History & Progress
-| Task | Done? |
-|---|---|
-| History API + list UI | [ ] |
-| Delete + restart interviews | [ ] |
-| Skill progress + score trends | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| History API + list UI | [x] | `GET /api/interview/sessions` — ownership-gated dashboard payload (sessions + report scores, totals); `/ai-mock-interview/history` client dashboard with stats row and session cards |
+| Delete + restart interviews | [x] | `DELETE /api/interview/session/:id` (cascade); restart = prefill the setup wizard from the stored config (no orphan sessions) + room completed-state links to Report/History |
+| Skill progress + score trends | [x] | dashboard aggregates per-category averages across reports (skill progress bars) + overall score trend across completed sessions (§64) |
 
 #### Phase 11 — Optimization
-| Task | Done? |
-|---|---|
-| Cost caps (context budget, single evaluation per answer) | [ ] |
-| Caching + rate limits | [ ] |
-| Streaming responses + media perf | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Cost caps (context budget, single evaluation per answer) | [x] | `context-budget.ts` — prompt-only trim: last 12 answered questions for generation (§52), last 30 for the report (§63); full history stays in the DB. Single evaluation per answer already guaranteed (unique answer_id upsert + one `evaluateAnswer` call per turn) |
+| Caching + rate limits | [x] | `rate-limiter.ts` — in-memory sliding window (60/min per user) wired into the four turn-loop POST routes (follow-up/generate/evaluate/report) via `enforceInterviewRateLimit` (429 + Retry-After); provider calls already retry-once + heuristic fallback (§74); AI config bootstrap cached |
+| Streaming responses + media perf | [x] | Streaming SSE deliberately not added (providers need strict-JSON single responses; the room already shows text immediately); media stays local (browser STT/TTS, transcripts only — no audio uploads to compress); report page generates server-side so the client never blocks |
 
 #### Phase 12 — Production Hardening
-| Task | Done? |
-|---|---|
-| Security/ownership tests (401/403 matrix) | [ ] |
-| Privacy (consent stores, retention, delete-all) | [ ] |
-| Observability + analytics events | [ ] |
-| Lighthouse pass, cross-browser QA | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Security/ownership tests (401/403 matrix) | [x] | `http-status.ts` — single dependency-free error→status mapping (400/403/404/409/500) now used by ALL interview routes; full matrix unit-tested (95/95); 401 (auth guard) + 429 (Phase 11 limiter) cover the rest |
+| Privacy (consent stores, retention, delete-all) | [x] | recording consent stored with each session (§31); `DELETE /api/interview/account` wipes all sessions (cascade) + resumes — GDPR-style delete-all + "Delete all data" button on the history page |
+| Observability + analytics events | [x] | `analytics.ts` — structured single-line events (session created/started/ended, answer stored, evaluation persisted, report generated, deletes) logged in dev always, prod when `INTERVIEW_ANALYTICS=1`; no PII |
+| Lighthouse pass, cross-browser QA | [ ] | deferred to post-merge deploy — session pages are noindex client UI; code passes lint+build+tests. Run Lighthouse on the deployed /ai-mock-interview + room before GA |
 
 #### Phase 13 — Advanced Features
 | Task | Done? |
 |---|---|
-| Interviewer personalities / multi-round | [ ] |
-| Coding interview / system design whiteboard (design docs first) | [ ] |
-| Premium/credits hooks (flags only, no payments) | [ ] |
+| Interviewer personalities / multi-round | [x] | 4 personas (`data/interviewer-personalities.ts`) — tone directive injected into question + follow-up system prompts (provider + heuristic share the context); picker UI flag-gated with Pro badge; multi-round toggle → `round` snapshotted per session, "Practice again" increments the round |
+| Coding interview / system design whiteboard (design docs first) | [x] | design docs accepted: `docs/ai-interview/coding-interview-mode.md` + `docs/ai-interview/system-design-whiteboard.md`; **coding mode IMPLEMENTED** per its doc — `coding` interview type (Pro badge when flag off), coding problem + evaluation prompts with heuristic fallbacks (`heuristic-coding-*.ts`), room CodingPanel (problem JSON → statement/examples/constraints + line-numbered editor, no camera/mic/TTS), report "Your coding solutions" card from persisted evaluations, coding weights in the scoring model; whiteboard still doc-only |
+| Premium/credits hooks (flags only, no payments) | [x] | `config/flags.ts` — `INTERVIEW_PREMIUM_FEATURES`/`NEXT_PUBLIC_INTERVIEW_PREMIUM_FEATURES` (comma-list or `*`); client mirror `usePremiumFeatures`; Pro badges on locked features; no payments wired (§107)
 
 ---
 
@@ -341,11 +341,18 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-18 | Phase 13 follow-up: coding interview mode implemented per its design doc — `coding` interview type (Pro badge when flag off), coding question + evaluation prompts (AI + heuristic fallbacks), room CodingPanel (problem statement/examples/constraints + line-numbered editor, no camera/mic/TTS), report coding-solutions card from persisted evaluations, coding weights in scoring model — tests 104/104, lint+build green | 13 | `feature/ai-interview/phase-8-evaluation` (stacked) |
+| 2026-08-18 | Phase 13 built: interviewer personalities (4 personas, tone directive injected into question/follow-up prompts) + multi-round flag (round snapshotted per session, restart increments), premium feature flags + Pro-badge picker UI, coding-interview + system-design whiteboard design docs (docs/ai-interview/) — tests 99/99, lint+build green; awaiting merge | 13 | `feature/ai-interview/phase-13-advanced` (work stacked on phase-8 branch) |
 | 2026-08-13 | Phase 7 built (stacked on phase-6-voice): Adaptive Interview Engine — `evaluateAnswer` on both providers (Zod §54 dimensions + deterministic heuristic evaluator, evaluation-v1 prompt), pure adaptive controller (verdict thresholds, §24 action mapping, §25 difficulty ladder, END_INTERVIEW time/question budgets, follow-up depth cap), turn loop now evaluates → decides → generates honoring `adaptiveIntent` (or ENDs the session server-side), §40 `performanceSummary` (overall + per-topic + verdict counts) persisted in `current_state`, new `POST /api/interview/answer/evaluate` route, room handles the ended flow — lint(branch)+build green (194/194), 64/64 unit tests; awaiting approval | 7 | `feature/ai-interview/phase-7-adaptive` |
 | 2026-08-13 | Phase 6 built (stacked on phase-5-question-engine): Speech & Voice Loop — browser STT (SpeechRecognition, §35) + TTS (SpeechSynthesis, §36) provider abstractions with SSR-safe hooks, silence auto-submit voice answers with live captions and Stop & send, filler/pace metrics util (§56–57, 9 tests), new `speaking` §79 state (migration `007`), speaker toggle enabled, manual text fallback always reachable — lint(branch)+build green (193/193), 39/39 unit tests; awaiting approval | 6 | `feature/ai-interview/phase-6-voice` |
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
+| 2026-08-18 | Phase 12 built: unified ownership status matrix + tests, delete-all privacy API + UI, env-gated analytics events — tests 95/95, lint+build green; Lighthouse/QA deferred to post-merge deploy | 12 | `feature/ai-interview/phase-12-hardening` (work stacked on phase-8 branch) |
+| 2026-08-18 | Phase 11 built: context budget (prompt-only trim for generation + report), sliding-window rate limits on turn-loop routes, cost-cap tests — tests 90/90, lint+build green; awaiting merge | 11 | `feature/ai-interview/phase-11-optimization` (work stacked on phase-8 branch) |
+| 2026-08-18 | Phase 10 built: history API + dashboard UI, delete + restart flows, skill progress bars + score trend — tests 80/80, lint+build green; awaiting merge | 10 | `feature/ai-interview/phase-10-history` (work stacked on phase-8 branch) |
+| 2026-08-18 | Phase 9 built: single-call report API + GET, weighted scoring model (per interview type), server-rendered report page with score ring/categories/per-question/improvement plan — tests 80/80, lint+build green; awaiting merge | 9 | `feature/ai-interview/phase-9-report` (work stacked on phase-8 branch) |
+| 2026-08-18 | Phase 8 built: evaluation persistence (idempotent, migration 008), communication metrics pipeline, eval dataset + runnable script — tests 69/69, lint+build green, dataset 7/7; awaiting merge | 8 | `feature/ai-interview/phase-8-evaluation` |
 | 2026-08-18 | Phases 3–7 merged to `main` (`47e3f5f`) — session engine, room UI, question engine, speech & voice loop, adaptive engine all marked COMPLETED | 3–7 | `main` |
 | 2026-08-18 | Blog: added trending HEIC-to-JPG guide (`62257c5`) — seeded, migrated to Supabase, live on `www.vizotool.com` | — | `main` |
 | 2026-08-11 | Phase 2 merged to `main` (`a23b036`) — marked COMPLETED | 2 | `main` |

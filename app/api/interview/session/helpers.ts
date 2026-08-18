@@ -4,6 +4,10 @@ import {
   getCurrentUser,
   isInterviewBackendConfigured,
 } from "@/features/ai-interview/services/interview/auth";
+import {
+  interviewRateLimiter,
+  rateLimitKey,
+} from "@/features/ai-interview/services/interview/rate-limiter";
 
 /**
  * Shared guard for the session routes. Returns:
@@ -41,4 +45,22 @@ export async function requireInterviewUser(): Promise<
   }
 
   return { ok: true, userId: auth.userId, email: auth.email };
+}
+
+/**
+ * Phase 11 — per-user sliding-window rate limit for the interview turn-loop
+ * routes (answer/follow-up/generate/evaluate/report). Returns a 429 response
+ * when the user exceeds the budget, otherwise null.
+ */
+export function enforceInterviewRateLimit(userId: string): NextResponse | null {
+  if (!interviewRateLimiter.allow(rateLimitKey(userId))) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Too many requests — please wait a moment and try again.",
+      },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+  return null;
 }

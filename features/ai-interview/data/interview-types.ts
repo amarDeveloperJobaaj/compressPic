@@ -23,6 +23,13 @@ export const INTERVIEW_TYPES: InterviewType[] = [
     description: "Architecture, scalability, caching, and distributed systems.",
   },
   {
+    id: "coding",
+    name: "Coding",
+    description: "Solve live coding problems — write a solution in the built-in editor.",
+    // Phase 13 — flag-gated premium feature (§107, no payments wired).
+    premium: true,
+  },
+  {
     id: "mixed",
     name: "Mixed",
     description: "Technical + HR + Behavioral + project deep-dive.",

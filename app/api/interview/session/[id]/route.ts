@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { deleteSession } from "@/features/ai-interview/services/interview/history";
 import { getSessionRecovery } from "@/features/ai-interview/services/interview/session";
 import { requireInterviewUser } from "../helpers";
 
@@ -31,6 +32,36 @@ export async function GET(
     return NextResponse.json({ ok: true, ...result.recovery });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to load the session.";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/interview/session/:id (Phase 10 — §64).
+ *
+ * Permanently removes the session (cascades to questions, answers,
+ * evaluations and the report). Ownership-gated: 403 / 404.
+ */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await requireInterviewUser();
+  if (!user.ok) return user.response;
+
+  const { id } = await params;
+
+  try {
+    const result = await deleteSession(user.userId, id);
+    if (!result.ok) {
+      return NextResponse.json(
+        { ok: false, error: result.error },
+        { status: result.forbidden ? 403 : 404 }
+      );
+    }
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to delete the session.";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

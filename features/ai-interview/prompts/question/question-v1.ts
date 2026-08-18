@@ -1,4 +1,5 @@
 import type { QuestionContext } from "../../services/ai/types";
+import { getPersonality } from "../../data/interviewer-personalities";
 
 /**
  * Question generation prompt — v1 (Phase 5).
@@ -23,6 +24,16 @@ Rules:
 
 Output schema:
 {"action":"NEW_TOPIC","question":"...","type":"technical|project|behavioral|hr|problem_solving","topic":"short topic label","difficulty":"beginner|intermediate|advanced|expert","reason":"why this question"}`;
+
+/**
+ * System prompt for the configured interviewer persona (Phase 13). The persona
+ * directive is appended as a tone instruction — the strict JSON contract and
+ * rules above never change (§96).
+ */
+export function buildQuestionSystemPrompt(personalityId?: string | null): string {
+  const directive = getPersonality(personalityId).promptDirective;
+  return directive ? `${QUESTION_SYSTEM_PROMPT}\n\n${directive}` : QUESTION_SYSTEM_PROMPT;
+}
 
 export function buildQuestionUserPrompt(context: QuestionContext): string {
   return [

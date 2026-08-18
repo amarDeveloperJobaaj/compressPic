@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import {
-  evaluateStoredAnswer,
-  QuestionEngineError,
-} from "@/features/ai-interview/services/interview/question-engine";
-import { requireInterviewUser } from "../../session/helpers";
+import { evaluateStoredAnswer } from "@/features/ai-interview/services/interview/question-engine";
+import { toHttpStatus } from "@/features/ai-interview/services/interview/http-status";
+import { enforceInterviewRateLimit, requireInterviewUser } from "../../session/helpers";
 
 /**
  * POST /api/interview/answer/evaluate (master spec §48, §54).
@@ -28,6 +26,8 @@ const BodySchema = z.object({
 export async function POST(request: Request) {
   const user = await requireInterviewUser();
   if (!user.ok) return user.response;
+  const limited = enforceInterviewRateLimit(user.userId);
+  if (limited) return limited;
 
   let body: unknown;
   try {
@@ -52,12 +52,7 @@ export async function POST(request: Request) {
     );
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
-    if (e instanceof QuestionEngineError) {
-      const status =
-        e.kind === "forbidden" ? 403 : e.kind === "not_found" ? 404 : e.kind === "validation" ? 400 : 409;
-      return NextResponse.json({ ok: false, error: e.message }, { status });
-    }
     const message = e instanceof Error ? e.message : "Failed to evaluate the answer.";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: message }, { status: toHttpStatus(e) });
   }
 }

@@ -5,8 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   ArrowRight,
+  Award,
   Bot,
+  Braces,
   CheckCircle2,
+  History,
   Loader2,
   LogIn,
   RefreshCw,
@@ -41,6 +44,7 @@ import {
 } from "@/features/ai-interview/store/interview-room-store";
 import { useInterviewStore } from "@/features/ai-interview/store/interview-store";
 import { AIInterviewerPanel } from "./AIInterviewerPanel";
+import { CodingPanel } from "./CodingPanel";
 import { InterviewControls } from "./InterviewControls";
 import { InterviewTimer } from "./InterviewTimer";
 import { PermissionModal } from "./PermissionModal";
@@ -100,13 +104,33 @@ export function InterviewRoom() {
       interviewTypeId: s.interviewTypeId,
       durationMinutes: s.durationMinutes,
       difficulty: s.difficulty,
+      personalityId: s.personalityId,
+      multiRound: s.multiRound,
       resumePath: s.resumePath,
       resumeFile: s.resumeFile,
       candidateProfile: s.candidateProfile,
     }))
   );
 
+  // Phase 13 — coding interview mode: no camera/mic, no TTS; the candidate
+  // solves problems in the built-in editor (text only).
+  const isCoding = setup.interviewTypeId === "coding";
+
+  // Coding problem JSON → readable statement for the transcript.
+  const displayQuestion = useCallback((text: string) => {
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed.statement === "string") return parsed.statement;
+    } catch {
+      // not JSON — show as-is
+    }
+    return text;
+  }, []);
+
   const [confirmEnd, setConfirmEnd] = useState(false);
+  // Phase 13 — multi-round counter. When enabled, each "Practice again"
+  // starts the next round (fresh session, same setup, round+1).
+  const [round, setRound] = useState(1);
 
   const setupComplete = Boolean(
     setup.roleId &&
@@ -133,6 +157,12 @@ export function InterviewRoom() {
   // Stop camera/mic when leaving the room. `media.stop` is a stable callback.
   useEffect(() => () => stopMedia(), [stopMedia]);
 
+  // Phase 13 — coding mode needs no camera/mic: skip the permission modal and
+  // go straight to the ready state (Begin → first problem).
+  useEffect(() => {
+    if (isCoding && status === "idle") setStatus("ready");
+  }, [isCoding, status, setStatus]);
+
   /**
    * Deliver a question (Phase 6 voice loop): SPEAKING while TTS reads it
    * aloud, then LISTENING for the answer. If voice is off/unavailable, speak
@@ -140,13 +170,19 @@ export function InterviewRoom() {
    */
   const presentQuestion = useCallback(
     async (question: string) => {
+      // Phase 13 — coding mode is text-only: no TTS read-aloud, the editor is
+      // ready immediately (the problem is always shown as text, §29).
+      if (isCoding) {
+        setStatus("active");
+        return;
+      }
       setStatus("speaking");
       await ttsSpeak(question);
       // The interview may have ended while the voice was playing.
       if (useInterviewRoomStore.getState().status !== "speaking") return;
       setStatus("listening");
     },
-    [setStatus, ttsSpeak]
+    [setStatus, ttsSpeak, isCoding]
   );
 
   const endInterview = useCallback(async () => {
@@ -200,15 +236,19 @@ export function InterviewRoom() {
       interviewTypeId: setup.interviewTypeId!,
       durationMinutes: setup.durationMinutes!,
       difficulty: setup.difficulty,
+      personalityId: setup.personalityId,
+      round: setup.multiRound ? round : undefined,
       resumePath: setup.resumePath ?? undefined,
       resumeFileName: setup.resumeFile?.name ?? undefined,
       candidateProfile: setup.candidateProfile ?? undefined,
       recordingConsent: true,
     };
-  }, [setup]);
+  }, [setup, round]);
 
   const beginInterview = useCallback(async () => {
-    if (!recordingConsent) {
+    // Phase 13 — coding mode records no audio/video (text answers only), so
+    // the recording-consent gate (§31) does not apply.
+    if (!isCoding && !recordingConsent) {
       setError("Please agree to the recording consent to start the interview.");
       return;
     }
@@ -253,7 +293,12 @@ export function InterviewRoom() {
     }
     setCurrentQuestionId(first.data.question.id);
     setCurrentQuestion(first.data.question.question);
-    addTranscriptEntry({ speaker: "interviewer", text: first.data.question.question });
+    addTranscriptEntry({
+      speaker: "interviewer",
+      text: isCoding
+        ? `Coding challenge: ${displayQuestion(first.data.question.question)}`
+        : first.data.question.question,
+    });
     await presentQuestion(first.data.question.question); // SPEAKING → LISTENING
   }, [
     recordingConsent,
@@ -269,6 +314,8 @@ export function InterviewRoom() {
     addTranscriptEntry,
     sessionId,
     presentQuestion,
+    isCoding,
+    displayQuestion,
   ]);
 
   /**
@@ -323,7 +370,12 @@ export function InterviewRoom() {
       }
       setCurrentQuestionId(result.data.question.id);
       setCurrentQuestion(result.data.question.question);
-      addTranscriptEntry({ speaker: "interviewer", text: result.data.question.question });
+      addTranscriptEntry({
+        speaker: "interviewer",
+        text: isCoding
+          ? `Coding challenge: ${displayQuestion(result.data.question.question)}`
+          : result.data.question.question,
+      });
       await presentQuestion(result.data.question.question); // SPEAKING → LISTENING
     },
     [
@@ -336,6 +388,8 @@ export function InterviewRoom() {
       presentQuestion,
       ttsStop,
       stopMedia,
+      isCoding,
+      displayQuestion,
     ]
   );
 
@@ -392,7 +446,9 @@ export function InterviewRoom() {
   const restart = useCallback(() => {
     resetRoom();
     setStatus("idle");
-  }, [resetRoom, setStatus]);
+    // Multi-round (Phase 13): the next session is round+1 of the same setup.
+    setRound((r) => (setup.multiRound ? r + 1 : 1));
+  }, [resetRoom, setStatus, setup.multiRound]);
 
   // ---- Auth / setup gates --------------------------------------------------
   if (authLoading) {
@@ -453,19 +509,27 @@ export function InterviewRoom() {
         </div>
         <p className="mt-5 text-2xl font-bold text-text-primary">Interview complete</p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-text-secondary">
-          Your session was saved to your account. The full evaluation — scores, question analysis
-          and an improvement plan — arrives with the evaluation engine.
+          Your session and answers were saved to your account. View your full report — scores,
+          per-question analysis, communication metrics and an improvement plan.
         </p>
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Button onClick={restart}>
+        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          {sessionId && (
+            <Button asChild>
+              <Link href={`/ai-mock-interview/report/${sessionId}`}>
+                <Award className="h-4 w-4" />
+                View report
+              </Link>
+            </Button>
+          )}
+          <Button asChild variant="secondary">
+            <Link href="/ai-mock-interview/history">
+              <History className="h-4 w-4" />
+              My history
+            </Link>
+          </Button>
+          <Button onClick={restart} variant="secondary">
             <RefreshCw className="h-4 w-4" />
             Practice again
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/ai-mock-interview/setup">
-              Try another role
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </Button>
           <Button asChild variant="ghost">
             <Link href="/ai-mock-interview">Back to AI Interview</Link>
@@ -493,33 +557,16 @@ export function InterviewRoom() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <VideoPanel
-              stream={media.stream}
-              videoEnabled={media.videoEnabled}
-              cameraStatus={media.cameraStatus}
-            />
-            <AIInterviewerPanel status={status} />
-          </div>
-
-          {status === "ready" && (
-            <div className="mt-6 rounded-2xl border border-border bg-surface p-6 sm:p-7">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-text-primary">
-                  {media.cameraStatus === "granted" ? "Camera ready" : "Text mode"} ·{" "}
-                  {media.micStatus === "granted" ? "Microphone ready" : "No microphone"}
-                </p>
-                <p className="text-xs text-text-muted">
-                  <Video className="mr-1 inline h-3.5 w-3.5" />
-                  Preview — not live yet
-                </p>
+          {isCoding ? (
+            <div className="rounded-2xl border border-border bg-surface p-6 text-center sm:p-8">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-sky-500 text-white shadow-lg shadow-primary/30">
+                <Braces className="h-7 w-7" />
               </div>
-
-              <RecordingConsent
-                checked={recordingConsent}
-                onChange={setRecordingConsent}
-                disabled={creating || starting}
-              />
+              <p className="mt-4 text-lg font-semibold text-text-primary">Coding interview ready</p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-text-secondary">
+                No camera or microphone needed — you&apos;ll solve problems in the built-in
+                editor and your code is saved with the session.
+              </p>
 
               {error && (
                 <p
@@ -532,9 +579,9 @@ export function InterviewRoom() {
 
               <Button
                 size="lg"
-                className="mt-6 w-full"
+                className="mt-6 w-full sm:w-auto"
                 onClick={beginInterview}
-                disabled={!recordingConsent || creating || starting}
+                disabled={creating || starting}
               >
                 {creating || starting ? (
                   <>
@@ -543,37 +590,100 @@ export function InterviewRoom() {
                   </>
                 ) : (
                   <>
-                    <Video className="h-4 w-4" />
-                    Begin interview
+                    <Braces className="h-4 w-4" />
+                    Begin coding interview
                   </>
                 )}
               </Button>
               <p className="mt-3 text-center text-xs text-text-muted">
-                Starting creates your session and saves every question and answer to your account.
+                Starting creates your session and saves every problem and solution to your account.
               </p>
             </div>
-          )}
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <VideoPanel
+                  stream={media.stream}
+                  videoEnabled={media.videoEnabled}
+                  cameraStatus={media.cameraStatus}
+                />
+                <AIInterviewerPanel status={status} />
+              </div>
 
-          {status === "preparing" && (
-            <div className="mt-6 flex items-center justify-center gap-3 rounded-2xl border border-border bg-surface py-6 text-sm font-medium text-text-secondary">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              Preparing interview…
-            </div>
-          )}
+              {status === "ready" && (
+                <div className="mt-6 rounded-2xl border border-border bg-surface p-6 sm:p-7">
+                  <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-text-primary">
+                      {media.cameraStatus === "granted" ? "Camera ready" : "Text mode"} ·{" "}
+                      {media.micStatus === "granted" ? "Microphone ready" : "No microphone"}
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      <Video className="mr-1 inline h-3.5 w-3.5" />
+                      Preview — not live yet
+                    </p>
+                  </div>
 
-          <PermissionModal
-            open={status === "idle"}
-            cameraStatus={media.cameraStatus}
-            micStatus={media.micStatus}
-            error={media.error}
-            onRequest={media.requestMedia}
-            onGranted={handleGranted}
-            onSkip={handleSkip}
-            onNotNow={() => {
-              stopMedia();
-              window.location.href = "/ai-mock-interview";
-            }}
-          />
+                  <RecordingConsent
+                    checked={recordingConsent}
+                    onChange={setRecordingConsent}
+                    disabled={creating || starting}
+                  />
+
+                  {error && (
+                    <p
+                      role="alert"
+                      className="mt-4 rounded-xl border border-error/30 bg-error-light px-4 py-3 text-sm text-error"
+                    >
+                      {error}
+                    </p>
+                  )}
+
+                  <Button
+                    size="lg"
+                    className="mt-6 w-full"
+                    onClick={beginInterview}
+                    disabled={!recordingConsent || creating || starting}
+                  >
+                    {creating || starting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Preparing interview…
+                      </>
+                    ) : (
+                      <>
+                        <Video className="h-4 w-4" />
+                        Begin interview
+                      </>
+                    )}
+                  </Button>
+                  <p className="mt-3 text-center text-xs text-text-muted">
+                    Starting creates your session and saves every question and answer to your account.
+                  </p>
+                </div>
+              )}
+
+              {status === "preparing" && (
+                <div className="mt-6 flex items-center justify-center gap-3 rounded-2xl border border-border bg-surface py-6 text-sm font-medium text-text-secondary">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  Preparing interview…
+                </div>
+              )}
+
+              <PermissionModal
+                open={status === "idle"}
+                cameraStatus={media.cameraStatus}
+                micStatus={media.micStatus}
+                error={media.error}
+                onRequest={media.requestMedia}
+                onGranted={handleGranted}
+                onSkip={handleSkip}
+                onNotNow={() => {
+                  stopMedia();
+                  window.location.href = "/ai-mock-interview";
+                }}
+              />
+            </>
+          )}
         </div>
       </section>
     );
@@ -608,29 +718,53 @@ export function InterviewRoom() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
-        <div className="space-y-4">
-          <VideoPanel
-            stream={media.stream}
-            videoEnabled={media.videoEnabled}
-            cameraStatus={media.cameraStatus}
-          />
-          <QuestionPanel status={status} question={currentQuestion} />
-        </div>
-        <div className="space-y-4">
-          <AIInterviewerPanel status={status} />
-          <TranscriptPanel
-            onSubmitAnswer={submitAnswer}
+      {isCoding ? (
+        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+          <CodingPanel
+            status={status}
+            question={currentQuestion}
+            onSubmitCode={(code) => void submitAnswer(code)}
             submitting={engineBusy || status === "processing"}
-            voiceSupported={stt.supported}
-            voiceListening={stt.listening}
-            liveCaption={liveCaption}
-            voiceError={stt.error}
-            onVoiceSend={voiceSend}
-            onVoiceStop={voiceStop}
           />
+          <div className="space-y-4">
+            <AIInterviewerPanel status={status} />
+            <TranscriptPanel
+              onSubmitAnswer={submitAnswer}
+              submitting={engineBusy || status === "processing"}
+              voiceSupported={false}
+              voiceListening={false}
+              liveCaption=""
+              voiceError={null}
+              onVoiceSend={undefined}
+              onVoiceStop={undefined}
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
+          <div className="space-y-4">
+            <VideoPanel
+              stream={media.stream}
+              videoEnabled={media.videoEnabled}
+              cameraStatus={media.cameraStatus}
+            />
+            <QuestionPanel status={status} question={currentQuestion} />
+          </div>
+          <div className="space-y-4">
+            <AIInterviewerPanel status={status} />
+            <TranscriptPanel
+              onSubmitAnswer={submitAnswer}
+              submitting={engineBusy || status === "processing"}
+              voiceSupported={stt.supported}
+              voiceListening={stt.listening}
+              liveCaption={liveCaption}
+              voiceError={stt.error}
+              onVoiceSend={voiceSend}
+              onVoiceStop={voiceStop}
+            />
+          </div>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="mt-4 rounded-xl border border-error/30 bg-error-light px-4 py-3 text-sm text-error">
