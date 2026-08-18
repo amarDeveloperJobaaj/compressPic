@@ -5,7 +5,7 @@ import {
   evaluateStoredAnswer,
   QuestionEngineError,
 } from "@/features/ai-interview/services/interview/question-engine";
-import { requireInterviewUser } from "../../session/helpers";
+import { enforceInterviewRateLimit, requireInterviewUser } from "../../session/helpers";
 
 /**
  * POST /api/interview/answer/evaluate (master spec §48, §54).
@@ -28,6 +28,8 @@ const BodySchema = z.object({
 export async function POST(request: Request) {
   const user = await requireInterviewUser();
   if (!user.ok) return user.response;
+  const limited = enforceInterviewRateLimit(user.userId);
+  if (limited) return limited;
 
   let body: unknown;
   try {

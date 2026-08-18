@@ -12,6 +12,7 @@ import type { CandidateProfile } from "../../schemas/resume";
 import type { Difficulty } from "../../types";
 import { listEvaluationsForSession } from "./evaluation-store";
 import { computeReportScores } from "./report-scoring";
+import { trimReportQuestions } from "./context-budget";
 import { getSessionForUser } from "./session";
 
 /**
@@ -105,20 +106,24 @@ function buildReportContext(
     difficulty: (session.difficulty as Difficulty) ?? "intermediate",
     candidateProfile,
     scores: computeReportScores(evaluations, session.interview_type),
-    questions: evaluations.map((e) => ({
-      questionId: e.questionId,
-      question: e.question,
-      questionType: e.questionType,
-      topic: e.topic,
-      difficulty: (e.difficulty as Difficulty) ?? "intermediate",
-      answer: e.answer,
-      score: e.overall,
-      strengths: e.strengths,
-      weaknesses: e.weaknesses,
-      missingPoints: e.missingPoints,
-      improvement: e.improvement,
-      metrics: e.metrics,
-    })),
+    // Phase 11 — cost cap: bound the per-question context sent to the report
+    // provider (the stored report keeps everything the schema allows).
+    questions: trimReportQuestions(
+      evaluations.map((e) => ({
+        questionId: e.questionId,
+        question: e.question,
+        questionType: e.questionType,
+        topic: e.topic,
+        difficulty: (e.difficulty as Difficulty) ?? "intermediate",
+        answer: e.answer,
+        score: e.overall,
+        strengths: e.strengths,
+        weaknesses: e.weaknesses,
+        missingPoints: e.missingPoints,
+        improvement: e.improvement,
+        metrics: e.metrics,
+      }))
+    ),
     questionsAsked: SessionStateSchema.parse(session.current_state ?? {}).questionsAsked || evaluations.length,
     durationMinutes: session.duration_minutes,
   };

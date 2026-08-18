@@ -5,7 +5,7 @@ import {
   generateSessionReport,
   ReportEngineError,
 } from "@/features/ai-interview/services/interview/report-engine";
-import { requireInterviewUser } from "../../session/helpers";
+import { enforceInterviewRateLimit, requireInterviewUser } from "../../session/helpers";
 
 /**
  * POST /api/interview/report/generate (master spec §58–63, Phase 9).
@@ -25,6 +25,8 @@ const BodySchema = z.object({
 export async function POST(request: Request) {
   const user = await requireInterviewUser();
   if (!user.ok) return user.response;
+  const limited = enforceInterviewRateLimit(user.userId);
+  if (limited) return limited;
 
   let body: unknown;
   try {

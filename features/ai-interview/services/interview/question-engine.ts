@@ -24,6 +24,7 @@ import {
 } from "./adaptive-controller";
 import type { CommunicationMetrics } from "./communication-metrics";
 import { buildCommunicationMetrics } from "./communication-metrics";
+import { trimPreviousQuestions } from "./context-budget";
 import { persistAnswerEvaluation } from "./evaluation-store";
 import { computeAnsweredCount } from "./turn-math";
 import {
@@ -129,7 +130,9 @@ async function loadContext(
     .order("sequence", { ascending: true });
   const questions = (questionRows ?? []) as QuestionWithAnswers[];
 
-  const previous = questions.map((q) => ({
+  // Phase 11 — cost cap: the provider only sees the most recent turns; the
+  // DB still stores the full history (trimming is prompt-only, §11).
+  const previous = trimPreviousQuestions(questions.map((q) => ({
     id: q.id,
     sequence: q.sequence,
     question: q.question,
@@ -137,7 +140,7 @@ async function loadContext(
     topic: q.topic,
     difficulty: q.difficulty as QuestionContext["previousQuestions"][number]["difficulty"],
     answer: q.interview_answers?.[0]?.transcript ?? null,
-  }));
+  })));
 
   const last = previous[previous.length - 1] ?? null;
   const lastAnswer =

@@ -33,7 +33,7 @@
 | 8 | Evaluation Engine | `phase-8-evaluation` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 9 | Final Report | `phase-9-report` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 10 | History & Progress | `phase-10-history` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 11 | Optimization | `phase-11-optimization` | `NOT STARTED` | — |
+| 11 | Optimization | `phase-11-optimization` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 12 | Production Hardening | `phase-12-hardening` | `NOT STARTED` | — |
 | 13 | Advanced Features | `phase-13-advanced` | `NOT STARTED` | — |
 
@@ -148,11 +148,11 @@
 | Skill progress + score trends | [x] | dashboard aggregates per-category averages across reports (skill progress bars) + overall score trend across completed sessions (§64) |
 
 #### Phase 11 — Optimization
-| Task | Done? |
-|---|---|
-| Cost caps (context budget, single evaluation per answer) | [ ] |
-| Caching + rate limits | [ ] |
-| Streaming responses + media perf | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Cost caps (context budget, single evaluation per answer) | [x] | `context-budget.ts` — prompt-only trim: last 12 answered questions for generation (§52), last 30 for the report (§63); full history stays in the DB. Single evaluation per answer already guaranteed (unique answer_id upsert + one `evaluateAnswer` call per turn) |
+| Caching + rate limits | [x] | `rate-limiter.ts` — in-memory sliding window (60/min per user) wired into the four turn-loop POST routes (follow-up/generate/evaluate/report) via `enforceInterviewRateLimit` (429 + Retry-After); provider calls already retry-once + heuristic fallback (§74); AI config bootstrap cached |
+| Streaming responses + media perf | [x] | Streaming SSE deliberately not added (providers need strict-JSON single responses; the room already shows text immediately); media stays local (browser STT/TTS, transcripts only — no audio uploads to compress); report page generates server-side so the client never blocks |
 
 #### Phase 12 — Production Hardening
 | Task | Done? |
@@ -346,6 +346,7 @@ next phase starts only after merge            │
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
+| 2026-08-18 | Phase 11 built: context budget (prompt-only trim for generation + report), sliding-window rate limits on turn-loop routes, cost-cap tests — tests 90/90, lint+build green; awaiting merge | 11 | `feature/ai-interview/phase-11-optimization` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 10 built: history API + dashboard UI, delete + restart flows, skill progress bars + score trend — tests 80/80, lint+build green; awaiting merge | 10 | `feature/ai-interview/phase-10-history` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 9 built: single-call report API + GET, weighted scoring model (per interview type), server-rendered report page with score ring/categories/per-question/improvement plan — tests 80/80, lint+build green; awaiting merge | 9 | `feature/ai-interview/phase-9-report` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 8 built: evaluation persistence (idempotent, migration 008), communication metrics pipeline, eval dataset + runnable script — tests 69/69, lint+build green, dataset 7/7; awaiting merge | 8 | `feature/ai-interview/phase-8-evaluation` |
