@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import {
-  generateSessionReport,
-  ReportEngineError,
-} from "@/features/ai-interview/services/interview/report-engine";
+import { generateSessionReport } from "@/features/ai-interview/services/interview/report-engine";
+import { toHttpStatus } from "@/features/ai-interview/services/interview/http-status";
 import { enforceInterviewRateLimit, requireInterviewUser } from "../../session/helpers";
 
 /**
@@ -47,12 +45,7 @@ export async function POST(request: Request) {
     const result = await generateSessionReport(user.userId, parsed.data.sessionId);
     return NextResponse.json({ ok: true, report: result.report, createdAt: result.createdAt });
   } catch (e) {
-    if (e instanceof ReportEngineError) {
-      const status =
-        e.kind === "forbidden" ? 403 : e.kind === "not_found" ? 404 : 409;
-      return NextResponse.json({ ok: false, error: e.message }, { status });
-    }
     const message = e instanceof Error ? e.message : "Failed to generate the report.";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: message }, { status: toHttpStatus(e) });
   }
 }

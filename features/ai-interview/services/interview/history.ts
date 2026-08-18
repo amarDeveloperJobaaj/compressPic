@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 
 import type { Difficulty } from "../../types";
+import { logInterviewEvent } from "./analytics";
 import { getSessionForUser } from "./session";
 
 /**
@@ -194,5 +195,34 @@ export async function deleteSession(
   const admin = createAdminClient();
   const { error } = await admin.from("interview_sessions").delete().eq("id", sessionId);
   if (error) return { ok: false, error: error.message };
+  logInterviewEvent("session_deleted", { sessionId, userId });
   return { ok: true };
+}
+
+/**
+ * Phase 12 privacy — wipe every interview session AND uploaded resume for a
+ * user (GDPR-style delete-all). Sessions cascade to questions, answers,
+ * evaluations and reports; the resumes bucket object is left for the caller
+ * to purge (storage cleanup stays out of the transaction).
+ */
+export async function deleteAllUserData(
+  userId: string
+): Promise<{ ok: true; deletedSessions: number; deletedResumes: number } | { ok: false; error: string }> {
+  const admin = createAdminClient();
+
+  const { count: sessionCount, error: sessionError } = await admin
+    .from("interview_sessions")
+    .delete({ count: "exact" })
+    .eq("user_id", userId);
+  if (sessionError) return { ok: false, error: sessionError.message };
+
+  const { count: resumeCount, error: resumeError } = await admin
+    .from("resumes")
+    .delete({ count: "exact" })
+    .eq("user_id", userId);
+  if (resumeError) return { ok: false, error: resumeError.message };
+
+  logInterviewEvent("session_deleted", { userId, sessions: sessionCount ?? 0 });
+  logInterviewEvent("resume_deleted", { userId, resumes: resumeCount ?? 0 });
+  return { ok: true, deletedSessions: sessionCount ?? 0, deletedResumes: resumeCount ?? 0 };
 }

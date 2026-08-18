@@ -25,6 +25,7 @@ import {
 import type { CommunicationMetrics } from "./communication-metrics";
 import { buildCommunicationMetrics } from "./communication-metrics";
 import { trimPreviousQuestions } from "./context-budget";
+import { logInterviewEvent } from "./analytics";
 import { persistAnswerEvaluation } from "./evaluation-store";
 import { computeAnsweredCount } from "./turn-math";
 import {
@@ -364,6 +365,17 @@ export async function answerAndAskNext(
 
   // Phase 8 — persist the §54 evaluation + metrics (idempotent, per answer).
   await persistAnswerEvaluation(userId, answer.id, evaluation, metrics);
+  logInterviewEvent("answer_stored", {
+    sessionId,
+    answerId: answer.id,
+    questionsAnswered: answeredCount,
+    verdict: verdict,
+  });
+  logInterviewEvent("evaluation_persisted", {
+    sessionId,
+    answerId: answer.id,
+    overall: overall,
+  });
 
   // END_INTERVIEW rules (time / question budget) — finalize the session here.
   if (decision.action === "END_INTERVIEW") {

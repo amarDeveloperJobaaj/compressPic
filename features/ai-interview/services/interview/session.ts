@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
+import { logInterviewEvent } from "./analytics";
 import { CUSTOM_COMPANY_ID } from "@/features/ai-interview/data/companies";
 import { COMPANIES } from "@/features/ai-interview/data/companies";
 import { DOMAINS } from "@/features/ai-interview/data/domains";
@@ -218,6 +219,7 @@ export async function createInterviewSession(
     .select("*")
     .single();
   if (error) throw error;
+  logInterviewEvent("session_created", { sessionId: row.id, userId, role: labels.targetRole });
 
   if (data.resumePath) {
     // Optional resume metadata row (§42) — linked when the user uploaded one.
@@ -289,6 +291,7 @@ export async function startInterviewSession(
     .select("*")
     .single();
   if (error) throw error;
+  logInterviewEvent("session_started", { sessionId, userId });
   return { ok: true, session: mapSessionRow(data) };
 }
 
@@ -319,6 +322,7 @@ export async function endInterviewSession(
     .select("*")
     .single();
   if (error) throw error;
+  logInterviewEvent("session_ended", { sessionId, userId });
   return { ok: true, session: mapSessionRow(data) };
 }
 

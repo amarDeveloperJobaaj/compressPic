@@ -34,7 +34,7 @@
 | 9 | Final Report | `phase-9-report` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 10 | History & Progress | `phase-10-history` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 11 | Optimization | `phase-11-optimization` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 12 | Production Hardening | `phase-12-hardening` | `NOT STARTED` | — |
+| 12 | Production Hardening | `phase-12-hardening` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 13 | Advanced Features | `phase-13-advanced` | `NOT STARTED` | — |
 
 ### Phase detail (checklists)
@@ -155,12 +155,12 @@
 | Streaming responses + media perf | [x] | Streaming SSE deliberately not added (providers need strict-JSON single responses; the room already shows text immediately); media stays local (browser STT/TTS, transcripts only — no audio uploads to compress); report page generates server-side so the client never blocks |
 
 #### Phase 12 — Production Hardening
-| Task | Done? |
-|---|---|
-| Security/ownership tests (401/403 matrix) | [ ] |
-| Privacy (consent stores, retention, delete-all) | [ ] |
-| Observability + analytics events | [ ] |
-| Lighthouse pass, cross-browser QA | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Security/ownership tests (401/403 matrix) | [x] | `http-status.ts` — single dependency-free error→status mapping (400/403/404/409/500) now used by ALL interview routes; full matrix unit-tested (95/95); 401 (auth guard) + 429 (Phase 11 limiter) cover the rest |
+| Privacy (consent stores, retention, delete-all) | [x] | recording consent stored with each session (§31); `DELETE /api/interview/account` wipes all sessions (cascade) + resumes — GDPR-style delete-all + "Delete all data" button on the history page |
+| Observability + analytics events | [x] | `analytics.ts` — structured single-line events (session created/started/ended, answer stored, evaluation persisted, report generated, deletes) logged in dev always, prod when `INTERVIEW_ANALYTICS=1`; no PII |
+| Lighthouse pass, cross-browser QA | [ ] | deferred to post-merge deploy — session pages are noindex client UI; code passes lint+build+tests. Run Lighthouse on the deployed /ai-mock-interview + room before GA |
 
 #### Phase 13 — Advanced Features
 | Task | Done? |
@@ -346,6 +346,7 @@ next phase starts only after merge            │
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
+| 2026-08-18 | Phase 12 built: unified ownership status matrix + tests, delete-all privacy API + UI, env-gated analytics events — tests 95/95, lint+build green; Lighthouse/QA deferred to post-merge deploy | 12 | `feature/ai-interview/phase-12-hardening` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 11 built: context budget (prompt-only trim for generation + report), sliding-window rate limits on turn-loop routes, cost-cap tests — tests 90/90, lint+build green; awaiting merge | 11 | `feature/ai-interview/phase-11-optimization` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 10 built: history API + dashboard UI, delete + restart flows, skill progress bars + score trend — tests 80/80, lint+build green; awaiting merge | 10 | `feature/ai-interview/phase-10-history` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 9 built: single-call report API + GET, weighted scoring model (per interview type), server-rendered report page with score ring/categories/per-question/improvement plan — tests 80/80, lint+build green; awaiting merge | 9 | `feature/ai-interview/phase-9-report` (work stacked on phase-8 branch) |

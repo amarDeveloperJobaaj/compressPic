@@ -13,6 +13,7 @@ import type { Difficulty } from "../../types";
 import { listEvaluationsForSession } from "./evaluation-store";
 import { computeReportScores } from "./report-scoring";
 import { trimReportQuestions } from "./context-budget";
+import { logInterviewEvent } from "./analytics";
 import { getSessionForUser } from "./session";
 
 /**
@@ -174,6 +175,11 @@ export async function generateSessionReport(
   if (error || !data) {
     throw error ?? new ReportEngineError("invalid_state", "Failed to persist the report.");
   }
+  logInterviewEvent("report_generated", {
+    sessionId,
+    overall: report.scores.overall,
+    questions: report.questionAnalysis.length,
+  });
   return mapReportRow(data);
 }
 

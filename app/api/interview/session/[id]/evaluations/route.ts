@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import {
-  EvaluationStoreError,
-  listEvaluationsForSession,
-} from "@/features/ai-interview/services/interview/evaluation-store";
+import { listEvaluationsForSession } from "@/features/ai-interview/services/interview/evaluation-store";
+import { toHttpStatus } from "@/features/ai-interview/services/interview/http-status";
 import { requireInterviewUser } from "../../helpers";
 
 /**
@@ -29,13 +27,7 @@ export async function GET(
     const evaluations = await listEvaluationsForSession(user.userId, id);
     return NextResponse.json({ ok: true, count: evaluations.length, evaluations });
   } catch (e) {
-    if (e instanceof EvaluationStoreError) {
-      return NextResponse.json(
-        { ok: false, error: e.message },
-        { status: e.kind === "forbidden" ? 403 : 404 }
-      );
-    }
     const message = e instanceof Error ? e.message : "Failed to load evaluations.";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: message }, { status: toHttpStatus(e) });
   }
 }

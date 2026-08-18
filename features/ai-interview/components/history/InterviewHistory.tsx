@@ -49,6 +49,7 @@ export function InterviewHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -129,6 +130,30 @@ export function InterviewHistory() {
     [load]
   );
 
+  const removeAll = useCallback(async () => {
+    if (
+      !window.confirm(
+        "Delete ALL your interview data permanently? This removes every session, report and uploaded resume — this cannot be undone."
+      )
+    ) {
+      return;
+    }
+    setDeletingAll(true);
+    try {
+      const res = await fetch("/api/interview/account", { method: "DELETE" });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setError(data.error ?? "Failed to delete your data.");
+        return;
+      }
+      await load();
+    } catch {
+      setError("Failed to delete your data.");
+    } finally {
+      setDeletingAll(false);
+    }
+  }, [load]);
+
   // --- Not signed in ---------------------------------------------------------
   if (!authLoading && !user) {
     return (
@@ -185,11 +210,22 @@ export function InterviewHistory() {
               Track your progress across every mock interview.
             </p>
           </div>
-          <Button asChild>
-            <Link href="/ai-mock-interview/setup">
-              New interview <TrendingUp className="h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-rose-500 hover:bg-rose-500/10"
+              onClick={() => void removeAll()}
+              disabled={deletingAll || (dashboard?.sessions.length ?? 0) === 0}
+            >
+              <Trash2 className="h-4 w-4" /> Delete all data
+            </Button>
+            <Button asChild>
+              <Link href="/ai-mock-interview/setup">
+                New interview <TrendingUp className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
