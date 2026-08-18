@@ -8,6 +8,7 @@ import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/components/ui/button";
 import { Capsule } from "@/components/ui/capsule";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/features/ai-interview/hooks/useAuth";
 import { stepOneSchema, stepThreeSchema, stepTwoSchema } from "@/features/ai-interview/schemas/interview";
 import {
   SETUP_STEPS,
@@ -23,6 +24,10 @@ export function InterviewSetup() {
   const step = useInterviewStore((s) => s.step);
   const nextStep = useInterviewStore((s) => s.nextStep);
   const prevStep = useInterviewStore((s) => s.prevStep);
+
+  // Sessions are tied to a signed-in account (§49) — Start routes to the auth
+  // page when needed, then returns the user to the room.
+  const { user: authUser, loading: authLoading } = useAuth();
 
   const fields = useInterviewStore(
     useShallow((s) => ({
@@ -114,11 +119,22 @@ export function InterviewSetup() {
                   <Sparkles className="h-4 w-4" />
                   Start Interview
                 </Button>
+              ) : authLoading ? (
+                <Button size="lg" disabled>
+                  <Bot className="h-4 w-4" />
+                  Checking…
+                </Button>
               ) : (
                 <Button asChild size="lg">
-                  <Link href="/ai-mock-interview/room">
+                  <Link
+                    href={
+                      authUser
+                        ? "/ai-mock-interview/room"
+                        : "/ai-mock-interview/auth?next=/ai-mock-interview/room"
+                    }
+                  >
                     <Bot className="h-4 w-4" />
-                    Start Interview
+                    {authUser ? "Start Interview" : "Sign in to start"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -128,6 +144,13 @@ export function InterviewSetup() {
                 Continue
                 <ArrowRight className="h-4 w-4" />
               </Button>
+            )}
+
+            {isLast && !authLoading && !authUser && (
+              <p className="mt-4 w-full text-center text-xs text-text-muted">
+                You&apos;ll sign in before the interview starts — your session and report are saved to
+                your account.
+              </p>
             )}
           </div>
         </div>

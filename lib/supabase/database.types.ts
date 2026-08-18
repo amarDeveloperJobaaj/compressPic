@@ -446,6 +446,317 @@ export type Database = {
           },
         ];
       };
+      resumes: {
+        Row: {
+          id: string;
+          user_id: string;
+          file_name: string | null;
+          file_path: string | null;
+          parsed_text: string | null;
+          candidate_profile: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          file_name?: string | null;
+          file_path?: string | null;
+          parsed_text?: string | null;
+          candidate_profile?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          file_name?: string | null;
+          file_path?: string | null;
+          parsed_text?: string | null;
+          candidate_profile?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      interview_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          resume_id: string | null;
+          target_role: string;
+          target_company: string | null;
+          domain: string | null;
+          experience_level: string | null;
+          interview_type: string;
+          duration_minutes: number;
+          difficulty: string;
+          status: string;
+          config: Json;
+          current_state: Json;
+          started_at: string | null;
+          ended_at: string | null;
+          overall_score: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          resume_id?: string | null;
+          target_role: string;
+          target_company?: string | null;
+          domain?: string | null;
+          experience_level?: string | null;
+          interview_type: string;
+          duration_minutes: number;
+          difficulty?: string;
+          status?: string;
+          config?: Json;
+          current_state?: Json;
+          started_at?: string | null;
+          ended_at?: string | null;
+          overall_score?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          resume_id?: string | null;
+          target_role?: string;
+          target_company?: string | null;
+          domain?: string | null;
+          experience_level?: string | null;
+          interview_type?: string;
+          duration_minutes?: number;
+          difficulty?: string;
+          status?: string;
+          config?: Json;
+          current_state?: Json;
+          started_at?: string | null;
+          ended_at?: string | null;
+          overall_score?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "interview_sessions_resume_id_fkey";
+            columns: ["resume_id"];
+            isOneToOne: false;
+            referencedRelation: "resumes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      interview_questions: {
+        Row: {
+          id: string;
+          session_id: string;
+          question: string;
+          question_type: string;
+          topic: string | null;
+          difficulty: string;
+          sequence: number;
+          parent_question_id: string | null;
+          asked_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          question: string;
+          question_type?: string;
+          topic?: string | null;
+          difficulty?: string;
+          sequence: number;
+          parent_question_id?: string | null;
+          asked_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          question?: string;
+          question_type?: string;
+          topic?: string | null;
+          difficulty?: string;
+          sequence?: number;
+          parent_question_id?: string | null;
+          asked_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "interview_questions_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "interview_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "interview_questions_parent_question_id_fkey";
+            columns: ["parent_question_id"];
+            isOneToOne: false;
+            referencedRelation: "interview_questions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      interview_answers: {
+        Row: {
+          id: string;
+          question_id: string;
+          transcript: string | null;
+          audio_url: string | null;
+          video_url: string | null;
+          duration_seconds: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_id: string;
+          transcript?: string | null;
+          audio_url?: string | null;
+          video_url?: string | null;
+          duration_seconds?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          question_id?: string;
+          transcript?: string | null;
+          audio_url?: string | null;
+          video_url?: string | null;
+          duration_seconds?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "interview_answers_question_id_fkey";
+            columns: ["question_id"];
+            isOneToOne: false;
+            referencedRelation: "interview_questions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      interview_evaluations: {
+        Row: {
+          id: string;
+          answer_id: string;
+          technical_score: number | null;
+          relevance_score: number | null;
+          clarity_score: number | null;
+          communication_score: number | null;
+          problem_solving_score: number | null;
+          answer_quality_score: number | null;
+          strengths: Json;
+          weaknesses: Json;
+          missing_points: Json;
+          improvement: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          answer_id: string;
+          technical_score?: number | null;
+          relevance_score?: number | null;
+          clarity_score?: number | null;
+          communication_score?: number | null;
+          problem_solving_score?: number | null;
+          answer_quality_score?: number | null;
+          strengths?: Json;
+          weaknesses?: Json;
+          missing_points?: Json;
+          improvement?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          answer_id?: string;
+          technical_score?: number | null;
+          relevance_score?: number | null;
+          clarity_score?: number | null;
+          communication_score?: number | null;
+          problem_solving_score?: number | null;
+          answer_quality_score?: number | null;
+          strengths?: Json;
+          weaknesses?: Json;
+          missing_points?: Json;
+          improvement?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "interview_evaluations_answer_id_fkey";
+            columns: ["answer_id"];
+            isOneToOne: false;
+            referencedRelation: "interview_answers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      interview_reports: {
+        Row: {
+          id: string;
+          session_id: string;
+          overall_score: number | null;
+          technical_score: number | null;
+          communication_score: number | null;
+          problem_solving_score: number | null;
+          project_score: number | null;
+          behavioral_score: number | null;
+          strengths: Json;
+          weaknesses: Json;
+          improvement_areas: Json;
+          recommended_topics: Json;
+          summary: string | null;
+          report: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          overall_score?: number | null;
+          technical_score?: number | null;
+          communication_score?: number | null;
+          problem_solving_score?: number | null;
+          project_score?: number | null;
+          behavioral_score?: number | null;
+          strengths?: Json;
+          weaknesses?: Json;
+          improvement_areas?: Json;
+          recommended_topics?: Json;
+          summary?: string | null;
+          report?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          overall_score?: number | null;
+          technical_score?: number | null;
+          communication_score?: number | null;
+          problem_solving_score?: number | null;
+          project_score?: number | null;
+          behavioral_score?: number | null;
+          strengths?: Json;
+          weaknesses?: Json;
+          improvement_areas?: Json;
+          recommended_topics?: Json;
+          summary?: string | null;
+          report?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "interview_reports_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "interview_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       settings: {
         Row: {
           key: string;

@@ -4,6 +4,8 @@ import { getAiBootstrapConfig } from "./config";
 import { OpenAICompatibleProvider } from "./openai-compatible";
 import type { AIProvider } from "./types";
 import { heuristicAnalyzeResume } from "./heuristic";
+import { heuristicEvaluateAnswer } from "./heuristic-evaluation";
+import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
 
 /**
  * Provider factory (master spec §34, §118).
@@ -21,13 +23,14 @@ export function getAIProvider(): AIProvider {
     if (!cached) cached = new OpenAICompatibleProvider(config);
     return cached;
   }
-  // Not configured — heuristic fallback provider.
+  // Not configured — heuristic fallback provider (§74): every operation still
+  // works deterministically so the flow never hard-fails without an AI key.
   return {
     id: "heuristic",
     analyzeResume: async ({ resumeText }) => heuristicAnalyzeResume(resumeText),
-    generateQuestion: () => Promise.reject(new Error("No AI provider configured (Phase 5+).")),
-    generateFollowUp: () => Promise.reject(new Error("No AI provider configured (Phase 5+).")),
-    evaluateAnswer: () => Promise.reject(new Error("No AI provider configured (Phase 8+).")),
+    generateQuestion: async (context) => heuristicGenerateQuestion(context),
+    generateFollowUp: async (context) => heuristicGenerateFollowUp(context),
+    evaluateAnswer: async (context) => heuristicEvaluateAnswer(context),
     generateReport: () => Promise.reject(new Error("No AI provider configured (Phase 9+).")),
   };
 }
