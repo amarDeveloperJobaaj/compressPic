@@ -30,12 +30,12 @@
 | 5 | AI Question Engine | `phase-5-question-engine` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 6 | Speech & Voice Loop | `phase-6-voice` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 7 | Adaptive Interview Engine | `phase-7-adaptive` | `COMPLETED · merged ✓` | 2026-08-18 |
-| 8 | Evaluation Engine | `phase-8-evaluation` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 9 | Final Report | `phase-9-report` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 10 | History & Progress | `phase-10-history` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 11 | Optimization | `phase-11-optimization` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 12 | Production Hardening | `phase-12-hardening` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 13 | Advanced Features | `phase-13-advanced` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
+| 8 | Evaluation Engine | `phase-8-evaluation` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 9 | Final Report | `phase-9-report` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 10 | History & Progress | `phase-10-history` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 11 | Optimization | `phase-11-optimization` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 12 | Production Hardening | `phase-12-hardening` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 13 | Advanced Features | `phase-13-advanced` | `COMPLETED · merged ✓` | 2026-08-18 |
 
 ### Phase detail (checklists)
 
@@ -341,6 +341,7 @@ next phase starts only after merge            │
 
 | Date | What changed | Phase | Branch / commit |
 |---|---|---|---|
+| 2026-08-18 | Phases 8–13 merged to main (`feature/ai-interview/phase-8-evaluation` → main, --no-ff): evaluation engine, final report, history & progress, optimization, production hardening, advanced features (personalities, multi-round, premium flags, coding interview mode) — all `COMPLETED · merged ✓`; post-merge QA (Lighthouse + cross-browser) still deferred per Phase 12 | 8–13 | `main` (merge commit) |
 | 2026-08-18 | Phase 13 follow-up: coding interview mode implemented per its design doc — `coding` interview type (Pro badge when flag off), coding question + evaluation prompts (AI + heuristic fallbacks), room CodingPanel (problem statement/examples/constraints + line-numbered editor, no camera/mic/TTS), report coding-solutions card from persisted evaluations, coding weights in scoring model — tests 104/104, lint+build green | 13 | `feature/ai-interview/phase-8-evaluation` (stacked) |
 | 2026-08-18 | Phase 13 built: interviewer personalities (4 personas, tone directive injected into question/follow-up prompts) + multi-round flag (round snapshotted per session, restart increments), premium feature flags + Pro-badge picker UI, coding-interview + system-design whiteboard design docs (docs/ai-interview/) — tests 99/99, lint+build green; awaiting merge | 13 | `feature/ai-interview/phase-13-advanced` (work stacked on phase-8 branch) |
 | 2026-08-13 | Phase 7 built (stacked on phase-6-voice): Adaptive Interview Engine — `evaluateAnswer` on both providers (Zod §54 dimensions + deterministic heuristic evaluator, evaluation-v1 prompt), pure adaptive controller (verdict thresholds, §24 action mapping, §25 difficulty ladder, END_INTERVIEW time/question budgets, follow-up depth cap), turn loop now evaluates → decides → generates honoring `adaptiveIntent` (or ENDs the session server-side), §40 `performanceSummary` (overall + per-topic + verdict counts) persisted in `current_state`, new `POST /api/interview/answer/evaluate` route, room handles the ended flow — lint(branch)+build green (194/194), 64/64 unit tests; awaiting approval | 7 | `feature/ai-interview/phase-7-adaptive` |
