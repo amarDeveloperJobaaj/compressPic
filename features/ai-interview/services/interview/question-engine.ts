@@ -22,6 +22,9 @@ import {
   mergePerformance,
   parsePerformanceSummary,
 } from "./adaptive-controller";
+import type { CommunicationMetrics } from "./communication-metrics";
+import { buildCommunicationMetrics } from "./communication-metrics";
+import { persistAnswerEvaluation } from "./evaluation-store";
 import { computeAnsweredCount } from "./turn-math";
 import {
   endInterviewSession,
@@ -67,6 +70,8 @@ export interface QuestionTurnResult {
   ended: boolean;
   /** §54 evaluation of the just-submitted answer. */
   evaluation: EvaluatedAnswer | null;
+  /** §55–57 communication metrics for the just-submitted answer. */
+  metrics: CommunicationMetrics | null;
 }
 
 type SessionRow = Database["public"]["Tables"]["interview_sessions"]["Row"];
@@ -193,7 +198,7 @@ export async function askFirstQuestion(
   // response was lost after the server committed), return it instead of
   // generating a duplicate.
   if (questions.length > 0) {
-    return { question: mapQuestionRow(questions[0]), answer: null, ended: false, evaluation: null };
+    return { question: mapQuestionRow(questions[0]), answer: null, ended: false, evaluation: null, metrics: null };
   }
 
   const provider = getAIProvider();
@@ -214,7 +219,7 @@ export async function askFirstQuestion(
     currentQuestion: question.sequence,
   });
 
-  return { question, answer: null, ended: false, evaluation: null };
+  return { question, answer: null, ended: false, evaluation: null, metrics: null };
 }
 
 /** Build the §54 evaluation context for one just-answered question. */
@@ -245,7 +250,7 @@ export async function evaluateStoredAnswer(
   userId: string,
   sessionId: string,
   questionId: string
-): Promise<{ evaluation: EvaluatedAnswer }> {
+): Promise<{ evaluation: EvaluatedAnswer; metrics: CommunicationMetrics }> {
   const { questions, context } = await loadContext(userId, sessionId, "next");
   const question = questions.find((q) => q.id === questionId);
   const answer = question?.interview_answers?.[0];
@@ -262,7 +267,16 @@ export async function evaluateStoredAnswer(
   );
   const overall = computeOverall(raw);
   const verdict = deriveVerdict(overall);
-  return { evaluation: { ...raw, overall, verdict } };
+  const evaluation: EvaluatedAnswer = { ...raw, overall, verdict };
+
+  // Phase 8 — persist the evaluation + communication metrics (§55–57).
+  const metrics = buildCommunicationMetrics(
+    answer.transcript,
+    answer.duration_seconds ?? null
+  );
+  await persistAnswerEvaluation(userId, answer.id, evaluation, metrics);
+
+  return { evaluation, metrics };
 }
 
 /**
@@ -306,6 +320,12 @@ export async function answerAndAskNext(
     durationSeconds: parsed.data.durationSeconds,
   });
 
+  // Phase 8 — communication metrics pipeline (§55–57) for this answer.
+  const metrics = buildCommunicationMetrics(
+    parsed.data.transcript,
+    parsed.data.durationSeconds ?? null
+  );
+
   // Retry-safe count from the pre-insert snapshot (§40) — a resubmitted
   // answer (stored by a failed attempt) must not inflate questionsAnswered.
   const answeredCount = computeAnsweredCount(
@@ -339,11 +359,14 @@ export async function answerAndAskNext(
     followUpDepth,
   });
 
+  // Phase 8 — persist the §54 evaluation + metrics (idempotent, per answer).
+  await persistAnswerEvaluation(userId, answer.id, evaluation, metrics);
+
   // END_INTERVIEW rules (time / question budget) — finalize the session here.
   if (decision.action === "END_INTERVIEW") {
     await updateSessionState(userId, sessionId, { questionsAnswered: answeredCount });
     await endInterviewSession(userId, sessionId);
-    return { question: null, answer, ended: true, evaluation };
+    return { question: null, answer, ended: true, evaluation, metrics };
   }
 
   await updateSessionState(userId, sessionId, { questionsAnswered: answeredCount });
@@ -387,5 +410,5 @@ export async function answerAndAskNext(
     ) as unknown as SessionState["performanceSummary"],
   });
 
-  return { question, answer, ended: false, evaluation };
+  return { question, answer, ended: false, evaluation, metrics };
 }
