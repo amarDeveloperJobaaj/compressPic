@@ -37,6 +37,15 @@ export const INTERVIEW_TYPE_WEIGHTS: Record<string, Record<keyof ReportScores, n
     project: 0.15,
     behavioral: 0.1,
   },
+  // Phase 13 — coding interviews weight algorithm/correctness + problem solving.
+  coding: {
+    overall: 0,
+    technical: 0.4,
+    communication: 0.05,
+    problemSolving: 0.4,
+    project: 0.1,
+    behavioral: 0.05,
+  },
   behavioral: {
     overall: 0,
     technical: 0.1,

@@ -36,6 +36,8 @@ export interface InterviewType {
   name: string;
   description: string;
   recommended?: boolean;
+  /** Premium feature gate — shows a Pro badge when the flag is off (Phase 13). */
+  premium?: boolean;
 }
 
 export interface DurationOption {

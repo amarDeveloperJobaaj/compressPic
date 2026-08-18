@@ -16,7 +16,12 @@ import {
  * pickers can show Pro badges next to locked features without exposing any
  * server secrets.
  */
-const FEATURES: PremiumFeature[] = ["personalities", "multi_round", "advanced_reports"];
+const FEATURES: PremiumFeature[] = [
+  "personalities",
+  "multi_round",
+  "advanced_reports",
+  "coding_interviews",
+];
 
 function subscribe(): () => void {
   return () => {};

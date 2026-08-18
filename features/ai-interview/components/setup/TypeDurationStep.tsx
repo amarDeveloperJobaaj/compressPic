@@ -1,8 +1,11 @@
 "use client";
 
+import { Crown } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { DURATIONS } from "@/features/ai-interview/data/durations";
 import { INTERVIEW_TYPES } from "@/features/ai-interview/data/interview-types";
+import { usePremiumFeatures } from "@/features/ai-interview/hooks/usePremiumFeatures";
 import { useInterviewStore } from "@/features/ai-interview/store/interview-store";
 import { ResumeUploader } from "../ResumeUploader";
 import { InterviewerOptions } from "./InterviewerOptions";
@@ -14,6 +17,8 @@ export function TypeDurationStep() {
   const durationMinutes = useInterviewStore((s) => s.durationMinutes);
   const setInterviewTypeId = useInterviewStore((s) => s.setInterviewTypeId);
   const setDurationMinutes = useInterviewStore((s) => s.setDurationMinutes);
+  const premium = usePremiumFeatures();
+  const codingEnabled = premium.coding_interviews;
 
   return (
     <div className="space-y-8">
@@ -25,17 +30,20 @@ export function TypeDurationStep() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {INTERVIEW_TYPES.map((type) => {
             const selected = interviewTypeId === type.id;
+            const locked = type.premium && !codingEnabled;
             return (
               <button
                 key={type.id}
                 type="button"
                 aria-pressed={selected}
+                disabled={locked}
                 onClick={() => setInterviewTypeId(type.id)}
                 className={cn(
                   "relative rounded-2xl border p-4 text-left transition-all duration-200",
                   selected
                     ? "border-primary bg-primary-light/60 shadow-lg shadow-primary/10"
-                    : "border-border bg-surface hover:border-primary/40 hover:bg-primary-light/30"
+                    : "border-border bg-surface hover:border-primary/40 hover:bg-primary-light/30",
+                  locked && "cursor-not-allowed opacity-60 hover:border-border hover:bg-surface"
                 )}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -48,6 +56,12 @@ export function TypeDurationStep() {
                       )}
                     >
                       Recommended
+                    </span>
+                  )}
+                  {locked && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      <Crown className="h-3 w-3" />
+                      Pro
                     </span>
                   )}
                 </div>

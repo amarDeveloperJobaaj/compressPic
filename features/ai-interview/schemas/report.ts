@@ -25,7 +25,7 @@ export type ReportScores = z.infer<typeof ReportScoresSchema>;
 /** Per-question feedback — §63: score + good/missing/improve per question. */
 export const ReportQuestionAnalysisSchema = z.object({
   questionId: z.string().uuid(),
-  question: z.string().max(1000),
+  question: z.string().max(3000),
   score: z.number().min(0).max(10),
   good: z.array(z.string().max(300)).max(6).default([]),
   missing: z.array(z.string().max(300)).max(6).default([]),

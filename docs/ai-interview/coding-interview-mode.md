@@ -1,8 +1,16 @@
 # Coding Interview Mode — Mini Design
 
 > Phase 13 advanced feature (master spec §13, §101). Per `05-phase-commands.md`
-> this item needs a design doc **before any code**. No code exists yet — this
-> doc is the gate. Premium/flag-gated, no payments wired (§107).
+> this item needs a design doc **before any code** — this doc is that gate and
+> it has been **implemented as designed** (see status note below).
+> Premium/flag-gated, no payments wired (§107).
+
+> **Implementation status (2026-08-18):** built exactly per this doc —
+> `coding` interview type (Pro-badged when the flag is off), coding problem
+> prompt + coding evaluation prompt (AI + deterministic heuristic fallbacks),
+> room CodingPanel (statement + editor, no camera/mic/TTS), report "Your
+> coding solutions" card rendered from persisted evaluations (never via the
+> AI report). No new tables, no new endpoints.
 
 ## 1. What it is
 

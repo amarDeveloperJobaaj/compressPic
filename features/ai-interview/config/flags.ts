@@ -10,7 +10,11 @@
  *   NEXT_PUBLIC_INTERVIEW_PREMIUM_FEATURES=personalities,multi_round
  */
 
-export type PremiumFeature = "personalities" | "multi_round" | "advanced_reports";
+export type PremiumFeature =
+  | "personalities"
+  | "multi_round"
+  | "advanced_reports"
+  | "coding_interviews";
 
 const SERVER_ENV_KEY = "INTERVIEW_PREMIUM_FEATURES";
 const CLIENT_ENV_KEY = "NEXT_PUBLIC_INTERVIEW_PREMIUM_FEATURES";

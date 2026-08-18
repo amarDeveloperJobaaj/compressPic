@@ -5,6 +5,7 @@ import {
   Award,
   BarChart3,
   BookOpen,
+  Braces,
   CheckCircle2,
   ChevronRight,
   MessageSquareText,
@@ -22,6 +23,8 @@ import {
   getSessionReport,
   ReportEngineError,
 } from "@/features/ai-interview/services/interview/report-engine";
+import type { StoredEvaluation } from "@/features/ai-interview/services/interview/evaluation-store";
+import { listEvaluationsForSession } from "@/features/ai-interview/services/interview/evaluation-store";
 import type { InterviewReport } from "@/features/ai-interview/schemas/report";
 
 /** Report page — never indexed (06-seo.md: session UI is not indexable). */
@@ -55,6 +58,26 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
+function ScoreChip({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-border bg-background px-3 py-2">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-text-muted">{label}</p>
+      <p className="mt-0.5 text-base font-bold text-text-primary">{value.toFixed(1)}</p>
+    </div>
+  );
+}
+
+/** Parse the coding problem JSON stored in the question text (Phase 13). */
+function parseCodingProblem(raw: string): { statement: string } | null {
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.statement === "string") return parsed;
+  } catch {
+    // not JSON — fall through
+  }
+  return null;
+}
+
 function SectionCard({
   icon,
   title,
@@ -85,6 +108,9 @@ export default async function InterviewReportPage({
 
   let report: InterviewReport | null = null;
   let error: string | null = null;
+  // Phase 13 — coding interview solutions (rendered deterministically, never
+  // via the AI report): problem + submitted code + per-dimension scores.
+  let codingSolutions: StoredEvaluation[] = [];
 
   if (auth.ok) {
     try {
@@ -93,6 +119,11 @@ export default async function InterviewReportPage({
       report = existing
         ? existing.report
         : (await generateSessionReport(auth.userId, sessionId)).report;
+
+      const evaluations = await listEvaluationsForSession(auth.userId, sessionId);
+      codingSolutions = evaluations.filter(
+        (e) => e.questionType.toLowerCase() === "coding"
+      );
     } catch (e) {
       if (e instanceof ReportEngineError && e.kind === "invalid_state") {
         error = e.message;
@@ -261,6 +292,70 @@ export default async function InterviewReportPage({
                 </div>
               </div>
             </SectionCard>
+
+            {/* Phase 13 — coding solutions (deterministic, from evaluations) */}
+            {codingSolutions.length > 0 && (
+              <SectionCard icon={<Braces className="h-5 w-5" />} title="Your coding solutions">
+                <p className="text-sm text-text-secondary">
+                  Submitted code with the per-dimension scores from your coding interview.
+                </p>
+                <div className="mt-4 space-y-5">
+                  {codingSolutions.map((e) => {
+                    const problem = parseCodingProblem(e.question);
+                    return (
+                      <div key={e.id} className="overflow-hidden rounded-xl border border-border bg-surface/60">
+                        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold uppercase tracking-wide text-text-muted">
+                              {e.topic ?? "Coding problem"}
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-text-primary">
+                              {problem?.statement ?? e.question}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                            {e.overall.toFixed(1)}/10
+                          </span>
+                        </div>
+
+                        <div className="grid gap-3 px-4 py-3 sm:grid-cols-3">
+                          <ScoreChip label="Accuracy" value={e.scores.technicalAccuracy} />
+                          <ScoreChip label="Completeness" value={e.scores.completeness} />
+                          <ScoreChip label="Depth" value={e.scores.depth} />
+                          <ScoreChip label="Clarity" value={e.scores.clarity} />
+                          <ScoreChip label="Structure" value={e.scores.structure} />
+                          <ScoreChip label="Relevance" value={e.scores.relevance} />
+                        </div>
+
+                        <pre className="max-h-80 overflow-auto border-t border-border bg-[#0d1117] px-4 py-3 font-mono text-[12px] leading-5 text-sky-100">
+                          {e.answer || "(no code submitted)"}
+                        </pre>
+
+                        {(e.strengths.length > 0 || e.weaknesses.length > 0) && (
+                          <div className="border-t border-border px-4 py-3">
+                            {e.strengths.length > 0 && (
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                                <span className="font-semibold">Good:</span> {e.strengths.join(" · ")}
+                              </p>
+                            )}
+                            {e.weaknesses.length > 0 && (
+                              <p className="mt-1 text-xs text-rose-500">
+                                <span className="font-semibold">Improve:</span> {e.weaknesses.join(" · ")}
+                              </p>
+                            )}
+                            {e.improvement && (
+                              <p className="mt-1 text-xs text-text-secondary">
+                                <span className="font-semibold">Next step:</span> {e.improvement}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </SectionCard>
+            )}
 
             {/* Recommended topics */}
             {report.recommendedTopics.length > 0 && (

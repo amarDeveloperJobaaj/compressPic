@@ -22,6 +22,14 @@ import {
   buildEvaluationUserPrompt,
 } from "../../prompts/evaluation/evaluation-v1";
 import {
+  CODING_EVALUATION_SYSTEM_PROMPT,
+  buildCodingEvaluationUserPrompt,
+} from "../../prompts/evaluation/evaluation-coding-v1";
+import {
+  buildCodingQuestionSystemPrompt,
+  buildCodingQuestionUserPrompt,
+} from "../../prompts/question/question-coding-v1";
+import {
   REPORT_SYSTEM_PROMPT,
   buildReportUserPrompt,
 } from "../../prompts/report/report-v1";
@@ -39,6 +47,11 @@ import { heuristicAnalyzeResume } from "./heuristic";
 import { heuristicEvaluateAnswer } from "./heuristic-evaluation";
 import { heuristicGenerateReport } from "./heuristic-report";
 import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
+import {
+  heuristicGenerateCodingFollowUp,
+  heuristicGenerateCodingQuestion,
+} from "./heuristic-coding-questions";
+import { heuristicEvaluateCodingAnswer } from "./heuristic-coding-evaluation";
 import type { z } from "zod";
 
 /**
@@ -156,34 +169,69 @@ export class OpenAICompatibleProvider implements AIProvider {
   }
 
   async generateQuestion(context: QuestionContext): Promise<GeneratedQuestion> {
+    // Phase 13 — coding interview mode: problem statements instead of prose.
+    const isCoding = context.interviewType.toLowerCase() === "coding";
     const messages: ChatCompletionMessage[] = [
-      { role: "system", content: buildQuestionSystemPrompt(context.personalityId) },
-      { role: "user", content: buildQuestionUserPrompt(context) },
+      {
+        role: "system",
+        content: isCoding
+          ? buildCodingQuestionSystemPrompt(context.personalityId)
+          : buildQuestionSystemPrompt(context.personalityId),
+      },
+      {
+        role: "user",
+        content: isCoding
+          ? buildCodingQuestionUserPrompt(context)
+          : buildQuestionUserPrompt(context),
+      },
     ];
     const { value } = await this.chatJson(messages, GeneratedQuestionSchema, () =>
-      heuristicGenerateQuestion(context)
+      isCoding ? heuristicGenerateCodingQuestion(context) : heuristicGenerateQuestion(context)
     );
     return value;
   }
 
   async generateFollowUp(context: QuestionContext): Promise<GeneratedQuestion> {
+    const isCoding = context.interviewType.toLowerCase() === "coding";
     const messages: ChatCompletionMessage[] = [
-      { role: "system", content: buildFollowUpSystemPrompt(context.personalityId) },
-      { role: "user", content: buildFollowUpUserPrompt(context) },
+      {
+        role: "system",
+        content: isCoding
+          ? buildCodingQuestionSystemPrompt(context.personalityId)
+          : buildFollowUpSystemPrompt(context.personalityId),
+      },
+      {
+        role: "user",
+        content: isCoding
+          ? buildCodingQuestionUserPrompt(context)
+          : buildFollowUpUserPrompt(context),
+      },
     ];
     const { value } = await this.chatJson(messages, GeneratedQuestionSchema, () =>
-      heuristicGenerateFollowUp(context)
+      isCoding ? heuristicGenerateCodingFollowUp(context) : heuristicGenerateFollowUp(context)
     );
     return value;
   }
 
   async evaluateAnswer(context: EvaluationContext): Promise<AnswerEvaluation> {
+    // Phase 13 — coding mode evaluates submitted code with the coding prompt.
+    const isCoding = context.questionType.toLowerCase() === "coding";
     const messages: ChatCompletionMessage[] = [
-      { role: "system", content: EVALUATION_SYSTEM_PROMPT },
-      { role: "user", content: buildEvaluationUserPrompt(context) },
+      {
+        role: "system",
+        content: isCoding ? CODING_EVALUATION_SYSTEM_PROMPT : EVALUATION_SYSTEM_PROMPT,
+      },
+      {
+        role: "user",
+        content: isCoding
+          ? buildCodingEvaluationUserPrompt(context)
+          : buildEvaluationUserPrompt(context),
+      },
     ];
-    const { value } = await this.chatJson(messages, AnswerEvaluationSchema, () =>
-      heuristicEvaluateAnswer(context),
+    const { value } = await this.chatJson(
+      messages,
+      AnswerEvaluationSchema,
+      () => (isCoding ? heuristicEvaluateCodingAnswer(context) : heuristicEvaluateAnswer(context)),
       0.2
     );
     return value;
