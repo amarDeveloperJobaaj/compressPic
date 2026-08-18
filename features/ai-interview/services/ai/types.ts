@@ -1,7 +1,9 @@
 import type { AnswerEvaluation } from "../../schemas/evaluation";
 import type { GeneratedQuestion } from "../../schemas/question";
 import type { CandidateProfile, ResumeAnalysisResult } from "../../schemas/resume";
+import type { InterviewReport, ReportScores } from "../../schemas/report";
 import type { Difficulty } from "../../types";
+import type { CommunicationMetrics } from "../interview/communication-metrics";
 
 /**
  * AI provider abstraction (master spec §34).
@@ -84,6 +86,46 @@ export interface EvaluationContext {
   domain: string | null;
 }
 
+/** One answered question with its persisted §54 evaluation + metrics — §63. */
+export interface ReportQuestionEntry {
+  questionId: string;
+  question: string;
+  questionType: string;
+  topic: string | null;
+  difficulty: Difficulty;
+  answer: string;
+  /** 0–10 overall of that answer. */
+  score: number;
+  strengths: string[];
+  weaknesses: string[];
+  missingPoints: string[];
+  improvement: string | null;
+  metrics: CommunicationMetrics;
+}
+
+/**
+ * Full context for the final report (master spec §58–63, Phase 9): setup
+ * labels, candidate profile, every question + answer + evaluation, and the
+ * deterministic category scores. Resume/answers are DATA (§73) — the AI
+ * writes the qualitative report, it never recomputes the numbers.
+ */
+export interface ReportGenerationContext {
+  targetRole: string;
+  domain: string | null;
+  targetCompany: string | null;
+  experienceLevel: string | null;
+  interviewType: string;
+  difficulty: Difficulty;
+  candidateProfile: CandidateProfile | null;
+  /** Deterministic §58 scores from the weighted scoring model. */
+  scores: ReportScores;
+  /** Per-question evaluations + metrics, in ask order. */
+  questions: ReportQuestionEntry[];
+  /** Total questions asked (incl. unanswered) — for the summary. */
+  questionsAsked: number;
+  durationMinutes: number;
+}
+
 export interface AIProvider {
   readonly id: string;
   /** Structured candidate profile from resume text (§19). */
@@ -94,9 +136,8 @@ export interface AIProvider {
   generateFollowUp(context: QuestionContext): Promise<GeneratedQuestion>;
   /** Per-answer evaluation on the §54 dimensions (Phase 7). */
   evaluateAnswer(context: EvaluationContext): Promise<AnswerEvaluation>;
-
-  // Declared for interface stability (implemented in a later phase):
-  generateReport(..._args: unknown[]): Promise<unknown>;
+  /** Final report (Phase 9) — §58–63, strict JSON. */
+  generateReport(context: ReportGenerationContext): Promise<InterviewReport>;
 }
 
 export type { CandidateProfile };

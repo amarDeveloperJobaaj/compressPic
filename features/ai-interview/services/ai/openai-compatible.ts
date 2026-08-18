@@ -21,11 +21,23 @@ import {
   EVALUATION_SYSTEM_PROMPT,
   buildEvaluationUserPrompt,
 } from "../../prompts/evaluation/evaluation-v1";
+import {
+  REPORT_SYSTEM_PROMPT,
+  buildReportUserPrompt,
+} from "../../prompts/report/report-v1";
+import { InterviewReportSchema } from "../../schemas/report";
 import type { AiBootstrapConfig } from "./config";
 import { chatCompletionsUrl } from "./config";
-import type { AIProvider, EvaluationContext, QuestionContext, ResumeAnalysisContext } from "./types";
+import type {
+  AIProvider,
+  EvaluationContext,
+  QuestionContext,
+  ReportGenerationContext,
+  ResumeAnalysisContext,
+} from "./types";
 import { heuristicAnalyzeResume } from "./heuristic";
 import { heuristicEvaluateAnswer } from "./heuristic-evaluation";
+import { heuristicGenerateReport } from "./heuristic-report";
 import { heuristicGenerateFollowUp, heuristicGenerateQuestion } from "./heuristic-questions";
 import type { z } from "zod";
 
@@ -177,8 +189,17 @@ export class OpenAICompatibleProvider implements AIProvider {
     return value;
   }
 
-  // Later-phase method — not implemented yet.
-  async generateReport() {
-    throw new Error("generateReport is not implemented until Phase 9.");
+  async generateReport(context: ReportGenerationContext) {
+    const messages: ChatCompletionMessage[] = [
+      { role: "system", content: REPORT_SYSTEM_PROMPT },
+      { role: "user", content: buildReportUserPrompt(context) },
+    ];
+    const { value } = await this.chatJson(
+      messages,
+      InterviewReportSchema,
+      () => heuristicGenerateReport(context),
+      0.3
+    );
+    return value;
   }
 }

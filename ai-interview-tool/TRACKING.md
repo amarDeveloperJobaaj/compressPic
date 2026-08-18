@@ -31,7 +31,7 @@
 | 6 | Speech & Voice Loop | `phase-6-voice` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 7 | Adaptive Interview Engine | `phase-7-adaptive` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 8 | Evaluation Engine | `phase-8-evaluation` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
-| 9 | Final Report | `phase-9-report` | `NOT STARTED` | — |
+| 9 | Final Report | `phase-9-report` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-18 |
 | 10 | History & Progress | `phase-10-history` | `NOT STARTED` | — |
 | 11 | Optimization | `phase-11-optimization` | `NOT STARTED` | — |
 | 12 | Production Hardening | `phase-12-hardening` | `NOT STARTED` | — |
@@ -134,11 +134,11 @@
 | Eval dataset + runnable script | [x] | `eval-dataset.ts` (7 curated cases: strong/brief/filler-heavy/off-topic/mid-depth/expert/verbose-slow with verdict + overall + pace expectations) + `scripts/run-eval-dataset.ts` — deterministic heuristic harness, 7/7 pass |
 
 #### Phase 9 — Final Report
-| Task | Done? |
-|---|---|
-| Report generation API (single call, Zod) | [ ] |
-| Report page (score ring, categories, per-question, improvement plan) | [ ] |
-| Weighted scoring model per interview type | [ ] |
+| Task | Done? | Notes |
+|---|---|---|
+| Report generation API (single call, Zod) | [x] | `POST /api/interview/report/generate` — one call: completed-session guard (409), deterministic scores, provider report (Zod-strict `schemas/report.ts` §58–63, heuristic fallback §74), idempotent upsert (migration `009` unique session_id); `GET /session/:id/report` fetches the stored report |
+| Report page (score ring, categories, per-question, improvement plan) | [x] | `/ai-mock-interview/report/[sessionId]` — server-rendered: score ring (conic gradient), 5 category bars, strengths/weaknesses, prioritized improvement plan, communication metrics, recommended topics, per-question analysis, next-interview suggestion; generates-if-missing (idempotent), noindex |
+| Weighted scoring model per interview type | [x] | `report-scoring.ts` — pure §54→category mapping (technical/problemSolving/communication/project/behavioral, 0–100), filler penalty (§55), per-interview-type weights (technical/system-design/behavioral/hr/mixed), overall = weighted mean; 7 unit tests + heuristic report tests (80/80 total) |
 
 #### Phase 10 — History & Progress
 | Task | Done? |
@@ -346,6 +346,7 @@ next phase starts only after merge            │
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
+| 2026-08-18 | Phase 9 built: single-call report API + GET, weighted scoring model (per interview type), server-rendered report page with score ring/categories/per-question/improvement plan — tests 80/80, lint+build green; awaiting merge | 9 | `feature/ai-interview/phase-9-report` (work stacked on phase-8 branch) |
 | 2026-08-18 | Phase 8 built: evaluation persistence (idempotent, migration 008), communication metrics pipeline, eval dataset + runnable script — tests 69/69, lint+build green, dataset 7/7; awaiting merge | 8 | `feature/ai-interview/phase-8-evaluation` |
 | 2026-08-18 | Phases 3–7 merged to `main` (`47e3f5f`) — session engine, room UI, question engine, speech & voice loop, adaptive engine all marked COMPLETED | 3–7 | `main` |
 | 2026-08-18 | Blog: added trending HEIC-to-JPG guide (`62257c5`) — seeded, migrated to Supabase, live on `www.vizotool.com` | — | `main` |

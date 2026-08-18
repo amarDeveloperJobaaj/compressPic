@@ -51,6 +51,10 @@ export interface StoredEvaluation {
   answerId: string;
   questionId: string;
   question: string;
+  questionType: string;
+  topic: string | null;
+  difficulty: string;
+  answer: string;
   sequence: number;
   overall: number;
   verdict: EvaluatedAnswer["verdict"];
@@ -73,7 +77,15 @@ export interface StoredEvaluation {
 /** Map a §46 row back to the §54 public shape. */
 function mapEvaluationRow(
   row: EvaluationRow,
-  question: { id: string; question: string; sequence: number }
+  question: {
+    id: string;
+    question: string;
+    question_type: string;
+    topic: string | null;
+    difficulty: string;
+    sequence: number;
+  },
+  answer: { transcript: string | null; duration_seconds: number | null } | null = null
 ): StoredEvaluation {
   const metrics = (row.metrics ?? {}) as Partial<CommunicationMetrics>;
   return {
@@ -81,6 +93,10 @@ function mapEvaluationRow(
     answerId: row.answer_id,
     questionId: question.id,
     question: question.question,
+    questionType: question.question_type,
+    topic: question.topic,
+    difficulty: question.difficulty,
+    answer: answer?.transcript ?? "",
     sequence: question.sequence,
     overall: Number(row.overall_score ?? 0),
     verdict: (row.verdict as EvaluatedAnswer["verdict"]) ?? "good",
@@ -225,7 +241,7 @@ export async function listEvaluationsForSession(
   const { data } = await admin
     .from("interview_questions")
     .select(
-      "id, question, sequence, interview_answers(id), interview_answers!inner(interview_evaluations(*))"
+      "id, question, question_type, topic, difficulty, sequence, interview_answers!inner(*, interview_evaluations(*))"
     )
     .eq("session_id", sessionId)
     .order("sequence", { ascending: true });
@@ -235,11 +251,18 @@ export async function listEvaluationsForSession(
     const evaluationRow = question.interview_answers?.[0]?.interview_evaluations?.[0];
     if (!evaluationRow) continue;
     evaluations.push(
-      mapEvaluationRow(evaluationRow, {
-        id: question.id,
-        question: question.question,
-        sequence: question.sequence,
-      })
+      mapEvaluationRow(
+        evaluationRow,
+        {
+          id: question.id,
+          question: question.question,
+          question_type: question.question_type,
+          topic: question.topic,
+          difficulty: question.difficulty,
+          sequence: question.sequence,
+        },
+        question.interview_answers?.[0] ?? null
+      )
     );
   }
   return evaluations;
