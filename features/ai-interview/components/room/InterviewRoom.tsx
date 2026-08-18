@@ -5,8 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   ArrowRight,
+  Award,
   Bot,
   CheckCircle2,
+  History,
   Loader2,
   LogIn,
   RefreshCw,
@@ -453,19 +455,27 @@ export function InterviewRoom() {
         </div>
         <p className="mt-5 text-2xl font-bold text-text-primary">Interview complete</p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-text-secondary">
-          Your session was saved to your account. The full evaluation — scores, question analysis
-          and an improvement plan — arrives with the evaluation engine.
+          Your session and answers were saved to your account. View your full report — scores,
+          per-question analysis, communication metrics and an improvement plan.
         </p>
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Button onClick={restart}>
+        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          {sessionId && (
+            <Button asChild>
+              <Link href={`/ai-mock-interview/report/${sessionId}`}>
+                <Award className="h-4 w-4" />
+                View report
+              </Link>
+            </Button>
+          )}
+          <Button asChild variant="secondary">
+            <Link href="/ai-mock-interview/history">
+              <History className="h-4 w-4" />
+              My history
+            </Link>
+          </Button>
+          <Button onClick={restart} variant="secondary">
             <RefreshCw className="h-4 w-4" />
             Practice again
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/ai-mock-interview/setup">
-              Try another role
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </Button>
           <Button asChild variant="ghost">
             <Link href="/ai-mock-interview">Back to AI Interview</Link>
