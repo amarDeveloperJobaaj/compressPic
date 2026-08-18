@@ -25,11 +25,11 @@
 | 0 | Architecture & Research | `phase-0-research` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 1 | Product Foundation (landing + setup) | `phase-1-foundation` | `COMPLETED · merged ✓` | 2026-08-09 |
 | 2 | Resume Intelligence | `phase-2-resume` | `COMPLETED · merged ✓` | 2026-08-11 |
-| 3 | Interview Session Engine | `phase-3-session` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
-| 4 | Interview Room UI | `phase-4-room` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-11 |
-| 5 | AI Question Engine | `phase-5-question-engine` | `IN PROGRESS` (built · verified · awaiting merge) | 2026-08-12 |
-| 6 | Speech & Voice Loop | `phase-6-voice` | `IN PROGRESS` (built · verified · awaiting approval) | 2026-08-13 |
-| 7 | Adaptive Interview Engine | `phase-7-adaptive` | `IN PROGRESS` (built · verified · awaiting approval) | 2026-08-13 |
+| 3 | Interview Session Engine | `phase-3-session` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 4 | Interview Room UI | `phase-4-room` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 5 | AI Question Engine | `phase-5-question-engine` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 6 | Speech & Voice Loop | `phase-6-voice` | `COMPLETED · merged ✓` | 2026-08-18 |
+| 7 | Adaptive Interview Engine | `phase-7-adaptive` | `COMPLETED · merged ✓` | 2026-08-18 |
 | 8 | Evaluation Engine | `phase-8-evaluation` | `NOT STARTED` | — |
 | 9 | Final Report | `phase-9-report` | `NOT STARTED` | — |
 | 10 | History & Progress | `phase-10-history` | `NOT STARTED` | — |
@@ -79,6 +79,8 @@
 | Session recovery on reconnect | [x] | `GET /api/interview/session/:id` returns session + ordered questions with answers (§76); service `getSessionRecovery` |
 | User auth wired (per user decision) | [x] | Supabase Auth via browser client (no clash with admin `/api/auth/*`), `/ai-mock-interview/auth` page (sign in/up + email-confirm + not-configured states), `useAuth` hook, Start button gates to sign-in |
 
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-18 (merge commit `47e3f5f`).
+
 #### Phase 4 — Interview Room UI
 | Task | Done? | Notes |
 |---|---|---|
@@ -87,6 +89,8 @@
 | RecordingConsent flow | [x] | checkbox before Start (§31), gates Begin; consent stored with the session (config.recordingConsent) |
 | State-machine visuals (IDs per §79 of master spec) | [x] | room drives idle→preparing→ready→active→ending→completed; interviewer visual states (waiting/listening/thinking/speaking/processing/success) + §78 loading labels; LISTENING/PROCESSING/ASKING wired for Phase 5/6 |
 | Session wiring (Phase 3 APIs) | [x] | create/start/end via session-client; recovery-shaped GET ready for reconnect (§76); auto-end when the time budget hits zero |
+
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-18 (merge commit `47e3f5f`).
 
 #### Phase 5 — AI Question Engine
 | Task | Done? | Notes |
@@ -100,6 +104,8 @@
 | Engine drives §79 sub-states + persists answers | [x] | Room: Begin → ASKING → first question → LISTENING → answer → PROCESSING → next question; answers stored to `interview_answers`, §40 `current_state` kept in sync (questionsAsked/Answered, currentTopic, difficulty, currentQuestion) |
 | Ownership + idempotency hardening | [x] | 403 for another user's session; start idempotent (retry-safe Begin); answer idempotent (unique `question_id` index); live verified vs live Supabase |
 
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-18 (merge commit `47e3f5f`).
+
 #### Phase 6 — Speech & Voice Loop
 | Task | Done? | Notes |
 |---|---|---|
@@ -108,6 +114,8 @@
 | Filler words + pace metrics util | [x] | `utils/transcript.ts` — §56 filler list (um/umm/uh/like/basically/actually/you know/so, clause-start rule for "so") + §57 words-per-minute + pace bands; `analyzeTranscript`; 9 unit tests |
 | Listening/speaking states wired to state machine | [x] | new `speaking` §79 sub-state (enum + transitions + migration `007` status check); room loop: ASKING → SPEAKING (TTS) → LISTENING (STT) → PROCESSING → next question; spoken `durationSeconds` stored with answers for Phase 8 pace; migration `007_speech_status.sql` |
 
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-18 (merge commit `47e3f5f`).
+
 #### Phase 7 — Adaptive Interview Engine
 | Task | Done? | Notes |
 |---|---|---|
@@ -115,6 +123,8 @@
 | Adaptive controller (follow-up vs new topic vs difficulty) | [x] | `services/interview/adaptive-controller.ts` — pure §24 mapping (excellent→NEW_TOPIC harder, strong→FOLLOW_UP harder, good→NEW_TOPIC, weak→CLARIFICATION simpler, wrong→concept check) + §25 difficulty ladder + follow-up depth cap; provider writes the question honoring `adaptiveIntent` (prompt v1 + heuristic) |
 | END_INTERVIEW rules (time/question budget) | [x] | controller `shouldEndInterview` — time ≤ 0 OR questions ≥ budget (~1 per 2 min, §40) → engine finalizes the session (completed + ended_at) and the room closes; client turn type now carries `ended` |
 | Session-state store (topic, difficulty, performance) | [x] | §40 `current_state` updated per turn: currentTopic, controller difficulty, questionsAsked/Answered, and a running `performanceSummary` (overall avg, per-topic avg, verdict counts) via `mergePerformance` |
+
+> Status: `COMPLETED ✓` — merged to `main` on 2026-08-18 (merge commit `47e3f5f`).
 
 #### Phase 8 — Evaluation Engine
 | Task | Done? |
@@ -336,6 +346,8 @@ next phase starts only after merge            │
 | 2026-08-12 | Phase 5 built (stacked on phase-4-room): AI Question Engine — typed `generateQuestion`/`generateFollowUp` (OpenAI-compatible adapter + deterministic heuristic fallback), versioned question/follow-up prompts, `POST /question/generate` + `/question/follow-up` (Zod strict JSON, answers persisted idempotently, `parent_question_id` links, §40 `current_state`), migration `006` unique sequence/answer indexes, room loop drives ASKING→LISTENING→PROCESSING (Begin → first question → answer → follow-up) — lint+build green (193/193), heuristic logic tests + live API matrix (15/15) + browser walk (zero console errors); awaiting approval | 5 | `feature/ai-interview/phase-5-question-engine` |
 | 2026-08-11 | Phase 4 built (stacked on phase-3-session): Interview Room UI — PermissionModal + getUserMedia fallback chain, RecordingConsent (stored with session), AI interviewer visual states (§79), question/transcript panels, timer + auto-end, session create/start/end wiring, responsive dark room — lint(branch)+build green (190/190), browser walk zero console errors; awaiting approval | 4 | `feature/ai-interview/phase-4-room` |
 | 2026-08-11 | Phase 3 built: Supabase Auth for users (auth page + useAuth + wizard sign-in gate), migration `005_interview_sessions.sql` (6 tables, RLS user-scoped), session create/get/start/end APIs with ownership gates + recovery payload — lint(branch)+build green, 16 pure-logic checks + live 503/200 smoke tests + browser walk; awaiting approval | 3 | `feature/ai-interview/phase-3-session` |
+| 2026-08-18 | Phases 3–7 merged to `main` (`47e3f5f`) — session engine, room UI, question engine, speech & voice loop, adaptive engine all marked COMPLETED | 3–7 | `main` |
+| 2026-08-18 | Blog: added trending HEIC-to-JPG guide (`62257c5`) — seeded, migrated to Supabase, live on `www.vizotool.com` | — | `main` |
 | 2026-08-11 | Phase 2 merged to `main` (`a23b036`) — marked COMPLETED | 2 | `main` |
 | 2026-08-10 | Phase 2 merged premium landing branch into it (3D hero, nav polish) and fully verified: lint+build green, runtime API tests (heuristic profile extraction, upload validation, storage-off fallback, PDF text extraction) + browser wizard walkthrough, zero console errors | 2 | `feature/ai-interview/phase-2-resume` |
 | 2026-08-09 | Phase 2 built: resume upload API (private `resumes` bucket), analyze API → Zod CandidateProfile, services/ai provider abstraction + heuristic fallback, versioned prompts, uploader UI with progress/analyzing/retry/skip — lint+build green; awaiting approval | 2 | `feature/ai-interview/phase-2-resume` |
