@@ -5,135 +5,204 @@ import { motion } from "framer-motion";
 import { Terminal } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
+/* Theme-adaptive syntax colors — uses CSS variables                   */
+/* ------------------------------------------------------------------ */
+
+const C = {
+  // Terminal UI — theme-adaptive
+  promptUser: "var(--pf-accent)",
+  promptSymbol: "var(--pf-accent)",
+  command: "var(--pf-text)",
+
+  // Syntax highlighting — theme-adaptive
+  keyword: "var(--pf-accent)",
+  string: "var(--pf-warm)",
+  function: "var(--pf-accent)",
+  success: "#22c55e",
+  info: "var(--pf-text-2)",
+  comment: "var(--pf-text-3)",
+  warning: "var(--pf-warm)",
+  error: "#ef4444",
+  text: "var(--pf-text)",
+  dim: "var(--pf-text-3)",
+};
+
+/* ------------------------------------------------------------------ */
 /* Command definitions                                                */
 /* ------------------------------------------------------------------ */
 
-const COMMANDS: Record<string, () => string[]> = {
+interface OutputLine {
+  text: string;
+  color: string;
+}
+
+const COMMANDS: Record<string, () => OutputLine[]> = {
   help: () => [
-    "Available commands:",
-    "",
-    "  whoami      About me",
-    "  role        My current role",
-    "  location    Where I'm based",
-    "  skills      Tech stack",
-    "  experience  Work history",
-    "  projects    Things I've built",
-    "  contact     How to reach me",
-    "  education   Academic background",
-    "  hobbies     What I do outside code",
-    "  github      GitHub profile",
-    "  clear       Clear terminal",
-    "",
-    "Type a command and press Enter...",
+    { text: "Available commands:", color: C.keyword },
+    { text: "", color: C.dim },
+    { text: "  whoami      About me", color: C.text },
+    { text: "  role        My current role", color: C.text },
+    { text: "  location    Where I'm based", color: C.text },
+    { text: "  skills      Tech stack", color: C.text },
+    { text: "  experience  Work history", color: C.text },
+    { text: "  projects    Things I've built", color: C.text },
+    { text: "  contact     How to reach me", color: C.text },
+    { text: "  education   Academic background", color: C.text },
+    { text: "  hobbies     What I do outside code", color: C.text },
+    { text: "  github      GitHub profile", color: C.text },
+    { text: "  clear       Clear terminal", color: C.text },
+    { text: "", color: C.dim },
+    { text: "// Type a command and press Enter", color: C.comment },
   ],
+
   whoami: () => [
-    "amar-lodhi",
-    "",
-    "Software Engineer who builds products",
-    "that solve real problems. I don't just",
-    "write code — I ship things people use.",
+    { text: "amar-lodhi", color: C.string },
+    { text: "", color: C.dim },
+    { text: "Software Engineer who builds products", color: C.text },
+    { text: "that solve real problems.", color: C.text },
+    { text: "// I don't just write code — I ship things.", color: C.comment },
   ],
+
   role: () => [
-    "Software Engineer @ Jobaaj",
-    "",
-    "Full Stack Development",
-    "AI / GenAI Integration",
-    "Product Development",
-    "Building VizoTool",
+    { text: "Software Engineer", color: C.string },
+    { text: "@", color: C.dim },
+    { text: "Jobaaj", color: C.keyword },
+    { text: "", color: C.dim },
+    { text: "  Full Stack Development", color: C.text },
+    { text: "  AI / GenAI Integration", color: C.text },
+    { text: "  Product Development", color: C.text },
+    { text: "  Building VizoTool", color: C.string },
   ],
+
   location: () => [
-    "Mathura, India",
-    "IST (UTC +5:30)",
-    "",
-    "Open to remote opportunities",
-    "worldwide.",
+    { text: "Mathura, India", color: C.text },
+    { text: "IST (UTC +5:30)", color: C.info },
+    { text: "", color: C.dim },
+    { text: "// Open to remote opportunities worldwide", color: C.comment },
   ],
+
   skills: () => [
-    "FRONTEND   React, Next.js, TypeScript, Tailwind",
-    "BACKEND    Node.js, Express, REST APIs, PHP",
-    "DATABASE   MongoDB, MySQL, Supabase",
-    "AI/LLM     Gemini, OpenAI, RAG, Embeddings",
-    "TOOLS      Git, Linux, Docker, CI/CD",
-    "",
-    "Proficiency: ████████████████████░░ 92%",
+    { text: "FRONTEND", color: C.keyword },
+    { text: "  React, Next.js, TypeScript, Tailwind", color: C.text },
+    { text: "BACKEND ", color: C.keyword },
+    { text: "  Node.js, Express, REST APIs, PHP", color: C.text },
+    { text: "DATABASE", color: C.keyword },
+    { text: "  MongoDB, MySQL, Supabase", color: C.text },
+    { text: "AI/LLM  ", color: C.keyword },
+    { text: "  Gemini, OpenAI, RAG, Embeddings", color: C.text },
+    { text: "TOOLS   ", color: C.keyword },
+    { text: "  Git, Linux, Docker, CI/CD", color: C.text },
+    { text: "", color: C.dim },
+    { text: "proficiency: ", color: C.dim },
+    { text: "████████████████████░░ 92%", color: C.success },
   ],
+
   experience: () => [
-    "CURRENT",
-    "  Software Engineer @ Jobaaj (Feb 2026 - Present)",
-    "  - Full-stack development",
-    "  - AI-powered interview systems",
-    "  - Payment/credit systems",
-    "",
-    "PREVIOUS",
-    "  Intern @ Arema Technology (Oct 2025 - Feb 2026)",
-    "  - Client projects & production apps",
-    "  - Legacy codebase modernization",
-    "  - API integrations",
+    { text: "// CURRENT", color: C.comment },
+    { text: "Software Engineer", color: C.string },
+    { text: "@", color: C.dim },
+    { text: "Jobaaj", color: C.keyword },
+    { text: "(Feb 2026 - Present)", color: C.info },
+    { text: "  • Full-stack development", color: C.dim },
+    { text: "  • AI-powered interview systems", color: C.dim },
+    { text: "  • Payment/credit systems", color: C.dim },
+    { text: "", color: C.dim },
+    { text: "// PREVIOUS", color: C.comment },
+    { text: "Intern", color: C.string },
+    { text: "@", color: C.dim },
+    { text: "Arema Technology", color: C.keyword },
+    { text: "(Oct 2025 - Feb 2026)", color: C.info },
+    { text: "  • Client projects & production apps", color: C.dim },
+    { text: "  • Legacy codebase modernization", color: C.dim },
   ],
+
   projects: () => [
-    "01  VizoTool",
-    "     20+ web utilities — image, PDF,",
-    "     developer, SEO tools. Live at",
-    "     vizotool.com",
-    "",
-    "02  AI Mock Interview",
-    "     Adaptive AI interview engine with",
-    "     real-time speech, resume parsing,",
-    "     and AI-generated feedback.",
-    "",
-    "03  Terminal AI Agent",
-    "     AI-assisted coding terminal that",
-    "     understands project context.",
+    { text: "01", color: C.keyword },
+    { text: "VizoTool", color: C.string },
+    { text: "    20+ web utilities — image, PDF,", color: C.dim },
+    { text: "    developer, SEO tools. vizotool.com", color: C.text },
+    { text: "", color: C.dim },
+    { text: "02", color: C.keyword },
+    { text: "AI Mock Interview", color: C.string },
+    { text: "    Adaptive AI engine with real-time", color: C.dim },
+    { text: "    speech, resume parsing, AI feedback.", color: C.text },
+    { text: "", color: C.dim },
+    { text: "03", color: C.keyword },
+    { text: "Terminal AI Agent", color: C.string },
+    { text: "    AI-assisted coding terminal that", color: C.dim },
+    { text: "    understands project context.", color: C.text },
   ],
+
   contact: () => [
-    "Email    amarrajputdev@gmail.com",
-    "GitHub   github.com/amarRajputDev",
-    "LinkedIn linkedin.com/in/amarlodhi",
-    "",
-    "Available for:",
-    "  - Software Engineering roles",
-    "  - Full Stack Development",
-    "  - AI / GenAI projects",
-    "  - Product Development",
+    { text: "email", color: C.keyword },
+    { text: "  amarrajputdev@gmail.com", color: C.text },
+    { text: "github", color: C.keyword },
+    { text: "  github.com/amarRajputDev", color: C.text },
+    { text: "linkedin", color: C.keyword },
+    { text: "  linkedin.com/in/amarlodhi", color: C.text },
+    { text: "", color: C.dim },
+    { text: "// Available for:", color: C.comment },
+    { text: "  • Software Engineering roles", color: C.string },
+    { text: "  • Full Stack Development", color: C.string },
+    { text: "  • AI / GenAI projects", color: C.string },
+    { text: "  • Product Development", color: C.string },
   ],
+
   education: () => [
-    "BCA (Bachelor of Computer Applications)",
-    "",
-    "Focus: Software Engineering,",
-    "Data Structures, Algorithms",
-    "Web Development",
+    { text: "BCA", color: C.string },
+    { text: "(Bachelor of Computer Applications)", color: C.text },
+    { text: "", color: C.dim },
+    { text: "// Focus:", color: C.comment },
+    { text: "Software Engineering,", color: C.text },
+    { text: "Data Structures, Algorithms", color: C.text },
+    { text: "Web Development", color: C.text },
   ],
+
   hobbies: () => [
-    "Building side projects (obviously)",
-    "Exploring new AI/LLM capabilities",
-    "Open source contributions",
-    "Gaming (PUBG, obviously)",
-    "Listening to lo-fi while coding",
-    "Breaking things and figuring out why",
+    { text: "building", color: C.function },
+    { text: "side projects (obviously)", color: C.text },
+    { text: "exploring", color: C.function },
+    { text: "new AI/LLM capabilities", color: C.text },
+    { text: "contributing", color: C.function },
+    { text: "to open source", color: C.text },
+    { text: "gaming", color: C.function },
+    { text: "(PUBG, obviously)", color: C.text },
+    { text: "listening", color: C.function },
+    { text: "to lo-fi while coding", color: C.text },
   ],
+
   github: () => [
-    "github.com/amarRajputDev",
-    "",
-    "Public repos: VizoTool, AI tools,",
-    "open source contributions.",
-    "",
-    "Check it out — the code speaks",
-    "for itself.",
+    { text: "github.com/amarRajputDev", color: C.text },
+    { text: "", color: C.dim },
+    { text: "// Public repos:", color: C.comment },
+    { text: "VizoTool,", color: C.string },
+    { text: "AI tools,", color: C.string },
+    { text: "open source contributions.", color: C.string },
+    { text: "", color: C.dim },
+    { text: "// The code speaks for itself.", color: C.comment },
   ],
-  clear: () => ["__CLEAR__"],
-  sudo: () => ["Nice try, but you're not root here ;)"],
+
+  clear: () => [{ text: "__CLEAR__", color: C.dim }],
+
+  sudo: () => [
+    { text: "[!] Nice try, but you're not root here ;)", color: C.error },
+  ],
+
   ls: () => [
-    "portfolio/",
-    "├── about.md",
-    "├── skills.json",
-    "├── experience.log",
-    "├── projects/",
-    "│   ├── vizotool/",
-    "│   ├── ai-interview/",
-    "│   └── terminal-agent/",
-    "└── contact.yaml",
+    { text: "portfolio/", color: C.keyword },
+    { text: "├── about.md", color: C.text },
+    { text: "├── skills.json", color: C.text },
+    { text: "├── experience.log", color: C.text },
+    { text: "├── projects/", color: C.keyword },
+    { text: "│   ├── vizotool/", color: C.string },
+    { text: "│   ├── ai-interview/", color: C.string },
+    { text: "│   └── terminal-agent/", color: C.string },
+    { text: "└── contact.yaml", color: C.text },
   ],
-  date: () => [new Date().toString()],
+
+  date: () => [
+    { text: new Date().toString(), color: C.text },
+  ],
 };
 
 /* ------------------------------------------------------------------ */
@@ -143,6 +212,7 @@ const COMMANDS: Record<string, () => string[]> = {
 interface HistoryEntry {
   type: "cmd" | "output";
   text: string;
+  color: string;
 }
 
 export function HeroTerminal() {
@@ -161,17 +231,17 @@ export function HeroTerminal() {
   ];
 
   const WELCOME_LINES: HistoryEntry[] = [
-    { type: "output", text: "" },
-    { type: "output", text: "Welcome! I'm Amar Lodhi — Software Engineer." },
-    { type: "output", text: "Type commands to explore my profile:" },
-    { type: "output", text: "" },
-    { type: "output", text: "  whoami      About me" },
-    { type: "output", text: "  skills      Tech stack" },
-    { type: "output", text: "  experience  Work history" },
-    { type: "output", text: "  projects    Things I've built" },
-    { type: "output", text: "  contact     How to reach me" },
-    { type: "output", text: "  help        All commands" },
-    { type: "output", text: "" },
+    { type: "output", text: "", color: C.dim },
+    { type: "output", text: "Welcome! I'm Amar Lodhi.", color: C.string },
+    { type: "output", text: "Type commands to explore my profile:", color: C.text },
+    { type: "output", text: "", color: C.dim },
+    { type: "output", text: "  whoami      About me", color: C.text },
+    { type: "output", text: "  skills      Tech stack", color: C.text },
+    { type: "output", text: "  experience  Work history", color: C.text },
+    { type: "output", text: "  projects    Things I've built", color: C.text },
+    { type: "output", text: "  contact     How to reach me", color: C.text },
+    { type: "output", text: "  help        All commands", color: C.text },
+    { type: "output", text: "", color: C.dim },
   ];
 
   // Boot sequence
@@ -203,7 +273,10 @@ export function HeroTerminal() {
   const execute = useCallback(
     (cmd: string) => {
       const trimmed = cmd.trim().toLowerCase();
-      const newHistory: HistoryEntry[] = [...history, { type: "cmd", text: cmd }];
+      const newHistory: HistoryEntry[] = [
+        ...history,
+        { type: "cmd", text: cmd, color: C.command },
+      ];
 
       if (!trimmed) {
         setHistory(newHistory);
@@ -218,13 +291,17 @@ export function HeroTerminal() {
       const handler = COMMANDS[trimmed];
       if (handler) {
         const output = handler();
-        const outputLines = output.map((t) => ({ type: "output" as const, text: t }));
+        const outputLines = output.map((t) => ({
+          type: "output" as const,
+          text: t.text,
+          color: t.color,
+        }));
         setHistory([...newHistory, ...outputLines]);
       } else {
         setHistory([
           ...newHistory,
-          { type: "output", text: `bash: ${trimmed}: command not found` },
-          { type: "output", text: "Type 'help' for available commands." },
+          { type: "output", text: `bash: ${trimmed}: command not found`, color: C.error },
+          { type: "output", text: "Type 'help' for available commands.", color: C.dim },
         ]);
       }
     },
@@ -242,11 +319,11 @@ export function HeroTerminal() {
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-[var(--pf-border)] bg-[var(--pf-surface)] shadow-2xl shadow-black/40"
+      className="overflow-hidden rounded-2xl border border-[var(--pf-border)] bg-[var(--pf-surface)] shadow-2xl shadow-black/10"
       onClick={focusInput}
     >
       {/* Title bar — macOS style */}
-      <div className="flex items-center gap-2 border-b border-[var(--pf-border)] bg-[var(--pf-surface)] px-4 py-2.5">
+      <div className="flex items-center gap-2 border-b border-[var(--pf-border)] bg-[var(--pf-bg)] px-4 py-2.5">
         <div className="flex gap-1.5">
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
@@ -261,7 +338,7 @@ export function HeroTerminal() {
       {/* Body */}
       <div
         ref={scrollRef}
-        className="max-h-[380px] min-h-[340px] overflow-y-auto p-4 font-[var(--pf-mono)] text-[13px] leading-relaxed"
+        className="max-h-[380px] min-h-[340px] overflow-y-auto bg-[var(--pf-surface)] p-4 font-[var(--pf-mono)] text-[13px] leading-relaxed"
       >
         {/* Boot sequence */}
         {!booted && (
@@ -273,25 +350,30 @@ export function HeroTerminal() {
                 animate={{ opacity: 1 }}
                 className="flex items-center gap-2"
               >
-                <span className="text-[var(--pf-accent)]">
+                <span style={{ color: i < bootLine ? C.success : C.keyword }}>
                   {i < bootLine ? "✓" : "▸"}
                 </span>
-                <span className="text-[var(--pf-text-2)]">{line.text}</span>
+                <span style={{ color: C.text }}>{line.text}</span>
               </motion.div>
             ))}
           </div>
         )}
 
-        {/* Command history */}
+        {/* Command history — syntax-highlighted output */}
         {booted && history.map((entry, i) => (
           <div key={i}>
             {entry.type === "cmd" ? (
-              <div className="flex gap-2">
-                <span className="select-none text-[var(--pf-accent)]">❯</span>
-                <span className="text-[var(--pf-text)]">{entry.text}</span>
+              <div className="flex">
+                <span className="select-none" style={{ color: C.promptUser }}>amar</span>
+                <span className="select-none" style={{ color: C.dim }}>@</span>
+                <span className="select-none" style={{ color: C.promptUser }}>portfolio</span>
+                <span className="select-none" style={{ color: C.dim }}>:</span>
+                <span className="select-none" style={{ color: C.promptSymbol }}>~</span>
+                <span className="select-none" style={{ color: C.promptSymbol }}>$ </span>
+                <span style={{ color: C.command }}>{entry.text}</span>
               </div>
             ) : (
-              <span className="whitespace-pre text-[var(--pf-text-2)]">{entry.text}</span>
+              <span className="whitespace-pre" style={{ color: entry.color }}>{entry.text}</span>
             )}
           </div>
         ))}
@@ -299,15 +381,18 @@ export function HeroTerminal() {
         {/* Input line — terminal-style thick block cursor */}
         {booted && (
           <div className="mt-1 flex items-center" onClick={focusInput}>
-            <span className="select-none text-[var(--pf-accent)]">❯ </span>
+            <span className="select-none" style={{ color: C.promptUser }}>amar</span>
+            <span className="select-none" style={{ color: C.dim }}>@</span>
+            <span className="select-none" style={{ color: C.promptUser }}>portfolio</span>
+            <span className="select-none" style={{ color: C.dim }}>:</span>
+            <span className="select-none" style={{ color: C.promptSymbol }}>~</span>
+            <span className="select-none" style={{ color: C.promptSymbol }}>$ </span>
             <span className="relative flex-1">
-              {/* Visible rendered text + block cursor */}
-              <span className="text-[var(--pf-text)]">{input}</span>
+              <span style={{ color: C.command }}>{input}</span>
               <span
-                className="inline-block h-[1.1em] w-[0.55em] align-middle bg-[var(--pf-accent)] ml-px"
-                style={{ animation: "pf-cursor-blink 1s step-end infinite" }}
+                className="inline-block h-[1.1em] w-[0.55em] align-middle ml-px"
+                style={{ backgroundColor: "var(--pf-text)", animation: "pf-cursor-blink 1s step-end infinite" }}
               />
-              {/* Hidden native input for keyboard capture */}
               <input
                 ref={hiddenInputRef}
                 value={input}

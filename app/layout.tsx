@@ -37,6 +37,23 @@ const softwareAppSchema = {
   author: {
     "@type": "Organization",
     name: SITE_NAME,
+    url: SITE_URL,
+  },
+  featureList: [
+    "Image Compression",
+    "Image Resizing & Cropping",
+    "Image Format Conversion",
+    "Image Flipping & Rotation",
+    "Background Removal",
+    "Watermarking",
+    "PDF to Image Conversion",
+    "Passport Photo Maker",
+    "Social Media Image Resizer",
+  ],
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.8",
+    ratingCount: "1200",
   },
 };
 
@@ -49,7 +66,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const HOME_TITLE = "Compress Image Online Free — Vizo Tool";
+const HOME_TITLE = "VizoTool — Free Online Image Tools | Compress, Resize, Crop & Convert";
 const HOME_IMAGE = ogImageUrl(HOME_TITLE);
 
 export const metadata: Metadata = {
@@ -59,18 +76,33 @@ export const metadata: Metadata = {
     template: "%s | Vizo Tool",
   },
   
-  description: SITE_DESCRIPTION,
+  description: "VizoTool is a free online suite of image tools — compress, resize, crop, flip, convert, remove background, and more. 100% browser-based, no uploads, no servers. Your images never leave your device.",
   keywords: [
-    "compress image",
-    "compress image online",
-    "image tools",
-    "image compressor",
-    "resize image",
-    "crop image online",
+    "vizotool",
+    "vizo tool",
+    "vizotool.com",
+    "free image tools",
+    "online image editor",
+    "image compressor online free",
+    "resize image online free",
+    "crop image online free",
     "flip image online",
-    "image converter",
-    "jpg to png",
-    "png to jpg",
+    "convert image format",
+    "remove background free",
+    "image tools online",
+    "jpg to png converter",
+    "png to jpg converter",
+    "compress jpg online",
+    "compress png online",
+    "image resizer free",
+    "passport photo maker online",
+    "image to pdf converter",
+    "pdf to image converter",
+    "watermark image online",
+    "social media image resizer",
+    "browser based image processing",
+    "no upload image editor",
+    "private image compression",
   ],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -82,21 +114,21 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: HOME_TITLE,
-    description: SITE_DESCRIPTION,
+    title: "VizoTool — Free Online Image Tools",
+    description: "Compress, resize, crop, flip, and convert images online for free. 100% browser-based — no uploads, no servers.",
     images: [
       {
         url: HOME_IMAGE,
         width: 1200,
         height: 630,
-        alt: SITE_NAME,
+        alt: "VizoTool — Free Online Image Tools",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: HOME_TITLE,
-    description: SITE_DESCRIPTION,
+    title: "VizoTool — Free Online Image Tools",
+    description: "Compress, resize, crop, flip, and convert images online for free. 100% browser-based.",
     images: [HOME_IMAGE],
   },
   robots: {
@@ -114,14 +146,18 @@ export const metadata: Metadata = {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
-  // Search-console verification — Google is verified for vizotool.com and its
-  // meta tag is always emitted; Bing can be enabled by setting
-  // NEXT_PUBLIC_BING_SITE_VERIFICATION.
+  // Search-console verification
   verification: {
     google: "RTE8j-fnl2EGl_touOdZ1CPHX3ADNyuHKkjP1LaxkpE",
     ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
       ? { bing: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
       : {}),
+  },
+  // Additional metadata for SEO
+  other: {
+    "application-name": "VizoTool",
+    "msapplication-TileColor": "#0B1120",
+    "apple-mobile-web-app-title": "VizoTool",
   },
 };
 

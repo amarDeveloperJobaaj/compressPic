@@ -2,20 +2,24 @@ import type { Metadata } from "next";
 
 /** Central site constants — change once, apply everywhere. */
 export const SITE_URL = "https://vizotool.com";
-export const SITE_NAME = "Vizo Tool";
+export const SITE_NAME = "VizoTool";
 export const SITE_TAGLINE = "Free Online Image Tools — 100% in Your Browser";
 export const SITE_DESCRIPTION =
-  "Compress, resize, crop, flip, and convert images online for free. 100% browser-based — no uploads, no servers, no limits.";
+  "VizoTool is a free online suite of image tools — compress, resize, crop, flip, convert, remove background, and more. 100% browser-based, no uploads, no servers. Your images never leave your device.";
 export const SITE_KEYWORDS = [
-  "image tools",
-  "image compressor",
-  "compress image online",
-  "resize image",
-  "crop image online",
+  "vizotool",
+  "vizo tool",
+  "free image tools",
+  "image compressor online free",
+  "resize image online free",
+  "crop image online free",
   "flip image online",
-  "image converter",
-  "jpg to png",
-  "png to jpg",
+  "image converter online",
+  "remove background free",
+  "jpg to png converter",
+  "png to jpg converter",
+  "online image editor",
+  "browser based image processing",
 ];
 
 /** Dynamic OG image generator route (app/og/route.tsx) — takes ?title=. */

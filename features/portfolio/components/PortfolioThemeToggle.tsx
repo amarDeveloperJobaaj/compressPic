@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 
 export function PortfolioThemeToggle() {
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("pf-theme");
-    if (saved === "light") {
-      setDark(false);
-      document.querySelector(".portfolio-root")?.classList.remove("portfolio-dark");
-      document.querySelector(".portfolio-root")?.classList.add("portfolio-light");
+    if (saved === "dark") {
+      setDark(true);
+      document.querySelector(".portfolio-root")?.classList.remove("portfolio-light");
+      document.querySelector(".portfolio-root")?.classList.add("portfolio-dark");
     }
   }, []);
 
