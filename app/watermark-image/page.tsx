@@ -7,11 +7,12 @@ import { useWatermarkStore } from "@/store/watermark-store";
 import { WatermarkControls } from "@/features/watermark/components/WatermarkControls";
 import { WatermarkPreview } from "@/features/watermark/components/WatermarkPreview";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { ImageQueue } from "@/components/shared/ImageQueue";
 
-const UploadZone = dynamic(
+const MultiImageUploadZone = dynamic(
   () =>
-    import("@/features/watermark/components/UploadZone").then((m) => ({
-      default: m.UploadZone,
+    import("@/components/shared/MultiImageUploadZone").then((m) => ({
+      default: m.MultiImageUploadZone,
     })),
   {
     ssr: false,
@@ -24,9 +25,16 @@ const UploadZone = dynamic(
 );
 
 export default function WatermarkPage() {
+  const files = useWatermarkStore((s) => s.files);
+  const activeIndex = useWatermarkStore((s) => s.activeIndex);
   const originalFile = useWatermarkStore((s) => s.originalFile);
   const error = useWatermarkStore((s) => s.error);
   const reset = useWatermarkStore((s) => s.reset);
+  const addFiles = useWatermarkStore((s) => s.addFiles);
+  const removeFile = useWatermarkStore((s) => s.removeFile);
+  const setActiveIndex = useWatermarkStore((s) => s.setActiveIndex);
+
+  const hasFiles = files.length > 0;
 
   return (
     <PageTransition>
@@ -37,7 +45,7 @@ export default function WatermarkPage() {
             <Stamp className="h-6 w-6 text-primary" />
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            Add a Watermark to Your Image
+            Add a Watermark to Your Images
           </h1>
           <p className="mt-3 text-lg text-text-secondary">
             Protect your photos with a custom text or logo watermark. Drag to position it,
@@ -45,21 +53,36 @@ export default function WatermarkPage() {
           </p>
         </div>
 
-        {/* Upload Zone (shown when no file) */}
-        {!originalFile && (
+        {/* Upload Zone */}
+        {!hasFiles && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mx-auto mt-10 max-w-xl"
           >
-            <UploadZone />
+            <MultiImageUploadZone
+              onFiles={addFiles}
+              label="Drop your images here"
+              ariaLabel="Upload images to watermark"
+              fileInputAccept=".jpg,.jpeg,.png,.webp"
+            />
           </motion.div>
         )}
 
-        {/* Watermark UI (shown when file is selected) */}
-        {originalFile && (
+        {/* Watermark UI */}
+        {hasFiles && (
           <div className="mx-auto mt-10 max-w-5xl">
-            {/* Compact file info + change button */}
+            {/* Image Queue */}
+            <ImageQueue
+              items={files.map((f) => ({ file: f.file, previewUrl: f.previewUrl }))}
+              activeIndex={activeIndex}
+              onSelect={setActiveIndex}
+              onRemove={removeFile}
+              onAdd={addFiles}
+              accept={["image/jpeg", "image/png", "image/webp"]}
+            />
+
+            {/* Compact file info */}
             <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-3 shadow-sm">
               <div className="flex items-center gap-3 truncate">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light">
@@ -67,10 +90,11 @@ export default function WatermarkPage() {
                 </div>
                 <div className="truncate">
                   <p className="truncate text-sm font-medium text-text-primary">
-                    {originalFile.name}
+                    {originalFile?.name}
                   </p>
                   <p className="text-xs text-text-muted">
-                    {(originalFile.size / 1024).toFixed(1)} KB
+                    {originalFile ? `${(originalFile.size / 1024).toFixed(1)} KB` : ""}
+                    {files.length > 1 && ` · ${files.length} images`}
                   </p>
                 </div>
               </div>
@@ -82,20 +106,16 @@ export default function WatermarkPage() {
               </button>
             </div>
 
-            {/* Two-column layout: Controls + Preview */}
+            {/* Two-column layout */}
             <div className="grid gap-6 lg:grid-cols-12">
-              {/* Controls - takes 5/12 (denser panel than flip) */}
               <div className="lg:col-span-5">
                 <WatermarkControls />
               </div>
-
-              {/* Preview - takes 7/12 */}
               <div className="lg:col-span-7">
                 <WatermarkPreview />
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -116,8 +136,7 @@ export default function WatermarkPage() {
           </div>
         )}
 
-        {/* Bottom CTA for empty state */}
-        {!originalFile && (
+        {!hasFiles && (
           <div className="mx-auto mt-8 max-w-xl text-center">
             <p className="text-sm text-text-muted">
               No uploads. No servers. 100% private browser-based watermarking.

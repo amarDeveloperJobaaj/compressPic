@@ -14,22 +14,31 @@ export const CONVERT_OUTPUT_FORMATS = [
   { label: "AVIF", value: "image/avif" as const },
 ];
 
+interface FileQueueEntry {
+  file: File;
+  previewUrl: string;
+  size: number;
+  type: string;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
 interface ConverterState {
-  // Input
+  // Multi-file queue
+  files: FileQueueEntry[];
+  activeIndex: number;
+
+  // Input (active file)
   originalFile: File | null;
   originalPreviewUrl: string | null;
   originalSize: number;
   originalType: string;
-
-  // Natural dimensions of the uploaded image
   naturalWidth: number;
   naturalHeight: number;
 
   // Output settings
   outputFormat: ConvertFormat;
   quality: number;
-
-  // Capability flags (computed on the client)
   avifSupported: boolean;
 
   // Processing
@@ -43,16 +52,89 @@ interface ConverterState {
 
   // Actions
   setFile: (file: File) => void;
+  addFiles: (files: File[]) => void;
+  removeFile: (index: number) => void;
+  setActiveIndex: (index: number) => void;
   setOutputFormat: (format: ConvertFormat) => void;
   setQuality: (q: number) => void;
-  /** Re-render the converted result and show the preview */
   convert: () => Promise<void>;
-  /** Download the currently rendered result */
   download: () => void;
   reset: () => void;
 }
 
+async function prepareFile(file: File): Promise<FileQueueEntry> {
+  const heic = isHeicFile(file);
+  let source: Blob = file;
+
+  if (heic) {
+    try {
+      source = await decodeHeicToJpeg(file);
+    } catch {
+      // Use original
+    }
+  }
+
+  const previewUrl = URL.createObjectURL(source);
+  let naturalWidth = 0;
+  let naturalHeight = 0;
+
+  try {
+    const img = await loadImage(previewUrl);
+    naturalWidth = img.naturalWidth;
+    naturalHeight = img.naturalHeight;
+  } catch {
+    // Dimensions stay 0
+  }
+
+  return {
+    file,
+    previewUrl,
+    size: file.size,
+    type: normalizeImageType(file),
+    naturalWidth,
+    naturalHeight,
+  };
+}
+
+function syncActive(state: ConverterState): Partial<ConverterState> {
+  const entry = state.files[state.activeIndex];
+  if (!entry) {
+    return {
+      originalFile: null,
+      originalPreviewUrl: null,
+      originalSize: 0,
+      originalType: "",
+      naturalWidth: 0,
+      naturalHeight: 0,
+    };
+  }
+  return {
+    originalFile: entry.file,
+    originalPreviewUrl: entry.previewUrl,
+    originalSize: entry.size,
+    originalType: entry.type,
+    naturalWidth: entry.naturalWidth,
+    naturalHeight: entry.naturalHeight,
+  };
+}
+
+function getInitialFormat(type: string): ConvertFormat {
+  let initialFormat: ConvertFormat = CONVERT_OUTPUT_FORMATS.some(
+    (f) => f.value === type
+  )
+    ? (type as ConvertFormat)
+    : "image/png";
+
+  if (initialFormat === "image/avif" && !canEncodeAvif()) {
+    initialFormat = "image/png";
+  }
+
+  return initialFormat;
+}
+
 export const useConverterStore = create<ConverterState>((set, get) => ({
+  files: [],
+  activeIndex: 0,
   originalFile: null,
   originalPreviewUrl: null,
   originalSize: 0,
@@ -69,90 +151,83 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
   resultSize: 0,
 
   setFile: (file: File) => {
-    const prevUrl = get().originalPreviewUrl;
-    if (prevUrl) URL.revokeObjectURL(prevUrl);
+    const state = get();
+    state.files.forEach((e) => URL.revokeObjectURL(e.previewUrl));
+    set({
+      files: [],
+      activeIndex: 0,
+      resultBlob: null,
+      resultPreviewUrl: null,
+      resultSize: 0,
+    });
+    void get().addFiles([file]);
+  },
 
-    const heic = isHeicFile(file);
+  addFiles: async (newFiles: File[]) => {
+    const entries = await Promise.all(newFiles.map(prepareFile));
+    set((state) => {
+      const files = [...state.files, ...entries];
+      const isFirst = state.files.length === 0;
+      const activeIndex = isFirst ? 0 : state.activeIndex;
+      const firstType = entries[0]?.type ?? "";
 
-    // Some platforms (Windows/Android) report an empty MIME type for HEIC
-    // files — normalize so labels show "HEIC" and the banner logic is correct.
-    const type = normalizeImageType(file);
+      return {
+        files,
+        activeIndex,
+        outputFormat: isFirst ? getInitialFormat(firstType) : state.outputFormat,
+        avifSupported: canEncodeAvif(),
+        resultBlob: null,
+        resultPreviewUrl: null,
+        resultSize: 0,
+        ...syncActive({ ...state, files, activeIndex }),
+      };
+    });
 
-    // Start with the uploaded file's own format so the initial auto-convert is
-    // a genuine no-op and the success banner only appears after the user
-    // actually switches formats. HEIC isn't an output option — default to PNG.
-    let initialFormat: ConvertFormat = CONVERT_OUTPUT_FORMATS.some(
-      (f) => f.value === type
-    )
-      ? (type as ConvertFormat)
-      : "image/png";
+    // Auto-convert the active file
+    void get().convert();
+  },
 
-    // If the file is AVIF but the browser can't re-encode AVIF, fall back to
-    // PNG so the initial auto-convert doesn't error out.
-    if (initialFormat === "image/avif" && !canEncodeAvif()) {
-      initialFormat = "image/png";
-    }
+  removeFile: (index: number) => {
+    set((state) => {
+      const entry = state.files[index];
+      if (entry) URL.revokeObjectURL(entry.previewUrl);
+      const files = state.files.filter((_, i) => i !== index);
+      const activeIndex = Math.min(state.activeIndex, Math.max(0, files.length - 1));
+      return {
+        files,
+        activeIndex,
+        resultBlob: null,
+        resultPreviewUrl: null,
+        resultSize: 0,
+        ...syncActive({ ...state, files, activeIndex }),
+      };
+    });
+  },
+
+  setActiveIndex: (index: number) => {
+    const state = get();
+    const activeIndex = Math.max(0, Math.min(index, state.files.length - 1));
+    const entry = state.files[activeIndex];
 
     set({
-      originalFile: file,
-      originalPreviewUrl: null,
-      originalSize: file.size,
-      originalType: type,
-      outputFormat: initialFormat,
-      avifSupported: canEncodeAvif(),
+      activeIndex,
+      outputFormat: entry ? getInitialFormat(entry.type) : state.outputFormat,
       resultBlob: null,
       resultPreviewUrl: null,
       resultSize: 0,
       error: null,
-      isProcessing: heic, // HEIC needs decoding before it can render
+      ...syncActive({ ...state, activeIndex }),
     });
 
-    const finish = async () => {
-      // HEIC can't be rendered by <img> in most browsers — decode to JPEG first
-      let source: Blob = file;
-      if (heic) {
-        try {
-          source = await decodeHeicToJpeg(file);
-        } catch {
-          if (get().originalFile !== file) return;
-          set({
-            isProcessing: false,
-            error:
-              "Couldn't decode this HEIC file. Try converting it to JPG or PNG on your device first.",
-          });
-          return;
-        }
-      }
-
-      if (get().originalFile !== file) return;
-
-      const previewUrl = URL.createObjectURL(source);
-      set({ originalPreviewUrl: previewUrl, isProcessing: false });
-
-      // Load image to capture natural dimensions.
-      // Guard against a stale load landing after the user switched to another file.
-      loadImage(previewUrl)
-        .then((img) => {
-          if (get().originalPreviewUrl !== previewUrl) return;
-          set({ naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight });
-          // Auto-convert the initial result once the image is ready
-          void get().convert();
-        })
-        .catch(() => {
-          if (get().originalPreviewUrl !== previewUrl) return;
-          set({ error: "Failed to read the image. Please try another file." });
-        });
-    };
-
-    void finish();
+    void get().convert();
   },
 
-  setOutputFormat: (format: ConvertFormat) => {
+  setOutputFormat: (format) => {
     set({ outputFormat: format });
     void get().convert();
   },
 
-  setQuality: (q: number) => {
+  setQuality: (q) => {
     set({ quality: q });
     void get().convert();
   },
@@ -165,11 +240,7 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
     set({ isProcessing: true, error: null });
 
     try {
-      const result = await convertImage(
-        state.originalPreviewUrl,
-        state.outputFormat,
-        state.quality
-      );
+      const result = await convertImage(state.originalPreviewUrl, state.outputFormat, state.quality);
 
       set({
         resultBlob: result.blob,
@@ -178,12 +249,8 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
         isProcessing: false,
       });
 
-      // Rapid clicks can be dropped by the isProcessing guard above. If the
-      // format or quality changed while we were rendering, re-render so the
-      // final state always matches the preview.
       const latest = get();
-      const changed =
-        latest.outputFormat !== state.outputFormat || latest.quality !== state.quality;
+      const changed = latest.outputFormat !== state.outputFormat || latest.quality !== state.quality;
       if (changed && !latest.isProcessing) {
         void latest.convert();
       }
@@ -199,15 +266,14 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
     const state = get();
     if (!state.resultBlob || !state.originalFile) return;
 
-    const blob = state.resultBlob;
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(state.resultBlob);
     const link = document.createElement("a");
     link.href = url;
-    const ext = blob.type.includes("avif")
+    const ext = state.resultBlob.type.includes("avif")
       ? "avif"
-      : blob.type.includes("jpeg")
+      : state.resultBlob.type.includes("jpeg")
         ? "jpg"
-        : blob.type.includes("png")
+        : state.resultBlob.type.includes("png")
           ? "png"
           : "webp";
     const originalName = state.originalFile.name.replace(/\.[^.]+$/, "") || "image";
@@ -220,9 +286,11 @@ export const useConverterStore = create<ConverterState>((set, get) => ({
 
   reset: () => {
     const state = get();
-    if (state.originalPreviewUrl) URL.revokeObjectURL(state.originalPreviewUrl);
+    state.files.forEach((e) => URL.revokeObjectURL(e.previewUrl));
 
     set({
+      files: [],
+      activeIndex: 0,
       originalFile: null,
       originalPreviewUrl: null,
       originalSize: 0,

@@ -4,26 +4,40 @@ import { compressImage, getDownloadUrl, revokeDownloadUrl } from "@/features/com
 
 export type TargetSize = "50" | "100" | "200" | "custom";
 
-interface CompressorState {
-  // Input
-  originalFile: File | null;
-  /** File actually used for compression (decoded JPEG for HEIC inputs) */
+interface FileEntry {
+  file: File;
   workingFile: File | null;
-  originalPreviewUrl: string | null;
-  originalSize: number;
-  originalType: string;
+  previewUrl: string | null;
+  size: number;
+  type: string;
+  // Compression result
+  compressedBlob: Blob | null;
+  compressedPreviewUrl: string | null;
+  compressedSize: number;
+  compressionRatio: number;
+}
 
-  // Target
+interface CompressorState {
+  // Multi-file queue
+  files: FileEntry[];
+  activeIndex: number;
+
+  // Target (shared across all files)
   targetSize: TargetSize;
   customTargetSize: number;
   targetSizeKB: number;
 
-  // Compression
+  // Processing (global)
   isCompressing: boolean;
   progress: number;
   error: string | null;
 
-  // Result
+  // Backward-compat getters (active file)
+  originalFile: File | null;
+  workingFile: File | null;
+  originalPreviewUrl: string | null;
+  originalSize: number;
+  originalType: string;
   compressedBlob: Blob | null;
   compressedPreviewUrl: string | null;
   compressedSize: number;
@@ -31,11 +45,16 @@ interface CompressorState {
 
   // Actions
   setFile: (file: File) => void;
+  addFiles: (files: File[]) => void;
+  removeFile: (index: number) => void;
+  setActiveIndex: (index: number) => void;
   setTargetSize: (size: TargetSize) => void;
   setCustomTargetSize: (kb: number) => void;
   compress: () => Promise<void>;
+  compressAll: () => Promise<void>;
   reset: () => void;
   download: () => void;
+  downloadAll: () => void;
 }
 
 function getTargetSizeKB(targetSize: TargetSize, customTargetSize: number): number {
@@ -43,82 +62,151 @@ function getTargetSizeKB(targetSize: TargetSize, customTargetSize: number): numb
   return Number.parseInt(targetSize, 10);
 }
 
+function getExtension(mimeType: string): string {
+  const map: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  return map[mimeType] ?? "jpg";
+}
+
+async function processFileEntry(file: File): Promise<FileEntry> {
+  const heic = isHeicFile(file);
+  let source: Blob = file;
+  let workingFile: File = file;
+
+  if (heic) {
+    try {
+      source = await decodeHeicToJpeg(file);
+      workingFile = new File([source], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+        type: "image/jpeg",
+      });
+    } catch {
+      // HEIC decode failed — use original
+    }
+  }
+
+  const previewUrl = URL.createObjectURL(source);
+
+  return {
+    file,
+    workingFile,
+    previewUrl,
+    size: file.size,
+    type: normalizeImageType(file),
+    compressedBlob: null,
+    compressedPreviewUrl: null,
+    compressedSize: 0,
+    compressionRatio: 0,
+  };
+}
+
+function syncActive(state: CompressorState): Partial<CompressorState> {
+  const entry = state.files[state.activeIndex];
+  if (!entry) {
+    return {
+      originalFile: null,
+      workingFile: null,
+      originalPreviewUrl: null,
+      originalSize: 0,
+      originalType: "",
+      compressedBlob: null,
+      compressedPreviewUrl: null,
+      compressedSize: 0,
+      compressionRatio: 0,
+    };
+  }
+  return {
+    originalFile: entry.file,
+    workingFile: entry.workingFile,
+    originalPreviewUrl: entry.previewUrl,
+    originalSize: entry.size,
+    originalType: entry.type,
+    compressedBlob: entry.compressedBlob,
+    compressedPreviewUrl: entry.compressedPreviewUrl,
+    compressedSize: entry.compressedSize,
+    compressionRatio: entry.compressionRatio,
+  };
+}
+
 export const useCompressorStore = create<CompressorState>((set, get) => ({
-  // Initial state
-  originalFile: null,
-  workingFile: null,
-  originalPreviewUrl: null,
-  originalSize: 0,
-  originalType: "",
+  files: [],
+  activeIndex: 0,
   targetSize: "50",
   customTargetSize: 100,
   targetSizeKB: 50,
   isCompressing: false,
   progress: 0,
   error: null,
+  originalFile: null,
+  workingFile: null,
+  originalPreviewUrl: null,
+  originalSize: 0,
+  originalType: "",
   compressedBlob: null,
   compressedPreviewUrl: null,
   compressedSize: 0,
   compressionRatio: 0,
 
   setFile: (file: File) => {
-    // Revoke previous preview URL to avoid memory leaks
-    const prevUrl = get().originalPreviewUrl;
-    if (prevUrl) revokeDownloadUrl(prevUrl);
-
-    const heic = isHeicFile(file);
+    // Reset everything and add single file
+    const state = get();
+    state.files.forEach((e) => {
+      if (e.previewUrl) revokeDownloadUrl(e.previewUrl);
+      if (e.compressedPreviewUrl) revokeDownloadUrl(e.compressedPreviewUrl);
+    });
 
     set({
-      originalFile: file,
-      workingFile: null,
-      originalPreviewUrl: null,
-      originalSize: file.size,
-      originalType: normalizeImageType(file),
-      // Reset compression results when new file is uploaded
+      files: [],
+      activeIndex: 0,
       compressedBlob: null,
       compressedPreviewUrl: null,
       compressedSize: 0,
       compressionRatio: 0,
       progress: 0,
       error: null,
-      isCompressing: heic, // HEIC needs decoding before it can render
     });
 
-    const finish = async () => {
-      // HEIC can't be rendered by <img> or compressed by browser-image-compression
-      // in most browsers — decode to JPEG first.
-      let source: Blob = file;
-      if (heic) {
-        try {
-          source = await decodeHeicToJpeg(file);
-        } catch {
-          if (get().originalFile !== file) return;
-          set({
-            isCompressing: false,
-            error:
-              "Couldn't decode this HEIC file. Try converting it to JPG or PNG on your device first.",
-          });
-          return;
-        }
+    void get().addFiles([file]);
+  },
+
+  addFiles: async (newFiles: File[]) => {
+    const entries = await Promise.all(newFiles.map(processFileEntry));
+    set((state) => {
+      const files = [...state.files, ...entries];
+      return {
+        files,
+        activeIndex: state.files.length === 0 ? 0 : state.activeIndex,
+        ...syncActive({ ...state, files, activeIndex: state.files.length === 0 ? 0 : state.activeIndex }),
+      };
+    });
+  },
+
+  removeFile: (index: number) => {
+    set((state) => {
+      const entry = state.files[index];
+      if (entry) {
+        if (entry.previewUrl) revokeDownloadUrl(entry.previewUrl);
+        if (entry.compressedPreviewUrl) revokeDownloadUrl(entry.compressedPreviewUrl);
       }
 
-      if (get().originalFile !== file) return;
+      const files = state.files.filter((_, i) => i !== index);
+      const activeIndex = Math.min(state.activeIndex, Math.max(0, files.length - 1));
 
-      const previewUrl = URL.createObjectURL(source);
-      const workingFile = heic
-        ? new File([source], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
-            type: "image/jpeg",
-          })
-        : file;
+      return {
+        files,
+        activeIndex,
+        ...syncActive({ ...state, files, activeIndex }),
+      };
+    });
+  },
 
-      set({
-        originalPreviewUrl: previewUrl,
-        workingFile,
-        isCompressing: false,
-      });
-    };
-
-    void finish();
+  setActiveIndex: (index: number) => {
+    set((state) => {
+      const activeIndex = Math.max(0, Math.min(index, state.files.length - 1));
+      return { activeIndex, ...syncActive({ ...state, activeIndex }) };
+    });
   },
 
   setTargetSize: (size: TargetSize) => {
@@ -137,82 +225,131 @@ export const useCompressorStore = create<CompressorState>((set, get) => ({
   },
 
   compress: async () => {
-    const { originalFile, workingFile, targetSizeKB } = get();
-    const file = workingFile ?? originalFile;
-
-    if (!file) {
+    const { files, activeIndex, targetSizeKB } = get();
+    const entry = files[activeIndex];
+    if (!entry) {
       set({ error: "No image selected. Please upload an image first." });
       return;
     }
-
     if (targetSizeKB < 1) {
       set({ error: "Target size must be at least 1 KB." });
       return;
     }
 
-    set({
-      isCompressing: true,
-      progress: 0,
-      error: null,
-      compressedBlob: null,
-      compressedPreviewUrl: null,
-      compressedSize: 0,
-      compressionRatio: 0,
-    });
+    const file = entry.workingFile ?? entry.file;
+
+    set({ isCompressing: true, progress: 0, error: null });
 
     try {
       const compressedBlob = await compressImage({
         file,
         targetSizeKB,
-        onProgress: (progress) => {
-          set({ progress });
-        },
+        onProgress: (progress) => set({ progress }),
       });
 
-      // Validate result before using it
       if (!compressedBlob || typeof compressedBlob.size !== "number") {
         throw new Error("Invalid compression result received.");
       }
 
       const compressedSize = compressedBlob.size;
-      // For HEIC inputs the working file is the decoded JPEG (typically larger
-      // than the compact HEIC the user uploaded), so base the savings stat on
-      // what was actually uploaded.
-      const baseSize = originalFile ? originalFile.size : file.size;
+      const baseSize = entry.file.size;
       const compressionRatio = baseSize > 0
         ? Math.round(((baseSize - compressedSize) / baseSize) * 100)
         : 0;
       const safeRatio = Number.isFinite(compressionRatio) ? Math.max(-999, Math.min(100, compressionRatio)) : 0;
 
-      // Revoke previous compressed preview
-      const prevCompressedUrl = get().compressedPreviewUrl;
-      if (prevCompressedUrl) revokeDownloadUrl(prevCompressedUrl);
-
+      const prevUrl = entry.compressedPreviewUrl;
+      if (prevUrl) revokeDownloadUrl(prevUrl);
       const compressedPreviewUrl = URL.createObjectURL(compressedBlob);
 
-      set({
-        compressedBlob,
-        compressedPreviewUrl,
-        compressedSize,
-        compressionRatio: safeRatio,
-        isCompressing: false,
-        progress: 100,
+      set((state) => {
+        const files = [...state.files];
+        files[activeIndex] = {
+          ...files[activeIndex],
+          compressedBlob,
+          compressedPreviewUrl,
+          compressedSize,
+          compressionRatio: safeRatio,
+        };
+        return {
+          files,
+          isCompressing: false,
+          progress: 100,
+          ...syncActive({ ...state, files }),
+        };
       });
     } catch (err) {
       set({
         isCompressing: false,
-        error: err instanceof Error ? err.message : "An unexpected error occurred during compression. Please try again.",
+        error: err instanceof Error ? err.message : "An unexpected error occurred during compression.",
         progress: 0,
       });
     }
   },
 
+  compressAll: async () => {
+    const { files, targetSizeKB } = get();
+    if (files.length === 0) return;
+    if (targetSizeKB < 1) {
+      set({ error: "Target size must be at least 1 KB." });
+      return;
+    }
+
+    set({ isCompressing: true, progress: 0, error: null });
+
+    for (let i = 0; i < files.length; i++) {
+      const entry = files[i];
+      if (entry.compressedBlob) continue; // skip already compressed
+
+      const file = entry.workingFile ?? entry.file;
+      try {
+        const compressedBlob = await compressImage({
+          file,
+          targetSizeKB,
+          onProgress: (p) => set({ progress: Math.round(((i + p / 100) / files.length) * 100) }),
+        });
+
+        if (!compressedBlob || typeof compressedBlob.size !== "number") continue;
+
+        const compressedSize = compressedBlob.size;
+        const baseSize = entry.file.size;
+        const compressionRatio = baseSize > 0
+          ? Math.round(((baseSize - compressedSize) / baseSize) * 100)
+          : 0;
+
+        const prevUrl = entry.compressedPreviewUrl;
+        if (prevUrl) revokeDownloadUrl(prevUrl);
+        const compressedPreviewUrl = URL.createObjectURL(compressedBlob);
+
+        set((state) => {
+          const files = [...state.files];
+          files[i] = {
+            ...files[i],
+            compressedBlob,
+            compressedPreviewUrl,
+            compressedSize,
+            compressionRatio: Number.isFinite(compressionRatio) ? Math.max(-999, Math.min(100, compressionRatio)) : 0,
+          };
+          return { files, ...syncActive({ ...state, files }) };
+        });
+      } catch {
+        // Skip failed files
+      }
+    }
+
+    set({ isCompressing: false, progress: 100 });
+  },
+
   reset: () => {
-    const { originalPreviewUrl, compressedPreviewUrl } = get();
-    if (originalPreviewUrl) revokeDownloadUrl(originalPreviewUrl);
-    if (compressedPreviewUrl) revokeDownloadUrl(compressedPreviewUrl);
+    const { files } = get();
+    files.forEach((e) => {
+      if (e.previewUrl) revokeDownloadUrl(e.previewUrl);
+      if (e.compressedPreviewUrl) revokeDownloadUrl(e.compressedPreviewUrl);
+    });
 
     set({
+      files: [],
+      activeIndex: 0,
       originalFile: null,
       workingFile: null,
       originalPreviewUrl: null,
@@ -239,17 +376,21 @@ export const useCompressorStore = create<CompressorState>((set, get) => ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    // Small delay before revoking to ensure download starts
     setTimeout(() => revokeDownloadUrl(url), 1000);
   },
-}));
 
-function getExtension(mimeType: string): string {
-  const map: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-  };
-  return map[mimeType] ?? "jpg";
-}
+  downloadAll: () => {
+    const { files } = get();
+    files.forEach((entry) => {
+      if (!entry.compressedBlob) return;
+      const url = getDownloadUrl(entry.compressedBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `compressed-${entry.file.name.replace(/\.[^.]+$/, "")}.${getExtension(entry.file.type)}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => revokeDownloadUrl(url), 1000);
+    });
+  },
+}));

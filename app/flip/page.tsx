@@ -7,11 +7,12 @@ import { useFlipStore } from "@/store/flip-store";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { FlipControls } from "@/features/flip/components/FlipControls";
 import { FlipPreview } from "@/features/flip/components/FlipPreview";
+import { ImageQueue } from "@/components/shared/ImageQueue";
 
-const UploadZone = dynamic(
+const MultiImageUploadZone = dynamic(
   () =>
-    import("@/features/flip/components/UploadZone").then((m) => ({
-      default: m.UploadZone,
+    import("@/components/shared/MultiImageUploadZone").then((m) => ({
+      default: m.MultiImageUploadZone,
     })),
   {
     ssr: false,
@@ -24,9 +25,16 @@ const UploadZone = dynamic(
 );
 
 export default function FlipPage() {
+  const files = useFlipStore((s) => s.files);
+  const activeIndex = useFlipStore((s) => s.activeIndex);
   const originalFile = useFlipStore((s) => s.originalFile);
   const error = useFlipStore((s) => s.error);
   const reset = useFlipStore((s) => s.reset);
+  const addFiles = useFlipStore((s) => s.addFiles);
+  const removeFile = useFlipStore((s) => s.removeFile);
+  const setActiveIndex = useFlipStore((s) => s.setActiveIndex);
+
+  const hasFiles = files.length > 0;
 
   return (
     <PageTransition>
@@ -37,7 +45,7 @@ export default function FlipPage() {
             <FlipHorizontal2 className="h-6 w-6 text-primary" />
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            Flip &amp; Rotate Your Image
+            Flip &amp; Rotate Your Images
           </h1>
           <p className="mt-3 text-lg text-text-secondary">
             Mirror horizontally or vertically, and rotate 90° at a time.
@@ -45,21 +53,34 @@ export default function FlipPage() {
           </p>
         </div>
 
-        {/* Upload Zone (shown when no file) */}
-        {!originalFile && (
+        {/* Upload Zone */}
+        {!hasFiles && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mx-auto mt-10 max-w-xl"
           >
-            <UploadZone />
+            <MultiImageUploadZone
+              onFiles={addFiles}
+              label="Drop your images here"
+              ariaLabel="Upload images to flip"
+            />
           </motion.div>
         )}
 
-        {/* Flip UI (shown when file is selected) */}
-        {originalFile && (
+        {/* Flip UI */}
+        {hasFiles && (
           <div className="mx-auto mt-10 max-w-5xl">
-            {/* Compact file info + change button */}
+            {/* Image Queue */}
+            <ImageQueue
+              items={files.map((f) => ({ file: f.file, previewUrl: f.previewUrl }))}
+              activeIndex={activeIndex}
+              onSelect={setActiveIndex}
+              onRemove={removeFile}
+              onAdd={addFiles}
+            />
+
+            {/* Compact file info */}
             <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-3 shadow-sm">
               <div className="flex items-center gap-3 truncate">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light">
@@ -67,10 +88,11 @@ export default function FlipPage() {
                 </div>
                 <div className="truncate">
                   <p className="truncate text-sm font-medium text-text-primary">
-                    {originalFile.name}
+                    {originalFile?.name}
                   </p>
                   <p className="text-xs text-text-muted">
-                    {(originalFile.size / 1024).toFixed(1)} KB
+                    {originalFile ? `${(originalFile.size / 1024).toFixed(1)} KB` : ""}
+                    {files.length > 1 && ` · ${files.length} images`}
                   </p>
                 </div>
               </div>
@@ -82,20 +104,16 @@ export default function FlipPage() {
               </button>
             </div>
 
-            {/* Two-column layout: Controls + Preview */}
+            {/* Two-column layout */}
             <div className="grid gap-6 lg:grid-cols-12">
-              {/* Controls - takes 4/12 */}
               <div className="lg:col-span-4">
                 <FlipControls />
               </div>
-
-              {/* Preview - takes 8/12 */}
               <div className="lg:col-span-8">
                 <FlipPreview />
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -116,8 +134,7 @@ export default function FlipPage() {
           </div>
         )}
 
-        {/* Bottom CTA for empty state */}
-        {!originalFile && (
+        {!hasFiles && (
           <div className="mx-auto mt-8 max-w-xl text-center">
             <p className="text-sm text-text-muted">
               No uploads. No servers. 100% private browser-based image editing.

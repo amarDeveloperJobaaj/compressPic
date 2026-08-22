@@ -46,22 +46,33 @@ export const OUTPUT_FORMATS = [
   { label: "WEBP", value: "image/webp" as const },
 ];
 
+interface FileQueueEntry {
+  file: File;
+  previewUrl: string;
+  size: number;
+  type: string;
+}
+
 interface ResizerState {
+  // Multi-file queue
+  files: FileQueueEntry[];
+  activeIndex: number;
+
   // Input
   originalFile: File | null;
   originalPreviewUrl: string | null;
   originalSize: number;
   originalType: string;
 
-  // Image natural dimensions (for crop calculations)
+  // Image natural dimensions
   naturalWidth: number;
   naturalHeight: number;
 
-  // Display dimensions (the size the image is rendered on screen)
+  // Display dimensions
   displayWidth: number;
   displayHeight: number;
 
-  // Crop state (in natural image coordinates)
+  // Crop state
   cropX: number;
   cropY: number;
   cropWidth: number;
@@ -90,6 +101,9 @@ interface ResizerState {
 
   // Actions
   setFile: (file: File) => void;
+  addFiles: (files: File[]) => void;
+  removeFile: (index: number) => void;
+  setActiveIndex: (index: number) => void;
   setDisplayDimensions: (w: number, h: number) => void;
   setCrop: (x: number, y: number, width: number, height: number) => void;
   selectRatio: (ratio: AspectRatio | null) => void;
@@ -97,15 +111,48 @@ interface ResizerState {
   setOutputFormat: (format: "image/jpeg" | "image/png" | "image/webp") => void;
   setOutputDimensions: (w: number, h: number) => void;
   setQuality: (q: number) => void;
-  /** Crop the image and show the preview (no download) */
   crop: () => Promise<void>;
-  /** Download the previously cropped result */
   download: () => void;
   reset: () => void;
 }
 
+async function prepareFile(file: File): Promise<FileQueueEntry> {
+  const heic = isHeicFile(file);
+  let source: Blob = file;
+
+  if (heic) {
+    try {
+      source = await decodeHeicToJpeg(file);
+    } catch {
+      // Use original
+    }
+  }
+
+  const previewUrl = URL.createObjectURL(source);
+  return { file, previewUrl, size: file.size, type: normalizeImageType(file) };
+}
+
+function syncActive(state: ResizerState): Partial<ResizerState> {
+  const entry = state.files[state.activeIndex];
+  if (!entry) {
+    return {
+      originalFile: null,
+      originalPreviewUrl: null,
+      originalSize: 0,
+      originalType: "",
+    };
+  }
+  return {
+    originalFile: entry.file,
+    originalPreviewUrl: entry.previewUrl,
+    originalSize: entry.size,
+    originalType: entry.type,
+  };
+}
+
 export const useResizerStore = create<ResizerState>((set, get) => ({
-  // Initial state
+  files: [],
+  activeIndex: 0,
   originalFile: null,
   originalPreviewUrl: null,
   originalSize: 0,
@@ -133,81 +180,122 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
   resultSize: 0,
 
   setFile: (file: File) => {
-    const prevUrl = get().originalPreviewUrl;
-    if (prevUrl) URL.revokeObjectURL(prevUrl);
-
-    const prevResultUrl = get().resultPreviewUrl;
-    if (prevResultUrl) URL.revokeObjectURL(prevResultUrl);
-
-    const heic = isHeicFile(file);
+    const state = get();
+    state.files.forEach((e) => {
+      if (e.previewUrl) URL.revokeObjectURL(e.previewUrl);
+    });
+    const prevResult = state.resultPreviewUrl;
+    if (prevResult && prevResult.startsWith("blob:")) URL.revokeObjectURL(prevResult);
 
     set({
-      originalFile: file,
-      originalPreviewUrl: null,
-      originalSize: file.size,
-      originalType: normalizeImageType(file),
+      files: [],
+      activeIndex: 0,
       resultBlob: null,
       resultPreviewUrl: null,
       resultSize: 0,
-      error: null,
-      isProcessing: heic, // HEIC needs decoding before it can render
-      selectedRatio: null,
     });
 
-    const finish = async () => {
-      // HEIC can't be rendered by <img> in most browsers — decode to JPEG first
-      let source: Blob = file;
-      if (heic) {
-        try {
-          source = await decodeHeicToJpeg(file);
-        } catch {
-          if (get().originalFile !== file) return;
-          set({
-            isProcessing: false,
-            error:
-              "Couldn't decode this HEIC file. Try converting it to JPG or PNG on your device first.",
-          });
-          return;
-        }
-      }
+    void get().addFiles([file]);
+  },
 
-      if (get().originalFile !== file) return;
+  addFiles: async (newFiles: File[]) => {
+    const entries = await Promise.all(newFiles.map(prepareFile));
+    set((state) => {
+      const files = [...state.files, ...entries];
+      const isFirst = state.files.length === 0;
+      return {
+        files,
+        activeIndex: isFirst ? 0 : state.activeIndex,
+        ...syncActive({ ...state, files, activeIndex: isFirst ? 0 : state.activeIndex }),
+      };
+    });
 
-      const previewUrl = URL.createObjectURL(source);
-      set({ originalPreviewUrl: previewUrl, isProcessing: false });
-
-      // Load the image to get natural dimensions
-      const img = new Image();
-      img.onload = () => {
-        if (get().originalPreviewUrl !== previewUrl) return;
+    // Load dimensions for the active file
+    const state = get();
+    if (state.originalPreviewUrl) {
+      try {
+        const img = await loadImage(state.originalPreviewUrl);
+        if (get().originalPreviewUrl !== state.originalPreviewUrl) return;
         const nw = img.naturalWidth;
         const nh = img.naturalHeight;
-
         set({
           naturalWidth: nw,
           naturalHeight: nh,
-          // Default crop to full image
           cropX: 0,
           cropY: 0,
           cropWidth: nw,
           cropHeight: nh,
           outputWidth: nw,
           outputHeight: nh,
+          selectedRatio: null,
         });
+      } catch {
+        set({ error: "Failed to read the image." });
+      }
+    }
+  },
+
+  removeFile: (index: number) => {
+    set((state) => {
+      const entry = state.files[index];
+      if (entry) URL.revokeObjectURL(entry.previewUrl);
+
+      const files = state.files.filter((_, i) => i !== index);
+      const activeIndex = Math.min(state.activeIndex, Math.max(0, files.length - 1));
+
+      return {
+        files,
+        activeIndex,
+        resultBlob: null,
+        resultPreviewUrl: null,
+        resultSize: 0,
+        ...syncActive({ ...state, files, activeIndex }),
       };
-      img.src = previewUrl;
-    };
-
-    void finish();
+    });
   },
 
-  setDisplayDimensions: (w: number, h: number) => {
-    set({ displayWidth: w, displayHeight: h });
+  setActiveIndex: (index: number) => {
+    const state = get();
+    const prevResult = state.resultPreviewUrl;
+    if (prevResult && prevResult.startsWith("blob:")) URL.revokeObjectURL(prevResult);
+
+    const activeIndex = Math.max(0, Math.min(index, state.files.length - 1));
+    set({
+      activeIndex,
+      resultBlob: null,
+      resultPreviewUrl: null,
+      resultSize: 0,
+      ...syncActive({ ...state, activeIndex }),
+    });
+
+    // Load dimensions for the new file
+    const newState = get();
+    if (newState.originalPreviewUrl) {
+      loadImage(newState.originalPreviewUrl)
+        .then((img) => {
+          if (get().originalPreviewUrl !== newState.originalPreviewUrl) return;
+          const nw = img.naturalWidth;
+          const nh = img.naturalHeight;
+          set({
+            naturalWidth: nw,
+            naturalHeight: nh,
+            cropX: 0,
+            cropY: 0,
+            cropWidth: nw,
+            cropHeight: nh,
+            outputWidth: nw,
+            outputHeight: nh,
+            selectedRatio: null,
+          });
+        })
+        .catch(() => set({ error: "Failed to read the image." }));
+    }
   },
 
-  setCrop: (x: number, y: number, width: number, height: number) => {
-    set({ cropX: x, cropY: y, cropWidth: width, cropHeight: height });
-  },
+  setDisplayDimensions: (w: number, h: number) => set({ displayWidth: w, displayHeight: h }),
+
+  setCrop: (x: number, y: number, width: number, height: number) =>
+    set({ cropX: x, cropY: y, cropWidth: width, cropHeight: height }),
 
   selectRatio: (ratio: AspectRatio | null) => {
     const state = get();
@@ -223,17 +311,14 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
       return;
     }
 
-    // Calculate the crop region that best fits this ratio within the image
     const imageAspect = state.naturalWidth / state.naturalHeight;
     const ratioAspect = ratio.width / ratio.height;
 
     let cropW: number, cropH: number;
     if (ratioAspect > imageAspect) {
-      // Ratio is wider than image — fit by width
       cropW = state.naturalWidth;
       cropH = cropW / ratioAspect;
     } else {
-      // Ratio is taller than image — fit by height
       cropH = state.naturalHeight;
       cropW = cropH * ratioAspect;
     }
@@ -255,14 +340,8 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
 
   setCustomRatio: (width: number, height: number) => {
     const state = get();
-    set({
-      isCustomRatio: true,
-      selectedRatio: null,
-      customRatioWidth: width,
-      customRatioHeight: height,
-    });
+    set({ isCustomRatio: true, selectedRatio: null, customRatioWidth: width, customRatioHeight: height });
 
-    // Recalculate crop area based on custom ratio
     const ratioAspect = width / height;
     const imageAspect = state.naturalWidth / state.naturalHeight;
 
@@ -275,12 +354,9 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
       cropW = cropH * ratioAspect;
     }
 
-    const cropX = (state.naturalWidth - cropW) / 2;
-    const cropY = (state.naturalHeight - cropH) / 2;
-
     set({
-      cropX,
-      cropY,
+      cropX: (state.naturalWidth - cropW) / 2,
+      cropY: (state.naturalHeight - cropH) / 2,
       cropWidth: cropW,
       cropHeight: cropH,
       outputWidth: Math.round(cropW),
@@ -288,35 +364,25 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
     });
   },
 
-  setOutputFormat: (format: "image/jpeg" | "image/png" | "image/webp") => {
-    set({ outputFormat: format });
-  },
-
-  setOutputDimensions: (w: number, h: number) => {
-    set({ outputWidth: w, outputHeight: h });
-  },
-
-  setQuality: (q: number) => {
-    set({ quality: q });
-  },
+  setOutputFormat: (format) => set({ outputFormat: format }),
+  setOutputDimensions: (w, h) => set({ outputWidth: w, outputHeight: h }),
+  setQuality: (q) => set({ quality: q }),
 
   crop: async () => {
     const state = get();
-
     if (!state.originalPreviewUrl) {
       set({ error: "No image to crop." });
       return;
     }
-
     if (state.naturalWidth === 0 || state.naturalHeight === 0) {
-      set({ error: "Image is still loading. Please wait a moment and try again." });
+      set({ error: "Image is still loading. Please wait a moment." });
       return;
     }
 
     const cropW = Math.round(state.cropWidth);
     const cropH = Math.round(state.cropHeight);
     if (cropW < 1 || cropH < 1) {
-      set({ error: "Crop area is too small. Please adjust the crop selection." });
+      set({ error: "Crop area is too small." });
       return;
     }
 
@@ -326,10 +392,7 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
     set({ isProcessing: true, error: null });
 
     try {
-      // Load the original image
       const img = await loadImage(state.originalPreviewUrl);
-
-      // Create a canvas and draw the cropped region
       const canvas = document.createElement("canvas");
       canvas.width = outW;
       canvas.height = outH;
@@ -337,7 +400,6 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Could not get canvas 2D context");
 
-      // Fill with white background for JPEG (which doesn't support transparency)
       if (state.outputFormat === "image/jpeg") {
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, outW, outH);
@@ -355,10 +417,8 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
         outH
       );
 
-      // Generate data URL for preview (more reliable than blob URL)
       const resultPreviewUrl = canvas.toDataURL(state.outputFormat, state.quality);
 
-      // Generate blob for download
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
           (b) => {
@@ -370,18 +430,10 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
         );
       });
 
-      // Revoke old preview URL if it was a blob URL
       const prevUrl = state.resultPreviewUrl;
-      if (prevUrl && prevUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(prevUrl);
-      }
+      if (prevUrl && prevUrl.startsWith("blob:")) URL.revokeObjectURL(prevUrl);
 
-      set({
-        resultBlob: blob,
-        resultPreviewUrl,
-        resultSize: blob.size,
-        isProcessing: false,
-      });
+      set({ resultBlob: blob, resultPreviewUrl, resultSize: blob.size, isProcessing: false });
     } catch (err) {
       set({
         isProcessing: false,
@@ -394,11 +446,10 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
     const state = get();
     if (!state.resultBlob || !state.originalFile) return;
 
-    const blob = state.resultBlob;
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(state.resultBlob);
     const link = document.createElement("a");
     link.href = url;
-    const ext = blob.type.includes("jpeg") ? "jpg" : blob.type.includes("png") ? "png" : "webp";
+    const ext = state.resultBlob.type.includes("jpeg") ? "jpg" : state.resultBlob.type.includes("png") ? "png" : "webp";
     const originalName = state.originalFile.name.replace(/\.[^.]+$/, "") ?? "image";
     link.download = `cropped-${originalName}.${ext}`;
     document.body.appendChild(link);
@@ -409,10 +460,12 @@ export const useResizerStore = create<ResizerState>((set, get) => ({
 
   reset: () => {
     const state = get();
-    if (state.originalPreviewUrl) URL.revokeObjectURL(state.originalPreviewUrl);
-    if (state.resultPreviewUrl) URL.revokeObjectURL(state.resultPreviewUrl);
+    state.files.forEach((e) => URL.revokeObjectURL(e.previewUrl));
+    if (state.resultPreviewUrl && state.resultPreviewUrl.startsWith("blob:")) URL.revokeObjectURL(state.resultPreviewUrl);
 
     set({
+      files: [],
+      activeIndex: 0,
       originalFile: null,
       originalPreviewUrl: null,
       originalSize: 0,

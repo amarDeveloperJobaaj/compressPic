@@ -374,3 +374,89 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ============================================================
+ * PORTFOLIO — custom design tokens & animations
+ * ============================================================
+ */
+.portfolio-root {
+  --pf-bg: #050a12;
+  --pf-surface: #0a1020;
+  --pf-surface-2: #0e1628;
+  --pf-border: #162038;
+  --pf-accent: #14b8a6;
+  --pf-accent-glow: rgba(20, 184, 166, 0.12);
+  --pf-warm: #f59e0b;
+  --pf-text: #e8edf5;
+  --pf-text-2: #8899b4;
+  --pf-text-3: #4a5d7a;
+  --pf-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+}
+
+.portfolio-root.portfolio-light {
+  --pf-bg: #f5f5f0;
+  --pf-surface: #ffffff;
+  --pf-surface-2: #fafaf7;
+  --pf-border: #e2e0db;
+  --pf-accent: #0d9488;
+  --pf-accent-glow: rgba(13, 148, 136, 0.1);
+  --pf-warm: #d97706;
+  --pf-text: #1a1a1a;
+  --pf-text-2: #555550;
+  --pf-text-3: #999994;
+}
+
+/* Terminal cursor blink */
+@keyframes pf-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Custom cursor outer ring pulse */
+@keyframes pf-cursor-ring-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.8; }
+}
+
+/* Noise grain overlay */
+.pf-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle grid pattern for portfolio sections */
+.pf-grid {
+  background-image:
+    linear-gradient(var(--pf-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pf-border) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Magnetic button */
+.pf-magnetic {
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* 3D scene canvas */
+.pf-3d-canvas canvas {
+  touch-action: none;
+}
+
+/* Reduced motion for portfolio */
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-root *,
+  .portfolio-root *::before,
+  .portfolio-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .pf-cursor-dot, .pf-cursor-ring { display: none !important; }
+}

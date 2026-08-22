@@ -9,11 +9,12 @@ import { useConverterStore } from "@/store/converter-store";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { ConverterControls } from "@/features/converter/components/ConverterControls";
 import { ConverterPreview } from "@/features/converter/components/ConverterPreview";
+import { ImageQueue } from "@/components/shared/ImageQueue";
 
-const UploadZone = dynamic(
+const MultiImageUploadZone = dynamic(
   () =>
-    import("@/features/converter/components/UploadZone").then((m) => ({
-      default: m.UploadZone,
+    import("@/components/shared/MultiImageUploadZone").then((m) => ({
+      default: m.MultiImageUploadZone,
     })),
   {
     ssr: false,
@@ -26,9 +27,16 @@ const UploadZone = dynamic(
 );
 
 export default function ConvertPage() {
+  const files = useConverterStore((s) => s.files);
+  const activeIndex = useConverterStore((s) => s.activeIndex);
   const originalFile = useConverterStore((s) => s.originalFile);
   const error = useConverterStore((s) => s.error);
   const reset = useConverterStore((s) => s.reset);
+  const addFiles = useConverterStore((s) => s.addFiles);
+  const removeFile = useConverterStore((s) => s.removeFile);
+  const setActiveIndex = useConverterStore((s) => s.setActiveIndex);
+
+  const hasFiles = files.length > 0;
 
   return (
     <PageTransition>
@@ -42,10 +50,10 @@ export default function ConvertPage() {
             Convert Image Format
           </h1>
           <p className="mt-3 text-lg text-text-secondary">
-            Change your image to PNG, JPEG, or WEBP — free and instantly, right in your browser.
+            Change your images to PNG, JPEG, or WEBP — free and instantly, right in your browser.
           </p>
 
-          {/* Dedicated conversion pages (driven by the pairs registry) */}
+          {/* Dedicated conversion pages */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             {CONVERSION_PAIRS.map((pair) => (
               <Link
@@ -61,21 +69,34 @@ export default function ConvertPage() {
           </div>
         </div>
 
-        {/* Upload Zone (shown when no file) */}
-        {!originalFile && (
+        {/* Upload Zone */}
+        {!hasFiles && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mx-auto mt-10 max-w-xl"
           >
-            <UploadZone />
+            <MultiImageUploadZone
+              onFiles={addFiles}
+              label="Drop your images here"
+              ariaLabel="Upload images to convert"
+            />
           </motion.div>
         )}
 
-        {/* Convert UI (shown when file is selected) */}
-        {originalFile && (
+        {/* Convert UI */}
+        {hasFiles && (
           <div className="mx-auto mt-10 max-w-5xl">
-            {/* Compact file info + change button */}
+            {/* Image Queue */}
+            <ImageQueue
+              items={files.map((f) => ({ file: f.file, previewUrl: f.previewUrl }))}
+              activeIndex={activeIndex}
+              onSelect={setActiveIndex}
+              onRemove={removeFile}
+              onAdd={addFiles}
+            />
+
+            {/* Compact file info */}
             <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-3 shadow-sm">
               <div className="flex items-center gap-3 truncate">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light">
@@ -83,10 +104,11 @@ export default function ConvertPage() {
                 </div>
                 <div className="truncate">
                   <p className="truncate text-sm font-medium text-text-primary">
-                    {originalFile.name}
+                    {originalFile?.name}
                   </p>
                   <p className="text-xs text-text-muted">
-                    {(originalFile.size / 1024).toFixed(1)} KB
+                    {originalFile ? `${(originalFile.size / 1024).toFixed(1)} KB` : ""}
+                    {files.length > 1 && ` · ${files.length} images`}
                   </p>
                 </div>
               </div>
@@ -98,20 +120,16 @@ export default function ConvertPage() {
               </button>
             </div>
 
-            {/* Two-column layout: Controls + Preview */}
+            {/* Two-column layout */}
             <div className="grid gap-6 lg:grid-cols-12">
-              {/* Controls - takes 4/12 */}
               <div className="lg:col-span-4">
                 <ConverterControls />
               </div>
-
-              {/* Preview - takes 8/12 */}
               <div className="lg:col-span-8">
                 <ConverterPreview />
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -132,8 +150,7 @@ export default function ConvertPage() {
           </div>
         )}
 
-        {/* Bottom CTA for empty state */}
-        {!originalFile && (
+        {!hasFiles && (
           <div className="mx-auto mt-8 max-w-xl text-center">
             <p className="text-sm text-text-muted">
               No uploads. No servers. 100% private browser-based image editing.

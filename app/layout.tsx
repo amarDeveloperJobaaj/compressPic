@@ -5,6 +5,7 @@ import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "./globals.css";
 import { MotionProvider } from "@/components/shared/MotionProvider";
+import { RouteChromeGuard } from "@/components/shared/RouteChromeGuard";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AnalyticsScripts } from "@/components/seo/AnalyticsScripts";
@@ -169,6 +170,7 @@ export default function RootLayout({
         <JsonLd data={softwareAppSchema} />
         <AnalyticsScripts />
         <MotionProvider>
+          <RouteChromeGuard />
           <Header />
           <main id="main-content" className="flex-1" tabIndex={-1}>
             {children}

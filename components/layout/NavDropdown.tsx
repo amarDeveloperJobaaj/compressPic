@@ -56,6 +56,12 @@ const FORMAT_ICONS: Record<string, LucideIcon> = {
  */
 export const MORE_NAV_ITEMS: NavLinkItem[] = [
   {
+    label: "Portfolio",
+    href: "/portfolio",
+    description: "Amar Lodhi — Software Engineer",
+    icon: Sparkles,
+  },
+  {
     label: "Blog",
     href: "/blogs",
     description: "Tips, guides & product updates",

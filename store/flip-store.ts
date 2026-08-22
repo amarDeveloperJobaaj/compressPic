@@ -15,13 +15,21 @@ export const FLIP_OUTPUT_FORMATS = [
   { label: "WEBP", value: "image/webp" as const },
 ];
 
+interface FileQueueEntry {
+  file: File;
+  previewUrl: string;
+  size: number;
+}
+
 interface FlipState {
+  // Multi-file queue
+  files: FileQueueEntry[];
+  activeIndex: number;
+
   // Input
   originalFile: File | null;
   originalPreviewUrl: string | null;
   originalSize: number;
-
-  // Natural dimensions of the uploaded image
   naturalWidth: number;
   naturalHeight: number;
 
@@ -45,20 +53,48 @@ interface FlipState {
 
   // Actions
   setFile: (file: File) => void;
+  addFiles: (files: File[]) => void;
+  removeFile: (index: number) => void;
+  setActiveIndex: (index: number) => void;
   toggleFlipH: () => void;
   toggleFlipV: () => void;
   rotate: (direction: "left" | "right") => void;
   resetTransform: () => void;
   setOutputFormat: (format: FlipFormat) => void;
   setQuality: (q: number) => void;
-  /** Re-render the flipped result and show the preview */
   apply: () => Promise<void>;
-  /** Download the currently rendered result */
   download: () => void;
   reset: () => void;
 }
 
+async function prepareFile(file: File): Promise<FileQueueEntry> {
+  let source: Blob = file;
+  if (isHeicFile(file)) {
+    try {
+      source = await decodeHeicToJpeg(file);
+    } catch {
+      // Use original
+    }
+  }
+  const previewUrl = URL.createObjectURL(source);
+  return { file, previewUrl, size: file.size };
+}
+
+function syncActive(state: FlipState): Partial<FlipState> {
+  const entry = state.files[state.activeIndex];
+  if (!entry) {
+    return { originalFile: null, originalPreviewUrl: null, originalSize: 0 };
+  }
+  return {
+    originalFile: entry.file,
+    originalPreviewUrl: entry.previewUrl,
+    originalSize: entry.size,
+  };
+}
+
 export const useFlipStore = create<FlipState>((set, get) => ({
+  files: [],
+  activeIndex: 0,
   originalFile: null,
   originalPreviewUrl: null,
   originalSize: 0,
@@ -76,64 +112,87 @@ export const useFlipStore = create<FlipState>((set, get) => ({
   resultHeight: 0,
 
   setFile: (file: File) => {
-    const prevUrl = get().originalPreviewUrl;
-    if (prevUrl) URL.revokeObjectURL(prevUrl);
+    const state = get();
+    state.files.forEach((e) => URL.revokeObjectURL(e.previewUrl));
+    set({ files: [], activeIndex: 0, resultBlob: null, resultPreviewUrl: null, resultSize: 0, transform: DEFAULT_TRANSFORM });
+    void get().addFiles([file]);
+  },
 
-    const heic = isHeicFile(file);
-
-    set({
-      originalFile: file,
-      originalPreviewUrl: null,
-      originalSize: file.size,
-      transform: DEFAULT_TRANSFORM,
-      resultBlob: null,
-      resultPreviewUrl: null,
-      resultSize: 0,
-      error: null,
-      isProcessing: heic, // HEIC needs decoding before it can render
+  addFiles: async (newFiles: File[]) => {
+    const entries = await Promise.all(newFiles.map(prepareFile));
+    set((state) => {
+      const files = [...state.files, ...entries];
+      const isFirst = state.files.length === 0;
+      return {
+        files,
+        activeIndex: isFirst ? 0 : state.activeIndex,
+        transform: DEFAULT_TRANSFORM,
+        resultBlob: null,
+        resultPreviewUrl: null,
+        resultSize: 0,
+        ...syncActive({ ...state, files, activeIndex: isFirst ? 0 : state.activeIndex }),
+      };
     });
 
-    const finish = async () => {
-      // HEIC can't be rendered by <img> in most browsers — decode to JPEG first.
-      let source: Blob = file;
-      if (heic) {
-        try {
-          source = await decodeHeicToJpeg(file);
-        } catch {
-          if (get().originalFile !== file) return;
-          set({
-            isProcessing: false,
-            error:
-              "Couldn't decode this HEIC file. Try converting it to JPG or PNG on your device first.",
-          });
-          return;
-        }
-      }
-
-      if (get().originalFile !== file) return;
-
-      const previewUrl = URL.createObjectURL(source);
-      set({ originalPreviewUrl: previewUrl, isProcessing: false });
-
-      // Load image to capture natural dimensions.
-      // Guard against a stale load landing after the user switched to another file.
-      loadImage(previewUrl)
+    // Load dimensions
+    const state = get();
+    if (state.originalPreviewUrl) {
+      loadImage(state.originalPreviewUrl)
         .then((img) => {
-          if (get().originalPreviewUrl !== previewUrl) return;
+          if (get().originalPreviewUrl !== state.originalPreviewUrl) return;
           const nw = img.naturalWidth;
           const nh = img.naturalHeight;
           const { width, height } = getOutputSize(nw, nh, 0);
           set({ naturalWidth: nw, naturalHeight: nh, resultWidth: width, resultHeight: height });
-          // Auto-render the initial result once the image is ready
           void get().apply();
         })
-        .catch(() => {
-          if (get().originalPreviewUrl !== previewUrl) return;
-          set({ error: "Failed to read the image. Please try another file." });
-        });
-    };
+        .catch(() => set({ error: "Failed to read the image." }));
+    }
+  },
 
-    void finish();
+  removeFile: (index: number) => {
+    set((state) => {
+      const entry = state.files[index];
+      if (entry) URL.revokeObjectURL(entry.previewUrl);
+      const files = state.files.filter((_, i) => i !== index);
+      const activeIndex = Math.min(state.activeIndex, Math.max(0, files.length - 1));
+      return {
+        files,
+        activeIndex,
+        resultBlob: null,
+        resultPreviewUrl: null,
+        resultSize: 0,
+        ...syncActive({ ...state, files, activeIndex }),
+      };
+    });
+  },
+
+  setActiveIndex: (index: number) => {
+    const state = get();
+    const activeIndex = Math.max(0, Math.min(index, state.files.length - 1));
+    set({
+      activeIndex,
+      transform: DEFAULT_TRANSFORM,
+      resultBlob: null,
+      resultPreviewUrl: null,
+      resultSize: 0,
+      ...syncActive({ ...state, activeIndex }),
+    });
+
+    // Load dimensions
+    const newState = get();
+    if (newState.originalPreviewUrl) {
+      loadImage(newState.originalPreviewUrl)
+        .then((img) => {
+          if (get().originalPreviewUrl !== newState.originalPreviewUrl) return;
+          const nw = img.naturalWidth;
+          const nh = img.naturalHeight;
+          const { width, height } = getOutputSize(nw, nh, 0);
+          set({ naturalWidth: nw, naturalHeight: nh, resultWidth: width, resultHeight: height });
+          void get().apply();
+        })
+        .catch(() => set({ error: "Failed to read the image." }));
+    }
   },
 
   toggleFlipH: () => {
@@ -146,7 +205,7 @@ export const useFlipStore = create<FlipState>((set, get) => ({
     void get().apply();
   },
 
-  rotate: (direction: "left" | "right") => {
+  rotate: (direction) => {
     set((s) => {
       const delta = direction === "left" ? 270 : 90;
       const rotation = ((s.transform.rotation + delta) % 360) as 0 | 90 | 180 | 270;
@@ -160,12 +219,12 @@ export const useFlipStore = create<FlipState>((set, get) => ({
     void get().apply();
   },
 
-  setOutputFormat: (format: FlipFormat) => {
+  setOutputFormat: (format) => {
     set({ outputFormat: format });
     void get().apply();
   },
 
-  setQuality: (q: number) => {
+  setQuality: (q) => {
     set({ quality: q });
     void get().apply();
   },
@@ -185,11 +244,7 @@ export const useFlipStore = create<FlipState>((set, get) => ({
         state.quality
       );
 
-      const { width, height } = getOutputSize(
-        state.naturalWidth,
-        state.naturalHeight,
-        state.transform.rotation
-      );
+      const { width, height } = getOutputSize(state.naturalWidth, state.naturalHeight, state.transform.rotation);
 
       set({
         resultBlob: result.blob,
@@ -200,14 +255,9 @@ export const useFlipStore = create<FlipState>((set, get) => ({
         isProcessing: false,
       });
 
-      // Rapid clicks can be dropped by the isProcessing guard above. If the
-      // transform or settings changed while we were rendering, re-render so
-      // the final state always matches the preview.
       const latest = get();
       const changed =
-        latest.transform !== state.transform ||
-        latest.outputFormat !== state.outputFormat ||
-        latest.quality !== state.quality;
+        latest.transform !== state.transform || latest.outputFormat !== state.outputFormat || latest.quality !== state.quality;
       if (changed && !latest.isProcessing) {
         void latest.apply();
       }
@@ -223,11 +273,10 @@ export const useFlipStore = create<FlipState>((set, get) => ({
     const state = get();
     if (!state.resultBlob || !state.originalFile) return;
 
-    const blob = state.resultBlob;
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(state.resultBlob);
     const link = document.createElement("a");
     link.href = url;
-    const ext = blob.type.includes("jpeg") ? "jpg" : blob.type.includes("png") ? "png" : "webp";
+    const ext = state.resultBlob.type.includes("jpeg") ? "jpg" : state.resultBlob.type.includes("png") ? "png" : "webp";
     const originalName = state.originalFile.name.replace(/\.[^.]+$/, "") || "image";
     link.download = `flipped-${originalName}.${ext}`;
     document.body.appendChild(link);
@@ -238,9 +287,11 @@ export const useFlipStore = create<FlipState>((set, get) => ({
 
   reset: () => {
     const state = get();
-    if (state.originalPreviewUrl) URL.revokeObjectURL(state.originalPreviewUrl);
+    state.files.forEach((e) => URL.revokeObjectURL(e.previewUrl));
 
     set({
+      files: [],
+      activeIndex: 0,
       originalFile: null,
       originalPreviewUrl: null,
       originalSize: 0,

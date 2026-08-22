@@ -8,11 +8,12 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { AspectRatioSelector } from "@/features/resizer/components/AspectRatioSelector";
 import { ResizePreview } from "@/features/resizer/components/ResizePreview";
 import { ResizeResults } from "@/features/resizer/components/ResizeResults";
+import { ImageQueue } from "@/components/shared/ImageQueue";
 
-const UploadZone = dynamic(
+const MultiImageUploadZone = dynamic(
   () =>
-    import("@/features/resizer/components/UploadZone").then((m) => ({
-      default: m.UploadZone,
+    import("@/components/shared/MultiImageUploadZone").then((m) => ({
+      default: m.MultiImageUploadZone,
     })),
   {
     ssr: false,
@@ -33,9 +34,16 @@ const ImageCropper = dynamic(
 );
 
 export default function ResizePage() {
+  const files = useResizerStore((s) => s.files);
+  const activeIndex = useResizerStore((s) => s.activeIndex);
   const originalFile = useResizerStore((s) => s.originalFile);
   const error = useResizerStore((s) => s.error);
   const reset = useResizerStore((s) => s.reset);
+  const addFiles = useResizerStore((s) => s.addFiles);
+  const removeFile = useResizerStore((s) => s.removeFile);
+  const setActiveIndex = useResizerStore((s) => s.setActiveIndex);
+
+  const hasFiles = files.length > 0;
 
   return (
     <PageTransition>
@@ -46,7 +54,7 @@ export default function ResizePage() {
             <Crop className="h-6 w-6 text-primary" />
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            Resize &amp; Crop Your Image
+            Resize &amp; Crop Your Images
           </h1>
           <p className="mt-3 text-lg text-text-secondary">
             Choose from prebuilt sizes like passport, document, or social media formats.
@@ -54,21 +62,34 @@ export default function ResizePage() {
           </p>
         </div>
 
-        {/* Upload Zone (shown when no file) */}
-        {!originalFile && (
+        {/* Upload Zone */}
+        {!hasFiles && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mx-auto mt-10 max-w-xl"
           >
-            <UploadZone />
+            <MultiImageUploadZone
+              onFiles={addFiles}
+              label="Drop your images here"
+              ariaLabel="Upload images to resize"
+            />
           </motion.div>
         )}
 
-        {/* Resize/Crop UI (shown when file is selected) */}
-        {originalFile && (
+        {/* Resize/Crop UI */}
+        {hasFiles && (
           <div className="mx-auto mt-10 max-w-5xl">
-            {/* Compact file info + change button */}
+            {/* Image Queue */}
+            <ImageQueue
+              items={files.map((f) => ({ file: f.file, previewUrl: f.previewUrl }))}
+              activeIndex={activeIndex}
+              onSelect={setActiveIndex}
+              onRemove={removeFile}
+              onAdd={addFiles}
+            />
+
+            {/* Compact file info */}
             <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-3 shadow-sm">
               <div className="flex items-center gap-3 truncate">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light">
@@ -76,10 +97,11 @@ export default function ResizePage() {
                 </div>
                 <div className="truncate">
                   <p className="truncate text-sm font-medium text-text-primary">
-                    {originalFile.name}
+                    {originalFile?.name}
                   </p>
                   <p className="text-xs text-text-muted">
-                    {(originalFile.size / 1024).toFixed(1)} KB
+                    {originalFile ? `${(originalFile.size / 1024).toFixed(1)} KB` : ""}
+                    {files.length > 1 && ` · ${files.length} images`}
                   </p>
                 </div>
               </div>
@@ -91,30 +113,23 @@ export default function ResizePage() {
               </button>
             </div>
 
-            {/* Three-column layout: Controls + Crop + Preview */}
+            {/* Three-column layout */}
             <div className="grid gap-6 lg:grid-cols-12">
-              {/* Sidebar Controls - takes 3/12 */}
               <div className="lg:col-span-3">
                 <AspectRatioSelector />
               </div>
-
-              {/* Crop Area - takes 6/12 */}
               <div className="lg:col-span-6">
                 <ImageCropper />
               </div>
-
-              {/* Results Panel - takes 3/12 */}
               <div className="lg:col-span-3">
                 <ResizeResults />
               </div>
             </div>
 
-            {/* Preview */}
             <div className="mt-6">
               <ResizePreview />
             </div>
 
-            {/* Error */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -135,8 +150,7 @@ export default function ResizePage() {
           </div>
         )}
 
-        {/* Bottom CTA for empty state */}
-        {!originalFile && (
+        {!hasFiles && (
           <div className="mx-auto mt-8 max-w-xl text-center">
             <p className="text-sm text-text-muted">
               No uploads. No servers. 100% private browser-based image editing.

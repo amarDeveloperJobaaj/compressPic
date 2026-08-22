@@ -1,19 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ImageDown } from "lucide-react";
+import { ImageDown, Download } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCompressorStore } from "@/store/compressor-store";
 import { TargetSizeSelector } from "@/features/compressor/components/TargetSizeSelector";
 import { CompressionProgress } from "@/features/compressor/components/CompressionProgress";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { ImageQueue } from "@/components/shared/ImageQueue";
 
-// Lazy-load heavy components that use browser-image-compression
-const UploadZone = dynamic(
+// Lazy-load heavy components
+const MultiImageUploadZone = dynamic(
   () =>
-    import("@/features/compressor/components/UploadZone").then((m) => ({
-      default: m.UploadZone,
+    import("@/components/shared/MultiImageUploadZone").then((m) => ({
+      default: m.MultiImageUploadZone,
     })),
   {
     ssr: false,
@@ -42,12 +43,23 @@ const Results = dynamic(
 );
 
 export default function CompressPage() {
+  const files = useCompressorStore((s) => s.files);
+  const activeIndex = useCompressorStore((s) => s.activeIndex);
   const originalFile = useCompressorStore((s) => s.originalFile);
   const isCompressing = useCompressorStore((s) => s.isCompressing);
   const compressedBlob = useCompressorStore((s) => s.compressedBlob);
   const targetSizeKB = useCompressorStore((s) => s.targetSizeKB);
   const compress = useCompressorStore((s) => s.compress);
+  const compressAll = useCompressorStore((s) => s.compressAll);
   const reset = useCompressorStore((s) => s.reset);
+  const addFiles = useCompressorStore((s) => s.addFiles);
+  const removeFile = useCompressorStore((s) => s.removeFile);
+  const setActiveIndex = useCompressorStore((s) => s.setActiveIndex);
+  const downloadAll = useCompressorStore((s) => s.downloadAll);
+
+  const hasFiles = files.length > 0;
+  const hasUncompressed = files.some((f) => !f.compressedBlob);
+  const allCompressed = files.length > 0 && files.every((f) => f.compressedBlob);
 
   return (
     <PageTransition>
@@ -58,28 +70,41 @@ export default function CompressPage() {
             <ImageDown className="h-6 w-6 text-primary" />
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-            Compress Your Image
+            Compress Your Images
           </h1>
           <p className="mt-3 text-lg text-text-secondary">
-            Upload an image and choose your target size. Everything stays in your browser.
+            Upload one or more images and choose your target size. Everything stays in your browser.
           </p>
         </div>
 
-        {/* Upload Zone (shown when no file) */}
-        {!originalFile && (
+        {/* Upload Zone (shown when no files) */}
+        {!hasFiles && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mx-auto mt-10 max-w-xl"
           >
-            <UploadZone />
+            <MultiImageUploadZone
+              onFiles={addFiles}
+              label="Drop your images here"
+              ariaLabel="Upload images to compress"
+            />
           </motion.div>
         )}
 
-        {/* Compressor UI (shown when file is selected) */}
-        {originalFile && (
+        {/* Compressor UI (shown when files are selected) */}
+        {hasFiles && (
           <div className="mx-auto mt-10 max-w-3xl">
-            {/* Compact file info + change button */}
+            {/* Image Queue */}
+            <ImageQueue
+              items={files.map((f) => ({ file: f.file, previewUrl: f.previewUrl! }))}
+              activeIndex={activeIndex}
+              onSelect={setActiveIndex}
+              onRemove={removeFile}
+              onAdd={addFiles}
+            />
+
+            {/* Compact file info + actions */}
             <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-3 shadow-sm">
               <div className="flex items-center gap-3 truncate">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-light">
@@ -87,21 +112,25 @@ export default function CompressPage() {
                 </div>
                 <div className="truncate">
                   <p className="truncate text-sm font-medium text-text-primary">
-                    {originalFile.name}
+                    {originalFile?.name}
                   </p>
                   <p className="text-xs text-text-muted">
-                    {(originalFile.size / 1024).toFixed(1)} KB
+                    {originalFile ? `${(originalFile.size / 1024).toFixed(1)} KB` : ""}
+                    {files.length > 1 && ` · ${files.length} images`}
                   </p>
                 </div>
               </div>
-              <Button
-                onClick={reset}
-                variant="ghost"
-                size="sm"
-                disabled={isCompressing}
-              >
-                Change
-              </Button>
+              <div className="flex items-center gap-2">
+                {allCompressed && files.length > 1 && (
+                  <Button onClick={downloadAll} variant="ghost" size="sm">
+                    <Download className="mr-1 h-3.5 w-3.5" />
+                    All
+                  </Button>
+                )}
+                <Button onClick={reset} variant="ghost" size="sm" disabled={isCompressing}>
+                  Change
+                </Button>
+              </div>
             </div>
 
             {/* Two-column layout: Preview + Controls */}
@@ -133,6 +162,19 @@ export default function CompressPage() {
                     `Compress to ${targetSizeKB} KB`
                   )}
                 </Button>
+
+                {/* Compress All button */}
+                {files.length > 1 && hasUncompressed && (
+                  <Button
+                    onClick={compressAll}
+                    disabled={isCompressing}
+                    variant="outline"
+                    size="xl"
+                    className="w-full"
+                  >
+                    Compress All ({files.filter((f) => !f.compressedBlob).length} remaining)
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -149,7 +191,7 @@ export default function CompressPage() {
         )}
 
         {/* Bottom CTA for empty state */}
-        {!originalFile && !compressedBlob && (
+        {!hasFiles && (
           <div className="mx-auto mt-8 max-w-xl text-center">
             <p className="text-sm text-text-muted">
               No uploads. No servers. 100% private browser compression.
