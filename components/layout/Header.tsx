@@ -94,6 +94,18 @@ export function Header() {
             Home
           </Link>
 
+          <Link
+            href="/vizodesign"
+            className={cn(
+              "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+              pathname.startsWith("/vizodesign")
+                ? "bg-primary-light text-primary"
+                : "text-text-secondary hover:bg-primary-light/70 hover:text-primary"
+            )}
+          >
+            VizoDesign
+          </Link>
+
           {TOOL_CATEGORIES.filter((c) => c.id !== "ai").map((category) => {
             const categoryPage = CATEGORY_PAGE_BY_CATEGORY_ID[category.id];
             return (

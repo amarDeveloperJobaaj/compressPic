@@ -787,6 +787,190 @@ export type Database = {
         };
         Relationships: [];
       };
+      design_categories: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      designs: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string;
+          short_description: string;
+          category_id: string | null;
+          status: Database["public"]["Enums"]["design_status"];
+          featured: boolean;
+          theme: Database["public"]["Enums"]["design_theme"];
+          style_type: string;
+          mood: string;
+          best_for: string[];
+          animation_level: Database["public"]["Enums"]["design_animation_level"];
+          has_3d: boolean;
+          responsive: boolean;
+          accessibility_level: string;
+          preview_type: string;
+          preview_component: string | null;
+          preview_image: string | null;
+          thumbnail: string | null;
+          design_system: Json;
+          design_markdown: string;
+          ai_prompt: string;
+          technologies: string[];
+          frameworks: string[];
+          tags: string[];
+          seo: Json;
+          view_count: number;
+          copy_count: number;
+          sort_order: number;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string;
+          short_description?: string;
+          category_id?: string | null;
+          status?: Database["public"]["Enums"]["design_status"];
+          featured?: boolean;
+          theme?: Database["public"]["Enums"]["design_theme"];
+          style_type?: string;
+          mood?: string;
+          best_for?: string[];
+          animation_level?: Database["public"]["Enums"]["design_animation_level"];
+          has_3d?: boolean;
+          responsive?: boolean;
+          accessibility_level?: string;
+          preview_type?: string;
+          preview_component?: string | null;
+          preview_image?: string | null;
+          thumbnail?: string | null;
+          design_system?: Json;
+          design_markdown?: string;
+          ai_prompt?: string;
+          technologies?: string[];
+          frameworks?: string[];
+          tags?: string[];
+          seo?: Json;
+          view_count?: number;
+          copy_count?: number;
+          sort_order?: number;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          description?: string;
+          short_description?: string;
+          category_id?: string | null;
+          status?: Database["public"]["Enums"]["design_status"];
+          featured?: boolean;
+          theme?: Database["public"]["Enums"]["design_theme"];
+          style_type?: string;
+          mood?: string;
+          best_for?: string[];
+          animation_level?: Database["public"]["Enums"]["design_animation_level"];
+          has_3d?: boolean;
+          responsive?: boolean;
+          accessibility_level?: string;
+          preview_type?: string;
+          preview_component?: string | null;
+          preview_image?: string | null;
+          thumbnail?: string | null;
+          design_system?: Json;
+          design_markdown?: string;
+          ai_prompt?: string;
+          technologies?: string[];
+          frameworks?: string[];
+          tags?: string[];
+          seo?: Json;
+          view_count?: number;
+          copy_count?: number;
+          sort_order?: number;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "designs_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "design_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      design_events: {
+        Row: {
+          id: string;
+          design_id: string;
+          event_type: string;
+          visitor_id: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          design_id: string;
+          event_type: string;
+          visitor_id?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          design_id?: string;
+          event_type?: string;
+          visitor_id?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "design_events_design_id_fkey";
+            columns: ["design_id"];
+            isOneToOne: false;
+            referencedRelation: "designs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -802,6 +986,9 @@ export type Database = {
     Enums: {
       blog_status: "draft" | "published" | "scheduled" | "archived";
       comment_status: "pending" | "approved" | "spam";
+      design_status: "draft" | "published" | "archived";
+      design_theme: "dark" | "light" | "both";
+      design_animation_level: "minimal" | "medium" | "high";
     };
     CompositeTypes: Record<string, never>;
   };
