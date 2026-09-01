@@ -22,13 +22,7 @@ import {
   Share2,
   ChevronDown,
   Flame,
-  Instagram,
-  Twitter,
   Youtube,
-  RectangleHorizontal,
-  Image as ImageIcon,
-  Globe,
-  Sparkles as SparklesIcon,
   Braces,
   ShieldCheck,
   Binary,
@@ -144,9 +138,11 @@ const toolCardIcons: Record<string, LucideIcon> = {
 
 // High-demand tools get a featured spotlight treatment on the homepage.
 const FEATURED_SLUGS = new Set([
-  "remove-background",
   "compress",
-  "passport-photo-maker",
+  "json-formatter",
+  "emi-calculator",
+  "meta-tag-generator",
+  "remove-background",
   "image-to-pdf",
 ]);
 
@@ -174,184 +170,95 @@ const features = [
   {
     icon: Zap,
     title: "Lightning Fast",
-    description: "Compress and resize images in milliseconds. All processing happens instantly in your browser.",
+    description: "Every tool runs instantly in your browser — no waiting for uploads or server processing.",
   },
   {
     icon: Shield,
     title: "100% Private",
-    description: "Your images never leave your device. No uploads, no servers, no tracking.",
+    description: "Your data never leaves your device. No uploads, no servers, no tracking.",
   },
   {
-    icon: Crop,
-    title: "Crop & Resize",
-    description: "Crop to passport, document, or social media sizes. Over 20 preset ratios to choose from.",
+    icon: ImageDown,
+    title: "Image Tools",
+    description: "Compress, resize, crop, flip, convert, remove backgrounds and more — all in your browser.",
   },
   {
-    icon: FlipHorizontal2,
-    title: "Flip & Rotate",
-    description: "Mirror images horizontally or vertically and rotate 90° at a time — perfect for fixing orientation.",
+    icon: FileText,
+    title: "PDF Tools",
+    description: "Merge images into PDFs and extract PDF pages as high-resolution JPG or PNG images.",
   },
   {
-    icon: Repeat,
-    title: "Format Converter",
-    description: "Change any image to PNG, JPEG, or WEBP instantly — perfect for compatibility across devices and apps.",
+    icon: Braces,
+    title: "Developer Tools",
+    description: "Format JSON, encode Base64, generate QR codes, decode JWTs and run live code playgrounds.",
   },
   {
-    icon: Download,
-    title: "Free & Unlimited",
-    description: "No sign-ups, no limits, no hidden costs. Compress, crop, resize, flip, and convert as much as you want.",
+    icon: Search,
+    title: "SEO Tools",
+    description: "Generate meta tags, schema markup, robots.txt, sitemaps and preview your SERP listings.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Finance Calculators",
+    description: "SIP, EMI, GST, tax, FD, retirement and 10+ more calculators with live charts and breakdowns.",
   },
   {
     icon: Smartphone,
     title: "Works on Any Device",
-    description: "Fully responsive and works perfectly on desktop, tablet, and mobile — no apps to install.",
+    description: "Fully responsive — desktop, tablet and mobile. No apps to install, just open and use.",
   },
-  {
-    icon: ImageDown,
-    title: "PNG, JPEG, WEBP & AVIF",
-    description: "Export in your preferred format with adjustable quality — including AVIF and HEIC support.",
-  },
-];
-
-const compressSteps = [
-  {
-    number: "01",
-    title: "Upload Image",
-    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-  },
-  {
-    number: "02",
-    title: "Choose Size",
-    description: "Select a target size — 50KB, 100KB, 200KB, or enter a custom value.",
-  },
-  {
-    number: "03",
-    title: "Download",
-    description: "Your compressed image is ready instantly. Download it with one click.",
-  },
-];
-
-const resizeSteps = [
-  {
-    number: "01",
-    title: "Upload Image",
-    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-  },
-  {
-    number: "02",
-    title: "Choose a Preset",
-    description: "Pick from passport, document, social media sizes, or set a custom aspect ratio.",
-  },
-  {
-    number: "03",
-    title: "Crop & Download",
-    description: "Fine-tune your crop area, adjust output quality, and download in PNG, JPEG, or WEBP.",
-  },
-];
-
-const flipSteps = [
-  {
-    number: "01",
-    title: "Upload Image",
-    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-  },
-  {
-    number: "02",
-    title: "Flip or Rotate",
-    description: "Mirror horizontally or vertically, or rotate 90° left and right.",
-  },
-  {
-    number: "03",
-    title: "Download",
-    description: "Save as PNG, JPEG, or WEBP with adjustable quality in one click.",
-  },
-];
-
-const convertSteps = [
-  {
-    number: "01",
-    title: "Upload Image",
-    description: "Drag & drop, click to upload, or paste an image from your clipboard.",
-  },
-  {
-    number: "02",
-    title: "Pick a Format",
-    description: "Choose PNG, JPEG, WEBP, or AVIF and fine-tune the quality slider.",
-  },
-  {
-    number: "03",
-    title: "Download",
-    description: "Your converted image is ready instantly — download it with one click.",
-  },
-];
-
-const presetBadges: { label: string; variant: CapsuleVariant; icon: LucideIcon }[] = [
-  { label: "Passport (2×2)", variant: "violet", icon: IdCard },
-  { label: "A4 Document", variant: "primary", icon: FileText },
-  { label: "Instagram Square", variant: "fuchsia", icon: Instagram },
-  { label: "Twitter Header", variant: "sky", icon: Twitter },
-  { label: "YouTube Thumbnail", variant: "rose", icon: Youtube },
-  { label: "16:9 Widescreen", variant: "amber", icon: RectangleHorizontal },
-];
-
-const formatBadges: { label: string; variant: CapsuleVariant; icon: LucideIcon }[] = [
-  { label: "PNG — Lossless & transparent", variant: "success", icon: ImageIcon },
-  { label: "JPEG — Small & universal", variant: "primary", icon: FileImage },
-  { label: "WEBP — Modern & efficient", variant: "purple", icon: Globe },
-  { label: "AVIF — Next-gen & tiny", variant: "sky", icon: SparklesIcon },
-  { label: "HEIC — iPhone photos", variant: "rose", icon: Smartphone },
 ];
 
 const faqs = [
   {
-    question: "How does Vizo Tool work?",
+    question: "What is VizoTool?",
     answer:
-      "Vizo Tool uses advanced browser-based image processing technology. Your images are processed entirely within your browser using the Canvas API — nothing is ever uploaded to any server.",
+      "VizoTool is a free all-in-one online tools platform. It provides 60+ browser-based tools across images, PDFs, developer utilities, SEO, finance calculators, YouTube creator tools and more — all in one place.",
   },
   {
-    question: "What is the Resize & Crop tool?",
+    question: "Are VizoTool tools free to use?",
     answer:
-      "The Resize & Crop tool lets you crop your images to any shape or size. Choose from over 20 prebuilt ratios including passport photo sizes (2×2), document formats (A4, Letter), social media dimensions (Instagram, Twitter, Facebook, YouTube), and common aspect ratios (16:9, 4:3, 1:1). You can also set a custom ratio and fine-tune the crop area by dragging.",
+      "Yes — every tool on VizoTool is completely free. No sign-ups, no hidden costs, no usage limits. Just open a tool and start using it.",
   },
   {
-    question: "What is the Format Converter tool?",
+    question: "What types of online tools does VizoTool provide?",
     answer:
-      "The Format Converter lets you change any image to PNG, JPEG, WEBP, or AVIF. It also accepts HEIC files from iPhones, so you can convert those straight to JPG or PNG. Perfect when a website or app only accepts a specific format — convert it instantly in your browser.",
+      "VizoTool offers tools across multiple categories: image editing (compress, resize, crop, convert, background removal), PDF conversion, developer tools (JSON formatter, Base64, QR codes, JWT decoder), SEO tools (meta tags, schema, sitemaps), finance calculators (SIP, EMI, tax), YouTube tools and more.",
   },
   {
-    question: "What is the Flip & Rotate tool?",
+    question: "Can I use VizoTool on mobile?",
     answer:
-      "The Flip & Rotate tool lets you mirror an image horizontally or vertically and rotate it 90° at a time. It's perfect for fixing mirrored selfies, sideways photos, or any image that needs a quick orientation change — all in your browser.",
+      "Yes — every tool is fully responsive and works perfectly on desktop, tablet and mobile browsers. No app installation needed.",
   },
   {
-    question: "What output formats are supported for cropping?",
+    question: "Do I need to install any software?",
     answer:
-      "You can download your cropped image as PNG (lossless), JPEG, or WEBP. For JPEG and WEBP, you can also adjust the quality slider to balance file size and image quality.",
+      "No. All tools run directly in your web browser. There's nothing to download, install or configure — just visit the site and use the tools you need.",
   },
   {
-    question: "Is my data safe?",
+    question: "Is VizoTool only for image tools?",
     answer:
-      "Absolutely. All image processing happens locally on your device. Your images never leave your computer, ensuring complete privacy and security.",
+      "No. While VizoTool started with image tools, it now offers 60+ tools across images, PDFs, developer utilities, SEO, finance, YouTube and AI — making it a complete all-in-one tools platform.",
   },
   {
-    question: "What image formats are supported?",
+    question: "Is my data safe on VizoTool?",
     answer:
-      "We support JPG, JPEG, PNG, WEBP, AVIF, and HEIC (iPhone) formats. You can compress to any target size from 1KB upwards, or convert between formats.",
+      "Yes. All processing happens locally in your browser. Your files and data never leave your device — there are no uploads to any server.",
   },
   {
-    question: "Is there a file size limit?",
+    question: "How many tools does VizoTool have?",
     answer:
-      "There's no artificial limit, but very large images may take a moment to process since everything runs in your browser. For best results, keep images under 50MB.",
+      "VizoTool currently offers 60+ free tools across 6 major categories: Image Tools, Developer Tools, SEO Tools, Finance Calculators, PDF Tools and YouTube Tools — with new tools added regularly.",
   },
   {
-    question: "Is Vizo Tool really free?",
+    question: "Can I use VizoTool for SEO?",
     answer:
-      "Yes! Vizo Tool is completely free with no hidden costs, no sign-ups, and no usage limits. We believe image compression should be accessible to everyone.",
+      "Yes. VizoTool provides 11 free SEO tools including meta tag generator, schema markup generator, robots.txt generator, sitemap generator, SERP preview, UTM builder, slug generator, heading checker and website traffic checker.",
   },
   {
-    question: "Does it work on mobile?",
+    question: "Does VizoTool have finance calculators?",
     answer:
-      "Yes! Vizo Tool is fully responsive and works perfectly on desktop, tablet, and mobile devices.",
+      "Yes. VizoTool offers 14 finance calculators including SIP, compound interest, EMI, GST, FD, CAGR, ROI, income tax, retirement, salary and more — each with live charts and year-by-year breakdowns.",
   },
 ];
 
@@ -466,37 +373,36 @@ export default function HomePage() {
             className="max-w-3xl"
           >
             <Capsule variant="success" dot className="mb-6">
-              100% Browser-Based — No Uploads
+              60+ Free Tools — No Sign-up Required
             </Capsule>
 
             <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              <TextGenerateEffect words="Edit Images" className="block text-text-primary" />
+              <TextGenerateEffect words="Free Online Tools" className="block text-text-primary" />
               <span className="mt-2 block bg-gradient-to-r from-primary via-sky-500 to-primary bg-clip-text text-transparent">
                 <FlipWords
-                  words={["Instantly & Free", "100% Privately", "In Your Browser", "On Any Device"]}
+                  words={["for Everything", "for Images & PDFs", "for Developers", "for SEO & Finance"]}
                   duration={3200}
                 />
               </span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-text-secondary sm:text-xl">
-              Compress, resize, and crop your images to perfection — all directly in your browser.
-              Your images never leave your device.
+              Use fast, free online tools for image editing, PDF conversion, development, SEO, finance and more — all in one place, all in your browser.
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <ShimmerButton href="/compress">
                 <ImageDown className="h-4 w-4" />
-                Compress Images
+                Explore All Tools
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </ShimmerButton>
 
               <Link
-                href="/remove-background"
+                href="#categories"
                 className="group inline-flex h-12 items-center gap-2 rounded-full border-2 border-primary/20 bg-surface px-7 text-sm font-semibold text-primary shadow-sm transition-all hover:border-primary hover:bg-primary-light/50 active:scale-[0.98]"
               >
-                <Wand2 className="h-4 w-4" />
-                Remove Background
+                <LayoutGrid className="h-4 w-4" />
+                Browse Categories
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
@@ -646,13 +552,13 @@ export default function HomePage() {
       </section>
 
       {/* Browse by Category — one card per category landing page */}
-      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
+      <section id="categories" className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
             icon={LayoutGrid}
-            title="Browse by Category"
-            subtitle="Explore every tool family — from image editing to finance calculators."
-            eyebrow="Tool Categories"
+            title="Explore Tools by Category"
+            subtitle="From image editing to finance calculators — find the right tool for any task."
+            eyebrow="60+ Tools Across 6 Categories"
             eyebrowVariant="violet"
           />
 
@@ -715,13 +621,13 @@ export default function HomePage() {
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <Capsule variant="primary" sm dot className="mb-4">
-              Why Vizo Tool
+              Why VizoTool
             </Capsule>
             <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-              Everything You Need, Nothing You Don&apos;t
+              One Platform, Many Tools
             </h2>
             <p className="mt-3 text-lg text-text-secondary">
-              Fast, private, browser-based image tools that just work.
+              Fast, free, browser-based tools for every task — no installs, no sign-ups.
             </p>
           </div>
 
@@ -746,130 +652,97 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works — Compress */}
+      {/* Popular Tools — multi-category showcase */}
       <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
-            icon={Download}
-            title="Compress Images"
-            subtitle="Three simple steps to reduce your file sizes."
-            eyebrow="How it works"
+            icon={Flame}
+            title="Popular Free Online Tools"
+            subtitle="Try the most-used tools across every category — all free and instant."
+            eyebrow="Most Popular"
+            eyebrowVariant="amber"
           />
-          <StepGrid steps={compressSteps} />
+
+          <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { slug: "compress", name: "Compress Images", desc: "Shrink JPG, PNG, WEBP to any target size", category: "Image Tools", href: "/compress", icon: Download },
+              { slug: "json-formatter", name: "JSON Formatter", desc: "Beautify, minify and validate JSON instantly", category: "Developer Tools", href: "/json-formatter", icon: Braces },
+              { slug: "emi-calculator", name: "EMI Calculator", desc: "Calculate loan EMI with amortization schedule", category: "Finance Tools", href: "/emi-calculator", icon: Home },
+              { slug: "meta-tag-generator", name: "Meta Tag Generator", desc: "Create perfect SEO meta tags with SERP preview", category: "SEO Tools", href: "/meta-tag-generator", icon: Tags },
+              { slug: "image-to-pdf", name: "Image to PDF", desc: "Merge JPG, PNG & HEIC into one PDF document", category: "PDF Tools", href: "/image-to-pdf", icon: FileText },
+              { slug: "qr-code-generator", name: "QR Code Generator", desc: "Generate QR codes for URLs, WiFi & more", category: "Developer Tools", href: "/qr-code-generator", icon: QrCode },
+              { slug: "remove-background", name: "Remove Background", desc: "AI background remover — transparent PNG output", category: "Image Tools", href: "/remove-background", icon: Wand2 },
+              { slug: "youtube-thumbnail-downloader", name: "YouTube Thumbnails", desc: "Download thumbnails in every resolution", category: "YouTube Tools", href: "/youtube-thumbnail-downloader", icon: Youtube },
+              { slug: "website-traffic-checker", name: "Traffic Checker", desc: "Estimate any website's monthly visitors", category: "SEO Tools", href: "/website-traffic-checker", icon: BarChart3 },
+            ].map((tool) => (
+              <Link
+                key={tool.slug}
+                href={tool.href}
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-surface/60 p-5 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                    <tool.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-text-primary">{tool.name}</p>
+                    <p className="mt-0.5 text-xs text-text-secondary line-clamp-1">{tool.desc}</p>
+                  </div>
+                </div>
+                <div className="mt-auto flex items-center justify-between pt-3">
+                  <Capsule variant="sky" sm>{tool.category}</Capsule>
+                  <ArrowRight className="h-4 w-4 text-text-muted transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
+                </div>
+              </Link>
+            ))}
+          </div>
+
           <div className="mt-10 text-center">
             <ShimmerButton href="/compress">
-              <ImageDown className="h-4 w-4" />
-              Start Compressing
+              <LayoutGrid className="h-4 w-4" />
+              Explore All 60+ Tools
               <ArrowRight className="h-4 w-4" />
             </ShimmerButton>
           </div>
         </div>
       </section>
 
-      {/* How It Works — Resize */}
+      {/* How It Works — Quick Overview */}
       <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
           <ToolSectionHeader
-            icon={Crop}
-            title="Resize & Crop Images"
-            subtitle="Choose from prebuilt sizes or create your own custom dimensions."
-            eyebrow="Prebuilt sizes"
-            eyebrowVariant="violet"
-          />
-          <StepGrid steps={resizeSteps} />
-
-          {/* Preset capsules */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, margin: "100px" }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="mx-auto mt-10 max-w-2xl text-center"
-          >
-            <p className="mb-4 text-sm font-medium text-text-secondary">
-              Prebuilt sizes for every need
-            </p>
-            <div className="flex flex-wrap justify-center gap-2.5">
-              {presetBadges.map((badge) => (
-                <Capsule key={badge.label} variant={badge.variant} icon={badge.icon}>
-                  {badge.label}
-                </Capsule>
-              ))}
-            </div>
-          </motion.div>
-
-          <div className="mt-10 text-center">
-            <ShimmerButton href="/resize">
-              <Crop className="h-4 w-4" />
-              Start Resizing
-              <ArrowRight className="h-4 w-4" />
-            </ShimmerButton>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works — Flip */}
-      <section className="content-visibility-auto py-16 sm:py-20">
-        <div className="container-page">
-          <ToolSectionHeader
-            icon={FlipHorizontal2}
-            title="Flip & Rotate Images"
-            subtitle="Fix mirrored selfies or sideways photos in one click."
-            eyebrow="Quick fixes"
+            icon={Zap}
+            title="How VizoTool Works"
+            subtitle="Every tool follows the same simple process — open, use, download."
+            eyebrow="Quick & Easy"
             eyebrowVariant="teal"
           />
-          <StepGrid steps={flipSteps} />
-          <div className="mt-10 text-center">
-            <ShimmerButton href="/flip">
-              <FlipHorizontal2 className="h-4 w-4" />
-              Start Flipping
-              <ArrowRight className="h-4 w-4" />
-            </ShimmerButton>
-          </div>
+          <StepGrid steps={[
+            { number: "01", title: "Pick a Tool", description: "Choose from 60+ tools across images, PDFs, developer, SEO, finance and YouTube categories." },
+            { number: "02", title: "Use It Instantly", description: "Everything runs in your browser — no uploads, no sign-ups, no waiting for servers." },
+            { number: "03", title: "Download or Copy", description: "Get your result instantly — download files, copy code, or save calculations." },
+          ]} />
         </div>
       </section>
 
-      {/* How It Works — Convert */}
-      <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
+      {/* SEO Content — crawlable text explaining VizoTool */}
+      <section className="content-visibility-auto py-16 sm:py-20">
         <div className="container-page">
-          <ToolSectionHeader
-            icon={Repeat}
-            title="Convert Image Formats"
-            subtitle="Switch to the right format for any platform in one click."
-            eyebrow="Formats"
-            eyebrowVariant="fuchsia"
-          />
-          <StepGrid steps={convertSteps} />
-
-          {/* Format capsule marquee */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, margin: "100px" }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="relative mt-12 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
-          >
-            {/* marquee is frozen below 640px too, so drop will-change there */}
-            <div className="flex w-max animate-marquee will-change-transform max-sm:will-change-auto gap-3 hover:[animation-play-state:paused]">
-              {[...formatBadges, ...formatBadges].map((badge, i) => (
-                <Capsule
-                  key={`${badge.label}-${i}`}
-                  variant={badge.variant}
-                  icon={badge.icon}
-                  interactive={false}
-                >
-                  {badge.label}
-                </Capsule>
-              ))}
+          <div className="mx-auto max-w-3xl">
+            <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+              Free Online Tools for Everyday Tasks
+            </h2>
+            <div className="mt-6 space-y-4 text-lg leading-relaxed text-text-secondary">
+              <p>
+                VizoTool is a free all-in-one online tools platform that brings together 60+ browser-based tools for images, PDFs, developer utilities, SEO, finance and more. Whether you need to compress an image, format JSON, generate a QR code, calculate your EMI or create perfect meta tags — VizoTool has you covered.
+              </p>
+              <p>
+                Every tool runs directly in your browser using modern web technologies. There are no uploads, no servers, and no sign-ups required. Your data stays on your device, making VizoTool a private and secure choice for everyday tasks.
+              </p>
+              <p>
+                From image editing tools like compress, resize, crop, flip and convert to developer essentials like JSON formatter, Base64 encoder, password generator and live code playgrounds — from SEO tools like meta tag generator, schema markup and sitemap builder to finance calculators for SIP, EMI, GST, tax and retirement planning — VizoTool is your one-stop platform for fast, free and easy online tools.
+              </p>
             </div>
-          </motion.div>
-
-          <div className="mt-10 text-center">
-            <ShimmerButton href="/convert">
-              <Repeat className="h-4 w-4" />
-              Start Converting
-              <ArrowRight className="h-4 w-4" />
-            </ShimmerButton>
           </div>
         </div>
       </section>
@@ -877,6 +750,24 @@ export default function HomePage() {
       {/* FAQ Section */}
       <section className="content-visibility-auto border-t border-border bg-surface py-16 sm:py-20">
         <div className="container-page">
+          {/* FAQPage structured data */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: faqs.map((faq) => ({
+                  "@type": "Question",
+                  name: faq.question,
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: faq.answer,
+                  },
+                })),
+              }),
+            }}
+          />
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
               Frequently Asked Questions
