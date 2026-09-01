@@ -5,16 +5,21 @@ import { ToolSeoContent } from "@/components/seo/ToolSeoContent";
 import { AdSlot } from "@/components/seo/AdSlot";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Website Traffic Checker — Estimate Any Site's Monthly Visitors",
+  title: "Free Website Traffic Checker — Check Any Site's Traffic",
   description:
-    "Estimate website traffic from public SEO signals: domain age, meta tags, robots.txt, sitemap, page size and more. Score breakdown, trend chart, compare mode and PDF reports — 100% free.",
+    "Check estimated website traffic for any site — free online traffic checker. Analyze visitors, SEO score & compare competitors. Quick, easy & private.",
   path: "/website-traffic-checker",
   keywords: [
     "website traffic checker",
+    "check website traffic",
+    "website traffic estimator",
+    "website traffic analysis",
+    "website visitor checker",
     "estimate website traffic",
-    "check website visitors",
-    "site traffic estimator",
-    "competitor traffic analysis",
+    "competitor website traffic",
+    "website analytics tool",
+    "free traffic checker",
+    "site traffic checker",
   ],
 });
 

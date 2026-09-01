@@ -11,8 +11,8 @@ export default function WebsiteTrafficCheckerPage() {
       <div className="container-page py-10 sm:py-16">
         <ToolHero
           icon={BarChart3}
-          title="Website Traffic Checker"
-          description="Estimate any website's monthly and yearly traffic from public SEO signals — with score breakdowns, a 12-month trend, compare mode and PDF reports."
+          title="Free Website Traffic Checker"
+          description="Check estimated website traffic for any site — analyze visitors, SEO score, performance & compare competitors. Free, fast & private — no sign-up needed."
         />
         <div className="mx-auto mt-10 max-w-5xl">
           <WebsiteTrafficCheckerTool />
