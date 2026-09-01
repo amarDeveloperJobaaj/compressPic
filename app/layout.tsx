@@ -11,6 +11,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AnalyticsScripts } from "@/components/seo/AnalyticsScripts";
 import { JsonLd } from "@/components/seo/JsonLd";
 import Script from "next/script";
+import { Analytics } from '@vercel/analytics/next';
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -210,6 +211,7 @@ export default function RootLayout({
           <Header />
           <main id="main-content" className="flex-1" tabIndex={-1}>
             {children}
+            <Analytics />
           </main>
           <Footer />
         </MotionProvider>
