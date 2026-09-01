@@ -11,6 +11,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AnalyticsScripts } from "@/components/seo/AnalyticsScripts";
 import { JsonLd } from "@/components/seo/JsonLd";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -213,6 +214,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </MotionProvider>
+        <Analytics />
       </body>
     </html>
   );
