@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronDown, House, X } from "lucide-react";
+import { ArrowRight, ChevronDown, House, Layers, X } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/tools";
 import { CATEGORY_PAGE_BY_CATEGORY_ID } from "@/lib/category-pages";
 import { getToolIcon } from "@/lib/tool-icons";
@@ -234,6 +234,20 @@ export function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
               >
                 <House className="h-4 w-4 shrink-0" />
                 Home
+              </Link>
+
+              <Link
+                href="/vizodesign"
+                onClick={onClose}
+                className={cn(
+                  "mb-2 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                  pathname.startsWith("/vizodesign")
+                    ? "bg-primary-light text-primary"
+                    : "text-text-secondary hover:bg-primary-light hover:text-primary"
+                )}
+              >
+                <Layers className="h-4 w-4 shrink-0" />
+                VizoDesign
               </Link>
 
               {TOOL_CATEGORIES.filter((c) => c.id !== "ai").map((category) => {

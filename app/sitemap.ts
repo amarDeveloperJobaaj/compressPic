@@ -3,6 +3,7 @@ import { ALL_TOOLS } from "@/lib/tools";
 import { CATEGORY_PAGES } from "@/lib/category-pages";
 import { CONVERSION_PAIRS } from "@/features/converter/utils/pairs";
 import { getBlogRepository } from "@/lib/blog/repository";
+import { SEED_DESIGNS, DESIGN_CATEGORIES } from "@/lib/vizodesign/seed";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://vizotool.com";
@@ -91,6 +92,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...searchRoute,
   ];
 
+  // VizoDesign pages
+  const vizodesignIndex: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/vizodesign`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+  ];
+  const vizodesignDesignRoutes: MetadataRoute.Sitemap = SEED_DESIGNS.map((design) => ({
+    url: `${baseUrl}/vizodesign/${design.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
+  const vizodesignCategoryRoutes: MetadataRoute.Sitemap = DESIGN_CATEGORIES.map((category) => ({
+    url: `${baseUrl}/vizodesign/category/${category.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+  const vizodesignRoutes: MetadataRoute.Sitemap = [
+    ...vizodesignIndex,
+    ...vizodesignDesignRoutes,
+    ...vizodesignCategoryRoutes,
+  ];
+
   return [
     {
       url: baseUrl,
@@ -102,6 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...conversionRoutes,
     ...categoryPageRoutes,
     ...blogRoutes,
+    ...vizodesignRoutes,
     {
       url: `${baseUrl}/about`,
       lastModified: now,
