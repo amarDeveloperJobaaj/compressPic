@@ -2426,4 +2426,443 @@ export const BLOG_POSTS: BlogPost[] = [
       newsletter(),
     ],
   }),
+
+  makePost({
+    slug: "free-online-tools-every-developer-should-bookmark",
+    title: "10 Free Online Tools Every Developer Should Bookmark",
+    subtitle:
+      "Stop installing apps for every small task — these browser-based developer utilities handle JSON, JWTs, UUIDs, SQL and more.",
+    excerpt:
+      "From formatting JSON to decoding JWTs, generating UUIDs and writing CSS — here are 10 free browser-based tools that save developers time on everyday tasks.",
+    category: "Developer Tools",
+    tags: [
+      "developer tools",
+      "json formatter",
+      "jwt decoder",
+      "uuid generator",
+      "online tools",
+      "programming",
+    ],
+    publishedDaysAgo: 0,
+    updatedDaysAgo: 0,
+    featured: true,
+    trending: false,
+    editorsPick: false,
+    readCount: 620,
+    seo: {
+      metaTitle:
+        "10 Free Online Tools Every Developer Should Bookmark",
+      metaDescription:
+        "Discover 10 free online tools developers can use for JSON formatting, validation, UUID generation, JWT decoding, CSS, SQL formatting and more.",
+      keywords: [
+        "free online tools for developers",
+        "developer tools online",
+        "free developer tools",
+        "useful tools for programmers",
+        "online coding tools",
+        "developer utilities",
+      ],
+    },
+    content: [
+      p(
+        "Developers spend a surprising amount of time on small, repetitive tasks — formatting a messy API response, decoding a JWT to check its payload, generating a UUID for a new database record, or tweaking a CSS shadow until it looks right. Most of the time, these jobs do not require a full IDE, a CLI tool or a installed package."
+      ),
+      p(
+        "Browser-based developer utilities solve these micro-tasks instantly. No installation, no configuration, no account. Just open a tab, do the work and move on. Here are 10 free tools worth bookmarking."
+      ),
+
+      // ── TOOL 1 ──────────────────────────────────────────────────
+      h(2, "1. JSON Formatter"),
+      h(3, "What problem does it solve?"),
+      p(
+        "You pull a response from an API and it arrives as a single unreadable line — thousands of characters with no indentation, no line breaks and no structure. Reading nested JSON in this state is painful, and spotting errors is nearly impossible."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Debugging API responses that return minified JSON.",
+        "Inspecting configuration files before deploying.",
+        "Reading deeply nested data structures.",
+        "Sharing formatted JSON with teammates in code reviews.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "A REST API returns a user object with nested addresses, orders and permissions — all on one line. Pasting it into a formatter instantly adds indentation and syntax highlighting, making the structure readable."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Formatting JSON by hand is tedious. A one-click formatter saves minutes every day, especially when working with multiple APIs."
+      ),
+      toolCta(
+        "json-formatter",
+        "Try the free JSON Formatter",
+        "Beautify, minify and validate JSON with a tree view — runs in your browser."
+      ),
+
+      // ── TOOL 2 ──────────────────────────────────────────────────
+      h(2, "2. JSON Validator"),
+      h(3, "What problem does it solve?"),
+      p(
+        "Formatting makes JSON readable, but it does not tell you whether the structure is valid. A trailing comma, a missing bracket or a misplaced quote can break an entire application — and the error message often does not tell you where."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Validating JSON before pasting it into a config file.",
+        "Checking API payloads before sending them to a server.",
+        "Debugging configuration errors in tools that expect valid JSON.",
+        "Verifying data received from third-party APIs.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "A package.json file fails to parse. The error says 'Unexpected token' but does not pinpoint the line. A validator catches the exact line and character where the syntax breaks."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Finding a syntax error in minified or complex JSON manually is slow. A validator with precise line numbers turns a 10-minute debugging session into a 10-second fix."
+      ),
+      toolCta(
+        "json-validator",
+        "Try the free JSON Validator",
+        "Real-time validation with error line numbers — no server needed."
+      ),
+
+      // ── TOOL 3 ──────────────────────────────────────────────────
+      h(2, "3. UUID Generator"),
+      h(3, "What problem does it solve?"),
+      p(
+        "UUIDs are the standard way to generate unique identifiers — for database primary keys, API resource IDs, session tokens, correlation IDs and more. Most languages have libraries for this, but sometimes you just need a few UUIDs quickly."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Creating test data with unique identifiers.",
+        "Generating IDs for API resources during development.",
+        "Populating database seed files.",
+        "Building sample datasets for demos and prototypes.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "You are building a REST API and need 20 unique resource IDs for testing. Instead of writing a script, you generate them in bulk from a browser tool."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Quick UUID generation without switching context or writing a one-off script keeps your workflow smooth."
+      ),
+      toolCta(
+        "uuid-generator",
+        "Try the free UUID Generator",
+        "Generate UUID v1, v4 and v7 — individually or in bulk."
+      ),
+
+      // ── TOOL 4 ──────────────────────────────────────────────────
+      h(2, "4. JWT Decoder"),
+      h(3, "What problem does it solve?"),
+      p(
+        "JSON Web Tokens are used everywhere in modern authentication — OAuth flows, API keys, session management. When debugging, you often need to inspect the header and payload to understand what a token contains."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Debugging authentication flows during development.",
+        "Inspecting JWT claims without hitting a server.",
+        "Verifying token structure during API testing.",
+        "Understanding what data is embedded in a token.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "An API returns a JWT and you need to check whether the 'exp' claim is set correctly, or whether the 'roles' array contains the expected values. Decoding the token shows the payload instantly."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Instead of writing a decode script or installing a CLI tool, a browser decoder gives you instant visibility into token contents."
+      ),
+      alert(
+        "warning",
+        "Important: Decoding is not verification",
+        "Decoding a JWT shows you what is inside — it does not verify the signature. Never trust a decoded token as proof of authenticity. Only the issuer can create a valid signature."
+      ),
+      toolCta(
+        "jwt-decoder",
+        "Try the free JWT Decoder",
+        "Decode JWT headers, payloads and expiry — instantly in your browser."
+      ),
+
+      // ── TOOL 5 ──────────────────────────────────────────────────
+      h(2, "5. Password Generator"),
+      h(3, "What problem does it solve?"),
+      p(
+        "Developers create test accounts, staging environments and demo users constantly. Using the same password everywhere — even for non-production systems — builds bad habits. A generator creates strong, unique passwords instantly."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Creating test credentials for staging environments.",
+        "Generating strong passwords for new accounts.",
+        "Building sample user data for demos.",
+        "Ensuring every development account uses a unique password.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "You are setting up a staging database and need 10 unique user passwords. A generator produces them with configurable length and character sets in seconds."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Quick password generation avoids the temptation to reuse passwords across development environments."
+      ),
+      toolCta(
+        "password-generator",
+        "Try the free Password Generator",
+        "Strong random passwords with a strength meter — generated in your browser."
+      ),
+
+      // ── TOOL 6 ──────────────────────────────────────────────────
+      h(2, "6. Base64 Encoder"),
+      h(3, "What problem does it solve?"),
+      p(
+        "Base64 encoding comes up more often than most developers expect — embedding images as data URLs, encoding credentials for HTTP Basic Auth headers, or preparing binary data for transmission over text-based protocols."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Encoding credentials for HTTP Authorization headers.",
+        "Embedding images as data URLs in HTML or CSS.",
+        "Preparing binary payloads for text-based APIs.",
+        "Testing webhook payloads that include encoded data.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "An API documentation says to send Basic Auth credentials as 'Base64(username:password)'. Instead of opening a terminal, you paste the string and get the encoded result."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Base64 encoding is a two-second task that happens often enough to justify a bookmark."
+      ),
+      alert(
+        "tip",
+        "Base64 is not encryption",
+        "Base64 is an encoding scheme, not a security measure. Anyone can decode Base64 trivially. Never use it to protect sensitive data."
+      ),
+      toolCta(
+        "base64-encoder",
+        "Try the free Base64 Encoder",
+        "Encode text, files and images to Base64 — with copy and download."
+      ),
+
+      // ── TOOL 7 ──────────────────────────────────────────────────
+      h(2, "7. Base64 Decoder"),
+      h(3, "What problem does it solve?"),
+      p(
+        "The reverse of encoding — when you receive a Base64 string and need to see what is inside. Common in debugging API responses, inspecting encoded payloads and understanding data formats."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Decoding API responses that return Base64-encoded data.",
+        "Inspecting encoded JWT parts or tokens.",
+        "Converting data URLs back to readable content.",
+        "Debugging encoding issues in data pipelines.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "A webhook sends a Base64-encoded payload. Decoding it reveals the original JSON structure, letting you inspect the data without writing a script."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Decoding is the mirror of encoding — both happen often enough that having a bookmark for each saves time."
+      ),
+      toolCta(
+        "base64-decoder",
+        "Try the free Base64 Decoder",
+        "Decode Base64 back to text or files — instantly."
+      ),
+
+      // ── TOOL 8 ──────────────────────────────────────────────────
+      h(2, "8. SQL Formatter"),
+      h(3, "What problem does it solve?"),
+      p(
+        "SQL queries generated by ORMs, migration tools or complex joins often arrive as dense, unreadable blocks. A formatter adds indentation, line breaks and consistent casing so you can actually read the logic."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Reading complex JOIN queries generated by ORMs.",
+        "Reviewing SQL migrations before running them.",
+        "Debugging WHERE clauses with multiple conditions.",
+        "Sharing readable queries in code reviews.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "A Prisma migration generates a 30-line SQL statement on one line. Pasting it into a formatter reveals the table joins, conditions and ordering clearly."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Unformatted SQL is a productivity killer. A formatter turns unreadable queries into clean, reviewable code in one click."
+      ),
+      toolCta(
+        "sql-formatter",
+        "Try the free SQL Formatter",
+        "Beautify and format SQL queries with syntax highlighting."
+      ),
+
+      // ── TOOL 9 ──────────────────────────────────────────────────
+      h(2, "9. CSS Gradient Generator"),
+      h(3, "What problem does it solve?"),
+      p(
+        "Writing CSS gradients by hand — especially multi-stop linear, radial or conic gradients — involves a lot of trial and error. A visual generator lets you pick colors, adjust angles and see the result live before copying the CSS."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Designing hero section backgrounds.",
+        "Creating button hover effects.",
+        "Building card overlays and gradient borders.",
+        "Experimenting with color combinations quickly.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "You need a subtle gradient background for a landing page hero section. Instead of guessing hex values and angle degrees, you design it visually and copy the CSS."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Gradient CSS is verbose and easy to get wrong. A generator produces clean, working CSS in seconds."
+      ),
+      toolCta(
+        "css-gradient-generator",
+        "Try the free CSS Gradient Generator",
+        "Design linear, radial and conic gradients visually — copy the CSS."
+      ),
+
+      // ── TOOL 10 ──────────────────────────────────────────────────
+      h(2, "10. CSS Box Shadow Generator"),
+      h(3, "What problem does it solve?"),
+      p(
+        "Box shadows add depth and dimension to UI components, but getting the offset, blur, spread and color right by hand takes trial and error. A visual generator shows the shadow in real time as you adjust each parameter."
+      ),
+      h(3, "When is it useful?"),
+      list(true, [
+        "Designing card and container shadows.",
+        "Creating layered depth effects for UI components.",
+        "Prototyping elevation systems for design systems.",
+        "Fine-tuning inset and drop shadows.",
+      ]),
+      h(3, "Example use case"),
+      p(
+        "You are building a card component and need a soft, elevated shadow. A visual generator lets you experiment with blur radius and spread until the shadow looks natural, then copies the CSS."
+      ),
+      h(3, "Why bookmark it?"),
+      p(
+        "Shadow CSS has six or more parameters. A visual tool eliminates the guesswork."
+      ),
+      toolCta(
+        "css-box-shadow-generator",
+        "Try the free Box Shadow Generator",
+        "Design CSS box shadows visually with live preview."
+      ),
+
+      // ── WORKFLOW SECTION ──────────────────────────────────────────
+      h(2, "A simple developer bookmark workflow"),
+      p(
+        "These tools fit naturally into different parts of a developer's day. Here is a practical way to organize them:"
+      ),
+      table(
+        "features",
+        ["Workflow", "Tools", "Use Case"],
+        [
+          [
+            "Debugging",
+            "JSON Formatter, JSON Validator",
+            "Inspecting and validating API responses",
+          ],
+          [
+            "Authentication",
+            "JWT Decoder, Password Generator",
+            "Checking tokens and creating credentials",
+          ],
+          [
+            "Data & IDs",
+            "UUID Generator, Base64 Encoder / Decoder",
+            "Generating unique IDs and encoding data",
+          ],
+          [
+            "Frontend Styling",
+            "CSS Gradient Generator, Box Shadow Generator",
+            "Designing visual effects and copying CSS",
+          ],
+          [
+            "Database Work",
+            "SQL Formatter",
+            "Reading and reviewing complex queries",
+          ],
+        ]
+      ),
+      p(
+        "Bookmarking these tools together in a 'Developer Utilities' browser folder means you never waste time searching for a utility when you need one quickly."
+      ),
+
+      // ── WHY BROWSER-BASED ──────────────────────────────────────────
+      h(2, "Why browser-based developer tools are useful"),
+      p(
+        "Browser tools are not a replacement for IDEs, CLI utilities or professional development environments. They are a complement — useful for quick tasks where switching context would break your flow."
+      ),
+      list(true, [
+        "Quick access — open a tab and start working, no installation required.",
+        "Works anywhere — use them on any device with a browser.",
+        "No configuration — no packages to install, no environments to set up.",
+        "Private by default — most tools process data locally without uploading it.",
+        "Good for temporary tasks — format one query, decode one token, generate a few UUIDs.",
+      ]),
+      p(
+        "For small, frequent tasks, the overhead of installing or configuring a tool often exceeds the time the task itself takes. Browser utilities eliminate that overhead."
+      ),
+
+      // ── EXPLORE MORE ──────────────────────────────────────────────
+      h(2, "Explore more developer tools"),
+      p(
+        "Vizotool includes these 10 developer utilities alongside 50+ other tools across images, PDFs, SEO, finance and more. The developer category covers formatting, validation, encoding, generation and visual CSS tools — all free and browser-based."
+      ),
+      p(
+        "If you work across multiple areas — debugging APIs, optimizing images for a website, checking SEO metadata or calculating project costs — having a single platform with tools for each task keeps your workflow simple."
+      ),
+      toolCta(
+        "json-formatter",
+        "Explore Vizotool Developer Tools",
+        "13+ free developer tools — JSON, Base64, QR codes, CSS, SQL and more."
+      ),
+
+      // ── FAQ ──────────────────────────────────────────────────────
+      h(2, "Frequently asked questions"),
+      faq([
+        {
+          question: "What are the most useful free online tools for developers?",
+          answer:
+            "The most useful ones cover everyday tasks: JSON formatting and validation, UUID generation, JWT decoding, password generation, Base64 encoding/decoding, SQL formatting and CSS generators for gradients and box shadows.",
+        },
+        {
+          question: "Are browser-based developer tools useful?",
+          answer:
+            "Yes, for quick tasks. They eliminate the overhead of installing or configuring tools for small jobs like formatting JSON, decoding a token or generating a few IDs. They complement — not replace — full development environments.",
+        },
+        {
+          question: "Can online tools replace an IDE?",
+          answer:
+            "No. Browser-based tools are utilities for specific, small tasks. They are useful for debugging, testing and quick generation — but full development work still happens in an IDE or code editor.",
+        },
+        {
+          question: "Is Base64 encryption?",
+          answer:
+            "No. Base64 is an encoding scheme, not encryption. Anyone can decode Base64 trivially. It is used for data transport, not security.",
+        },
+        {
+          question: "Does decoding a JWT verify it?",
+          answer:
+            "No. Decoding a JWT shows you its contents — header, payload and claims — but it does not verify the signature. Only the token issuer can create a valid signature. Never trust a decoded token as proof of authenticity.",
+        },
+        {
+          question: "Do I need to install software to use Vizotool developer tools?",
+          answer:
+            "No. All tools run directly in your browser. There is nothing to download, install or configure.",
+        },
+        {
+          question: "Are Vizotool developer tools free?",
+          answer:
+            "Yes. Every developer tool on Vizotool is completely free with no sign-ups, no usage limits and no data uploads.",
+        },
+      ]),
+
+      authorCard(),
+      newsletter(),
+    ],
+  }),
 ];
